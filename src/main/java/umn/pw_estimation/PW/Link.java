@@ -4,6 +4,7 @@
  */
 package umn.pw_estimation.PW;
 
+import umn.pw_estimation.Input.Detector;
 import java.util.List;
 
 /**
