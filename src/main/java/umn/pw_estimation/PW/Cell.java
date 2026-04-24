@@ -22,6 +22,9 @@ public class Cell {
     
     private Detector detector;
     
+    // this refers to a detector on an entrance or exit that observes vehicles entering or exiting
+    private Detector inflow, outflow;
+    
     private Link link;
     
     public Cell(double length, Link link, Cell prev){
@@ -49,6 +52,35 @@ public class Cell {
     public void setDetector(Detector det){
         detector = det;
     }
+    
+    
+    
+    
+    public void addInflow(Detector det){
+        this.inflow = det;
+    }
+    
+    public boolean hasInflow(){
+        return inflow != null;
+    }
+    
+    public Detector getInflow(){
+        return inflow;
+    }
+    
+    public void addOutflow(Detector det){
+        this.outflow= det;
+    }
+    
+    public boolean hasOutflow(){
+        return outflow != null;
+    }
+    
+    public Detector getOutflow(){
+        return outflow;
+    }
+    
+    
     
     public double getLength(){
         return length;

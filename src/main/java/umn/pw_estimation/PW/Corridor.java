@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -19,7 +20,7 @@ import org.apache.commons.math3.linear.RealVector;
 public class Corridor {
     
     private double tau = 1; // speed adaptation term
-    private double chi = 0.0001; // avoid divide by 0 in traffic pressure
+    private double chi = 0.01; // avoid divide by 0 in traffic pressure // originally was 0.0001
     
     private Cell[] cells;
     
@@ -117,6 +118,11 @@ public class Corridor {
         P_t_t = R_t;
         
         Q = new Array2DRowRealMatrix(size, size);
+        
+        for(Cell c : cells){
+            Q.setEntry(c.k_idx(), c.k_idx(), 5);
+            Q.setEntry(c.v_idx(), c.v_idx(), 1);
+        }
     }
     
     public void nextTimestep(){
@@ -146,6 +152,19 @@ public class Corridor {
             double dx2 = (c.getNext() != null? c.getNext().getLength() : c.getLength());
             
             double k_i_t = c.density;
+            
+            double added_flow = 0;
+            
+            if(c.hasInflow()){
+                added_flow += c.getInflow().getLast30sFlow();
+            }
+            if(c.hasOutflow()){
+                added_flow -= c.getOutflow().getLast30sFlow();
+            }
+            
+            // assume added flow enters cell, so it increases occupancy (increases density)
+            // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
+            k_i_t += added_flow / c.getLength();
             
 
             double v_i_t = c.speed;
@@ -224,7 +243,6 @@ public class Corridor {
         }
         
         
-        
         // moving on to next time step, so t -> tp
         P_t_tp = F_t.multiply(P_t_t).multiply(F_t.transpose()).add(Q);
         
@@ -248,15 +266,19 @@ public class Corridor {
                 y_t.setEntry(c.k_idx(), residual_k);
                 y_t.setEntry(c.v_idx(), residual_v);
                 
-                System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
+                //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
             }
         }
         
         // H is the identity matrix
         calcR();
+        
         RealMatrix S_t = P_t_tp.add(R_t);
         
+        //double determinant = new LUDecomposition(S_t).getDeterminant();
         
+        //System.out.println("S_t="+S_t);
+        //System.out.println("det="+determinant);
         
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));

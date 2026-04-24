@@ -17,25 +17,18 @@ public class Main {
     public static void main(String[] args) {
 
         double dt = 6;
-        Link test = new Link(0.2, dt, 60, 2400, 15, 240, 1);
+        Link test = new Link(0.3, dt, 60, 2400, 15, 240, 1);
         test.addDetector(0, new LoopDetector("test"));
         
         Corridor corridor = new Corridor(new Link[]{test}, dt);
         
         corridor.init();
         
-        corridor.printCells();
+        for(int t = 0; t < 5; t++){
+            corridor.printCells();
         
-        corridor.nextTimestep();
+            corridor.nextTimestep();
         
-        corridor.printCells();
-        
-        corridor.nextTimestep();
-        
-        corridor.printCells();
-        
-        corridor.nextTimestep();
-        
-        corridor.printCells();
+        }
     }
 }
