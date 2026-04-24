@@ -58,14 +58,20 @@ public class Link {
     }
     
     public double getEquilibriumSpeed(double k){
-        // calculate q from FD
-        if(k == 0){
-            return v;
-        }
         
-        double q = Math.min(v * k, Math.min(Q, -w * (K - k)));
-                
-        return q/k;
+        return  Math.min(k, Math.min(getQ() / k,  -w + w * getK()/k));
+    }
+    
+    public double getDerivEqSpeed(double k){
+        if(v * k < getQ()){
+            return 0;
+        }
+        else if(getQ() <= -w * (k - getK())){
+            return -getQ()/(k*k);
+        }
+        else{
+            return -w * getK() / (k*k);
+        }
     }
     
     public double getW(){

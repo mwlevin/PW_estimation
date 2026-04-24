@@ -75,9 +75,8 @@ public class Corridor {
         }
     }
     
-    private RealMatrix F, Ft;
-    private RealMatrix Q;
-    private RealMatrix P_t_tp, P_t_t;
+    private RealMatrix Q, F;
+    private RealMatrix P_t_tp, P_t_t, R_t_t;
     private RealVector x_t_tp, x_t_t;
     
     
@@ -88,7 +87,7 @@ public class Corridor {
         
         time = System.currentTimeMillis();
         
-        initializeF(size);
+
         x_t_tp = new ArrayRealVector(size);
         x_t_t = new ArrayRealVector(size);
         
@@ -97,8 +96,14 @@ public class Corridor {
             x_t_t.setEntry(c.v_idx(), c.speed);
         }
         
+        F = new Array2DRowRealMatrix(size, size);
         P_t_t = new Array2DRowRealMatrix(size, size);
+        R_t_t = new Array2DRowRealMatrix(size, size);
         P_t_tp = new Array2DRowRealMatrix(size, size);
+        
+        
+        calcR();
+        P_t_t = R_t_t;
         
         Q = new Array2DRowRealMatrix(size, size);
     }
@@ -158,30 +163,47 @@ public class Corridor {
 
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
+            
+            
+            
+            F.setEntry(c.k_idx(), c.k_idx(), 1 + dt/dx1 * c.speed);
+            F.setEntry(c.k_idx(), c.v_idx(), dt/dx1 * c.density);
+            
+            if(c.getPrev() != null){
+                F.setEntry(c.k_idx(), c.getPrev().k_idx(), - dt/dx1 * c.getPrev().speed);
+                F.setEntry(c.k_idx(), c.getPrev().v_idx(), - dt/dx1 * c.getPrev().density);
+                
+                F.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * -2 * v_ip_t / (2 * dx2));
+                        
+                F.setEntry(c.v_idx(), c.v_idx(), 1 + dt * 2 * v_i_t / (2 * dx2)  - 1/tau);
+            }
+            else{
+                F.setEntry(c.v_idx(), c.v_idx(), - 1/tau);
+            }
+            
+            
+            
+            if(c.getNext() != null){
+                F.setEntry(c.v_idx(), c.k_idx(), dt * C / (k_i_t + chi) * 1/dx2 - 
+                        dt * (k_in_t - k_i_t)/dx2 * C / ((k_i_t + chi) * (k_i_t + chi))  );
+                
+                F.setEntry(c.v_idx(), c.getNext().k_idx(), c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi) * 1/dx2);
+            }
+            else{
+                F.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
+            }
         }
         
         
         // moving on to next time step, so t -> tp
-        RealMatrix P_tp_tp = P_t_t;
-        //P_t_tp = F.multiply(P_tp_tp).multiply(Ft).add(Q);
+        P_t_tp = F.multiply(P_t_t).multiply(F.transpose()).add(Q);
     }
     
     private double calcC(Cell cell){
         return Math.min(20, Math.max(10, cell.getLink().getFFSpeed() / tau));
     }
     
-    private void initializeF(int size){
-        F = new Array2DRowRealMatrix(size, size);
-        
-        for(Cell c : cells){
-            
-        }
-        
-        
-        
-        
-        Ft = F.transpose();
-    }
+ 
     
     private void update(){
         x_t_t = x_t_tp.copy();
@@ -201,5 +223,38 @@ public class Corridor {
             System.out.println(c.k_idx()/2+"\t"+c.density+"\t"+c.speed);
         }
         System.out.println("--");
+    }
+    
+    public void calcR(){
+        
+        // for now, assuming 0 measurement error. Calculating variance based on speed estimation from average vehicle length.
+        // Speed = sum_i E[L_i]/t_i and L_i is random -> but using average speed results in approximate normal distribution
+        // assume normal distribution with mean 14.7 and stdev 1.5 for car lengths
+        // variance in speed should be variance in car length / n
+        // k = q/v
+        // cov(q/v, v) = q * cov(1/v, v) = 1 - E[v]E[1/v]
+        // E[1/v] is approximately 1/mu + sigma^2/mu^3
+        // variance(1/v) is approximately sigma^2/mu^4
+        
+        double len_mean = 14.7;
+        
+        double len_stdev = 1.5; // stdev in vehicle length
+        double len_var = len_stdev * len_stdev;
+        
+        double E_inv_len = 1/len_mean + len_stdev * len_stdev / (len_mean * len_mean * len_mean); // approximation
+        
+        double variance_inv_len = len_stdev * len_stdev / (len_mean * len_mean * len_mean * len_mean);
+        
+        for(Cell c : cells){
+            if(c.hasDetector()){
+                R_t_t.setEntry(c.v_idx(), c.v_idx(), len_var * len_var / c.getDetector().getLast30sCount());
+                
+                double cov = c.getFlow() * (1 - len_mean * E_inv_len); 
+                R_t_t.setEntry(c.v_idx(), c.k_idx(), cov);
+                R_t_t.setEntry(c.k_idx(), c.v_idx(), cov);
+                
+                R_t_t.setEntry(c.k_idx(), c.k_idx(), c.getFlow() * variance_inv_len);
+            }
+        }
     }
 }

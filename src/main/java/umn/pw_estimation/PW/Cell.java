@@ -42,6 +42,10 @@ public class Cell {
         this.speed = link.getFFSpeed();
     }
     
+    public boolean hasDetector(){
+        return detector != null;
+    }
+    
     public void setDetector(Detector det){
         detector = det;
     }
