@@ -1,0 +1,40 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package umn.pw_estimation.PW;
+
+/**
+ *
+ * @author mlevin
+ */
+public abstract class Detector {
+    
+    private String name;
+    
+    public Detector(String name){
+        this.name = name;
+    }
+    
+    
+    
+    public String getName(){
+        return name;
+    }
+    
+    public String toString(){
+        return name;
+    }
+    
+    public abstract int getLast30sCount();
+    
+    public double getLast30sFlow(){
+        return getLast30sCount() * 3600.0/30.0; // units conversion
+    }
+    public abstract double getLast30sSpeed();
+    
+    public double getLast30sDensity(){
+        return getLast30sFlow() / getLast30sSpeed();
+    }
+    
+}
