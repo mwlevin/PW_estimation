@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
@@ -75,10 +76,10 @@ public class Corridor {
         }
     }
     
-    private RealMatrix Q, F;
-    private RealMatrix P_t_tp, P_t_t, R_t_t;
+    private RealMatrix Q, F_t, I;
+    private RealMatrix P_t_tp, P_t_t, R_t;
     private RealVector x_t_tp, x_t_t;
-    
+    private RealVector y_t;
     
     public void init(){
         constructCells();
@@ -91,19 +92,29 @@ public class Corridor {
         x_t_tp = new ArrayRealVector(size);
         x_t_t = new ArrayRealVector(size);
         
+        y_t = new ArrayRealVector(size);
+        
         for(Cell c : cells){
+            if(c.hasDetector()){
+                c.density = c.getDetector().getLast30sDensity();
+                c.speed = c.getDetector().getLast30sSpeed();
+            }
+            
             x_t_t.setEntry(c.k_idx(), c.density);
             x_t_t.setEntry(c.v_idx(), c.speed);
+            
         }
         
-        F = new Array2DRowRealMatrix(size, size);
+        F_t = new Array2DRowRealMatrix(size, size);
         P_t_t = new Array2DRowRealMatrix(size, size);
-        R_t_t = new Array2DRowRealMatrix(size, size);
+        R_t = new Array2DRowRealMatrix(size, size);
         P_t_tp = new Array2DRowRealMatrix(size, size);
+        
+        I = MatrixUtils.createRealIdentityMatrix(size);
         
         
         calcR();
-        P_t_t = R_t_t;
+        P_t_t = R_t;
         
         Q = new Array2DRowRealMatrix(size, size);
     }
@@ -112,6 +123,10 @@ public class Corridor {
         
         predict(); // this populates P_t_tp and x_t_tp
         update(); // this populates P_t_t and x_t_t
+        
+        // this makes it easier to work with values later on
+        // do I need to multithread running the kalman filter and the cell data processing?
+        // if so, I will copy values from the cells into an array and process that array. Copying should be fast enough to not cause a synchronization error.
         saveValuesInCells(); // moves x_t_t values to cells
         
         time += dt * 1000;
@@ -147,7 +162,7 @@ public class Corridor {
                 k_ip_t = c.density;
                 v_ip_t = c.speed;
                 // starting cell should have a detector
-                q_ip_t = c.getDetector().getLast30sFlow();
+                q_ip_t = q_ip_t = k_ip_t * v_ip_t;
             }
             
             
@@ -163,40 +178,57 @@ public class Corridor {
 
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
+  
             
+            // now need to calculate F, which is the Jacobian matrix of df/dx where f is the PW state update equation
             
-            
-            F.setEntry(c.k_idx(), c.k_idx(), 1 + dt/dx1 * c.speed);
-            F.setEntry(c.k_idx(), c.v_idx(), dt/dx1 * c.density);
+ 
             
             if(c.getPrev() != null){
-                F.setEntry(c.k_idx(), c.getPrev().k_idx(), - dt/dx1 * c.getPrev().speed);
-                F.setEntry(c.k_idx(), c.getPrev().v_idx(), - dt/dx1 * c.getPrev().density);
+                F_t.setEntry(c.k_idx(), c.k_idx(), 1 + dt / 3600.0/dx1 * c.speed);
+            
+                F_t.setEntry(c.k_idx(), c.v_idx(), dt / 3600.0 /dx1 * c.density);
+            
+                F_t.setEntry(c.k_idx(), c.getPrev().k_idx(), - dt / 3600.0 /dx1 * c.getPrev().speed);
                 
-                F.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * -2 * v_ip_t / (2 * dx2));
+                F_t.setEntry(c.k_idx(), c.getPrev().v_idx(), - dt / 3600.0 /dx1 * c.getPrev().density);
+                
+              
+                
+                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt / 3600.0  * -2 * v_ip_t / (2 * dx2));
                         
-                F.setEntry(c.v_idx(), c.v_idx(), 1 + dt * 2 * v_i_t / (2 * dx2)  - 1/tau);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 + dt  / 3600.0 * 2 * v_i_t / (2 * dx2)  - 1/tau);
+               
             }
             else{
-                F.setEntry(c.v_idx(), c.v_idx(), - 1/tau);
+                F_t.setEntry(c.k_idx(), c.k_idx(), 1);
+            
+                F_t.setEntry(c.k_idx(), c.v_idx(), 0);
+                
+                F_t.setEntry(c.v_idx(), c.v_idx(), - 1/tau);
             }
             
             
             
             if(c.getNext() != null){
-                F.setEntry(c.v_idx(), c.k_idx(), dt * C / (k_i_t + chi) * 1/dx2 - 
-                        dt * (k_in_t - k_i_t)/dx2 * C / ((k_i_t + chi) * (k_i_t + chi))  );
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0  * C / (k_i_t + chi) * 1/dx2 - 
+                        dt / 3600.0  * (k_in_t - k_i_t)/dx2 * C / ((k_i_t + chi) * (k_i_t + chi))  );
                 
-                F.setEntry(c.v_idx(), c.getNext().k_idx(), c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi) * 1/dx2);
+                
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/3600 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi) * 1/dx2));
+  
             }
             else{
-                F.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0  * c.getLink().getDerivEqSpeed(k_in_t)/tau);
             }
         }
         
         
+        
         // moving on to next time step, so t -> tp
-        P_t_tp = F.multiply(P_t_t).multiply(F.transpose()).add(Q);
+        P_t_tp = F_t.multiply(P_t_t).multiply(F_t.transpose()).add(Q);
+        
+        
     }
     
     private double calcC(Cell cell){
@@ -206,8 +238,38 @@ public class Corridor {
  
     
     private void update(){
-        x_t_t = x_t_tp.copy();
-        P_t_t = P_t_tp.copy();
+        // obtain detector data
+        for(Cell c : cells){
+            if(c.hasDetector()){
+                // this is the measurement residual
+                double residual_k = c.getDetector().getLast30sDensity() - x_t_tp.getEntry(c.k_idx());
+                double residual_v = c.getDetector().getLast30sSpeed() - x_t_tp.getEntry(c.v_idx());
+                
+                y_t.setEntry(c.k_idx(), residual_k);
+                y_t.setEntry(c.v_idx(), residual_v);
+                
+                System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
+            }
+        }
+        
+        // H is the identity matrix
+        calcR();
+        RealMatrix S_t = P_t_tp.add(R_t);
+        
+        
+        
+        // Kalman gain
+        RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
+        
+        
+        System.out.println(x_t_tp);
+        x_t_t = x_t_tp.add(K_t.operate(y_t));
+        System.out.println(x_t_t);
+        
+        P_t_t = I.subtract(K_t).multiply(P_t_tp);
+        
+        
+        
     }
     
     private void saveValuesInCells(){
@@ -247,13 +309,16 @@ public class Corridor {
         
         for(Cell c : cells){
             if(c.hasDetector()){
-                R_t_t.setEntry(c.v_idx(), c.v_idx(), len_var * len_var / c.getDetector().getLast30sCount());
                 
-                double cov = c.getFlow() * (1 - len_mean * E_inv_len); 
-                R_t_t.setEntry(c.v_idx(), c.k_idx(), cov);
-                R_t_t.setEntry(c.k_idx(), c.v_idx(), cov);
+                double q = c.getDetector().getLast30sFlow();
                 
-                R_t_t.setEntry(c.k_idx(), c.k_idx(), c.getFlow() * variance_inv_len);
+                R_t.setEntry(c.v_idx(), c.v_idx(), len_var * len_var / c.getDetector().getLast30sCount());
+                
+                double cov = q * (1 - len_mean * E_inv_len); 
+                R_t.setEntry(c.v_idx(), c.k_idx(), cov);
+                R_t.setEntry(c.k_idx(), c.v_idx(), cov);
+                
+                R_t.setEntry(c.k_idx(), c.k_idx(), q * variance_inv_len);
             }
         }
     }

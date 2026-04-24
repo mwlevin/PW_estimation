@@ -25,12 +25,13 @@ public class Link {
     private List<Coordinate> coords;
     
     // dt in sec
-    public Link(double length, double dt, double v, double Q, double w, double K){
+    public Link(double length, double dt, double v, double Q, double w, double K, int numLanes){
         this.length = length;
         this.v = v;
         this.Q = Q;
         this.w = w;
         this.K = K;
+        this.numLanes = numLanes;
         
         double dx = v * dt / 3600.0;
         
@@ -49,6 +50,11 @@ public class Link {
         
     }
     
+    public Link(List<Coordinate> coords, double dt, double v, double Q, double w, double K, int numLanes){
+        this(calcLength(coords), dt, v, Q, w, K, numLanes);
+        this.coords = coords;
+    }
+    
     public void addDetector(double position, Detector det){
         assert(position > 0 && position < length);
         
@@ -59,10 +65,14 @@ public class Link {
     
     public double getEquilibriumSpeed(double k){
         
-        return  Math.min(k, Math.min(getQ() / k,  -w + w * getK()/k));
+        if(k == 0){
+            return v;
+        }
+        return  Math.min(v, Math.min(getQ() / k,  -w + w * getK()/k));
     }
     
     public double getDerivEqSpeed(double k){
+        
         if(v * k < getQ()){
             return 0;
         }
@@ -102,10 +112,7 @@ public class Link {
         return v;
     }
     
-    public Link(List<Coordinate> coords, double dt, double v, double Q, double w, double K){
-        this(calcLength(coords), dt, v, Q, w, K);
-        this.coords = coords;
-    }
+    
     
     public static double calcLength(List<Coordinate> coords){
         double total = 0;
