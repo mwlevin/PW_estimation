@@ -119,10 +119,7 @@ public class Corridor {
         
         Q = new Array2DRowRealMatrix(size, size);
         
-        for(Cell c : cells){
-            Q.setEntry(c.k_idx(), c.k_idx(), 5);
-            Q.setEntry(c.v_idx(), c.v_idx(), 1);
-        }
+        
     }
     
     public void nextTimestep(){
@@ -243,6 +240,7 @@ public class Corridor {
         }
         
         
+        calcQ();
         // moving on to next time step, so t -> tp
         P_t_tp = F_t.multiply(P_t_t).multiply(F_t.transpose()).add(Q);
         
@@ -284,9 +282,7 @@ public class Corridor {
         RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
         
         
-        System.out.println(x_t_tp);
         x_t_t = x_t_tp.add(K_t.operate(y_t));
-        System.out.println(x_t_t);
         
         P_t_t = I.subtract(K_t).multiply(P_t_tp);
         
@@ -342,6 +338,25 @@ public class Corridor {
                 
                 R_t.setEntry(c.k_idx(), c.k_idx(), q * variance_inv_len);
             }
+        }
+    }
+    
+    public void calcQ(){
+        
+        for(Cell c : cells){
+            
+            // covariance is likely negative: in congestion, larger k => smaller v
+            // this is variance due to FD not fully describing traffic evolution
+            // I don't know which values these should have
+            double scale = 1;
+            double var_k = 5 * scale;
+            double var_v = 1 * scale;
+            double cov = - var_k * var_v;
+            
+            Q.setEntry(c.k_idx(), c.k_idx(), var_k);
+            Q.setEntry(c.v_idx(), c.v_idx(), var_v);
+            Q.setEntry(c.k_idx(), c.v_idx(), cov);
+            Q.setEntry(c.v_idx(), c.k_idx(), cov);
         }
     }
 }

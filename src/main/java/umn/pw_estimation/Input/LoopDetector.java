@@ -19,7 +19,7 @@ public class LoopDetector extends Detector {
     }
     
     public double getLast30sSpeed(){
-        return 55;
+        return 65;
     }
     
     public double getLast30sDensity(){
