@@ -7,7 +7,7 @@ package umn.pw_estimation;
 import umn.pw_estimation.PW.Link;
 import org.apache.commons.math3.linear.RealMatrix;
 import umn.pw_estimation.PW.Corridor;
-import umn.pw_estimation.PW.LoopDetector;
+import umn.pw_estimation.Input.LoopDetector;
 /**
  *
  * @author mlevin
