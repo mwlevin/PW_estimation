@@ -12,10 +12,11 @@ import umn.pw_estimation.Input.Detector;
  */
 public class Cell {
     
-    protected double speed, density;
+    protected double speed, density, inflow, outflow;
     
     private int k_idx;
     private int v_idx;
+    private int inflow_idx, outflow_idx;
     
     private double length;
     
@@ -25,7 +26,7 @@ public class Cell {
     private Detector detector;
     
     // this refers to a detector on an entrance or exit that observes vehicles entering or exiting
-    private Detector inflow, outflow;
+    private Detector inflow_det, outflow_det;
     
     private Link link;
     
@@ -45,6 +46,24 @@ public class Cell {
         
         this.density = 0;
         this.speed = link.getFFSpeed();
+        
+        k_idx = -1;
+        v_idx = -1;
+        inflow_idx = -1;
+        outflow_idx = -1;
+    }
+    
+    public int getNumVariables(){
+        int count = 2;
+        
+        if(inflow_det != null){
+            count++;
+        }
+        if(outflow_det != null){
+            count++;
+        }
+        
+        return count;
     }
     
     public boolean hasDetector(){
@@ -58,28 +77,28 @@ public class Cell {
     
     
     
-    public void addInflow(Detector det){
-        this.inflow = det;
+    public void addInflowDet(Detector det){
+        this.inflow_det = det;
     }
     
-    public boolean hasInflow(){
-        return inflow != null;
+    public boolean hasInflowDet(){
+        return inflow_det != null;
     }
     
-    public Detector getInflow(){
-        return inflow;
+    public Detector getInflowDet(){
+        return inflow_det;
     }
     
-    public void addOutflow(Detector det){
-        this.outflow= det;
+    public void addOutflowDet(Detector det){
+        this.outflow_det = det;
     }
     
-    public boolean hasOutflow(){
-        return outflow != null;
+    public boolean hasOutflowDet(){
+        return outflow_det != null;
     }
     
-    public Detector getOutflow(){
-        return outflow;
+    public Detector getOutflowDet(){
+        return outflow_det;
     }
     
     
@@ -119,10 +138,42 @@ public class Cell {
         return v_idx;
     }
     
-    public void setIndices(int k_idx, int v_idx){
-        this.k_idx = k_idx;
-        this.v_idx = v_idx;
+    public int inflow_idx(){
+        return inflow_idx;
     }
+    
+    public int outflow_idx(){
+        return outflow_idx;
+    }
+    
+    public double getInflow(){
+        if(inflow_det != null){
+            return inflow_det.getLast30sCount();
+        }
+        
+        return 0;
+    }
+    
+    public double getOutflow(){
+        if(outflow_det != null){
+            return outflow_det.getLast30sCount();
+        }
+        return 0;
+    }
+    
+    public void set_k_idx(int idx){
+        k_idx = idx;
+    }
+    public void set_v_idx(int idx){
+        v_idx = idx;
+    }
+    public void set_inflow_idx(int idx){
+        inflow_idx = idx;
+    }
+    public void set_outflow_idx(int idx){
+        outflow_idx = idx;
+    }
+    
     
     protected double getFlow(){
         return speed * density;
