@@ -63,16 +63,21 @@ public class Corridor {
         
         cells = new Cell[total_size];
         
-        int idx = 0;
+        int var_idx = 0;
+        int cell_idx = 0;
         
         for(Link l : links){
             for(Cell c: l.cells){
-                cells[idx] = c;
+                cells[cell_idx++] = c;
+                c.set_k_idx(var_idx++);
+                c.set_v_idx(var_idx++);
                 
-                cells[idx].setIndices(idx*2, idx*2 + 1);
-
-                
-                idx++;
+                if(c.hasInflowDet()){
+                    c.set_inflow_idx(var_idx++);
+                }
+                if(c.hasOutflowDet()){
+                    c.set_outflow_idx(var_idx++);
+                }
             }
         }
     }
@@ -85,7 +90,12 @@ public class Corridor {
     public void init(){
         constructCells();
         
-        int size = cells.length*2;
+        int size = 0;
+
+        for(Cell c : cells){
+            size += c.getNumVariables();
+        }
+        
         
         time = System.currentTimeMillis();
         
@@ -104,6 +114,13 @@ public class Corridor {
             x_t_t.setEntry(c.k_idx(), c.density);
             x_t_t.setEntry(c.v_idx(), c.speed);
             
+            if(c.hasInflowDet()){
+                x_t_t.setEntry(c.inflow_idx(), c.getInflow());
+            }
+            
+            if(c.hasOutflowDet()){
+                x_t_t.setEntry(c.outflow_idx(), c.getOutflow());
+            }
         }
         
         F_t = new Array2DRowRealMatrix(size, size);
@@ -150,18 +167,20 @@ public class Corridor {
             
             double k_i_t = c.density;
             
-            double added_flow = 0;
+            double inflow = 0;
+            double outflow = 0;
             
-            if(c.hasInflow()){
-                added_flow += c.getInflow().getLast30sFlow();
+            if(c.hasInflowDet()){
+                inflow = c.inflow;
             }
-            if(c.hasOutflow()){
-                added_flow -= c.getOutflow().getLast30sFlow();
+            if(c.hasOutflowDet()){
+                outflow = c.outflow;
             }
+
             
             // assume added flow enters cell, so it increases occupancy (increases density)
             // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
-            k_i_t += added_flow / c.getLength();
+            k_i_t += (inflow - outflow) / c.getLength();
             
 
             double v_i_t = c.speed;
@@ -194,11 +213,25 @@ public class Corridor {
 
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
-  
+            
+            if(c.hasInflowDet()){
+                x_t_tp.setEntry(c.inflow_idx(), inflow);
+            }
+            if(c.hasOutflowDet()){
+                x_t_tp.setEntry(c.outflow_idx(), outflow);
+            }
             
             // now need to calculate F, which is the Jacobian matrix of df/dx where f is the PW state update equation
             
- 
+            if(c.hasInflowDet()){
+                F_t.setEntry(c.inflow_idx(), c.inflow_idx(), 1);
+                F_t.setEntry(c.k_idx(), c.inflow_idx(), 1.0 / c.getLength());
+            }
+            
+            if(c.hasOutflowDet()){
+                F_t.setEntry(c.outflow_idx(), c.outflow_idx(), 1);
+                F_t.setEntry(c.k_idx(), c.outflow_idx(), -1.0 / c.getLength());
+            }
             
             if(c.getPrev() != null){
                 F_t.setEntry(c.k_idx(), c.k_idx(), 1 + dt / 3600.0/dx1 * c.speed);
@@ -264,6 +297,15 @@ public class Corridor {
                 y_t.setEntry(c.k_idx(), residual_k);
                 y_t.setEntry(c.v_idx(), residual_v);
                 
+                if(c.hasInflowDet()){
+                    double residual_inflow = c.getInflow() - x_t_tp.getEntry(c.inflow_idx());
+                    y_t.setEntry(c.inflow_idx(), residual_inflow);
+                }
+                if(c.hasOutflowDet()){
+                    double residual_outflow = c.getOutflow() - x_t_tp.getEntry(c.outflow_idx());
+                    y_t.setEntry(c.outflow_idx(), residual_outflow);
+                }
+                
                 //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
             }
         }
@@ -294,6 +336,13 @@ public class Corridor {
         for(Cell c : cells){
             c.density = x_t_t.getEntry(c.k_idx());
             c.speed = x_t_t.getEntry(c.v_idx());
+            
+            if(c.hasInflowDet()){
+                c.inflow = x_t_t.getEntry(c.inflow_idx());
+            }
+            if(c.hasOutflowDet()){
+                c.outflow = x_t_t.getEntry(c.outflow_idx());
+            }
         }
     }
     
@@ -330,6 +379,15 @@ public class Corridor {
                 
                 double q = c.getDetector().getLast30sFlow();
                 
+                // inflow/outflow is handled by a different detector, so assume 0 covariance
+                // also assume 0 variance (perfect information)
+                if(c.hasInflowDet()){
+                    R_t.setEntry(c.inflow_idx(), c.inflow_idx(), 0);
+                }
+                if(c.hasOutflowDet()){
+                    R_t.setEntry(c.outflow_idx(), c.outflow_idx(), 0);
+                }
+                
                 R_t.setEntry(c.v_idx(), c.v_idx(), len_var * len_var / c.getDetector().getLast30sCount());
                 
                 double cov = q * (1 - len_mean * E_inv_len); 
@@ -353,10 +411,21 @@ public class Corridor {
             double var_v = 1 * scale;
             double cov = - var_k * var_v;
             
+            double cov_inflow = 5 * scale;
+            
             Q.setEntry(c.k_idx(), c.k_idx(), var_k);
             Q.setEntry(c.v_idx(), c.v_idx(), var_v);
             Q.setEntry(c.k_idx(), c.v_idx(), cov);
             Q.setEntry(c.v_idx(), c.k_idx(), cov);
+            
+            // inflow/outflow is a separate detector and behavior so assume 0 covariance
+            if(c.hasInflowDet()){
+                Q.setEntry(c.inflow_idx(), c.inflow_idx(), scale);
+            }
+            
+            if(c.hasOutflowDet()){
+                Q.setEntry(c.outflow_idx(), c.outflow_idx(), scale);
+            }
         }
     }
 }
