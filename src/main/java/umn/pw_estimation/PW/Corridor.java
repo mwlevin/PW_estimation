@@ -4,14 +4,23 @@
  */
 package umn.pw_estimation.PW;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import umn.pw_estimation.Input.Detector;
+import umn.pw_estimation.Input.DetectorGroup;
+import umn.pw_estimation.Input.LoopDetector;
 
 /**
  *
@@ -36,6 +45,11 @@ public class Corridor {
         this.dt = dt;
     }
     
+    public Corridor(List<Link> links, double dt){
+        this.links = links;
+        this.dt = dt;
+    }
+    
     public Corridor(Link[] input, double dt){
         this(dt);
         
@@ -44,6 +58,169 @@ public class Corridor {
             links.add(l);
         }
     }
+    
+    static private final double AVG_VEH_LEN = 27.6;
+    
+    private static double getCapacity(double ffspeed){
+
+        //HCM
+        return Math.min(2400, 2200 + 10 * (ffspeed - 50));
+    }
+    public static double getW(double ffspeed){
+        return ffspeed/2;
+    }
+
+    private static double getFFSpeed(double speed_limit){
+        return speed_limit + 5;
+    }
+    
+    public static Map<String, Corridor> readOSM(File osm_file, double dt, String[] labels, File detectors_file, String[] detector_labels) throws IOException {
+        
+        double K = 5280.0/AVG_VEH_LEN;
+                
+        Map<String, List<Link>> links = new HashMap<>();
+        
+        for(String l : labels){
+            links.put(l, new ArrayList<>());
+        }
+        
+        
+        Scanner filein = new Scanner(osm_file);
+        
+        while(filein.hasNextLine()){
+            if(filein.nextLine().trim().equals("\"type\": \"way\",")){
+                
+                
+                String temp = filein.nextLine();
+                int id = Integer.parseInt(temp.substring(temp.indexOf(":")+1, temp.indexOf(",")).trim());
+                
+                while(filein.nextLine().indexOf("geometry") < 0);
+                
+                List<Coordinate> coords = new ArrayList<>();
+                
+                
+                while(true){
+                    temp = filein.nextLine();
+                    
+                    if(temp.indexOf("lat") < 0){
+                        break;
+                    }
+                    
+                    double lat = Double.parseDouble(temp.substring(temp.indexOf(":")+1, temp.indexOf(",")).trim());
+                    temp = temp.substring(temp.indexOf(",")+1);
+                    double lon = Double.parseDouble(temp.substring(temp.indexOf(":")+1, temp.indexOf("}")).trim());
+                    
+                    coords.add(new Coordinate(lat, lon));
+                }
+                
+                while(filein.nextLine().indexOf("tags") < 0);
+                
+                Map<String, String> tags = new HashMap<>();
+                while(true){
+                    temp = filein.nextLine();
+                    if(temp.indexOf(":") < 0){
+                        break;
+                    }
+                    
+                    String key = temp.substring(0, temp.indexOf("\":")+1);
+                    
+                    key = key.substring(key.indexOf("\"")+1);
+                    
+                    key = key.substring(0, key.indexOf("\"")).trim();
+                    
+                    String value = temp.substring(temp.indexOf(":")+1);
+                    value = value.substring(value.indexOf("\"")+1);
+                    value = value.substring(0, value.indexOf("\"")).trim();
+                    
+                    tags.put(key, value);
+                }
+                
+                int lanes = tags.containsKey("lanes")? Integer.parseInt(tags.get("lanes")) : 3;
+                
+                int speed_limit = 65;
+                
+                if(tags.containsKey("maxspeed")){
+                    temp = tags.get("maxspeed");
+                    temp = temp.substring(0, temp.indexOf("mph")).trim();
+                    speed_limit = Integer.parseInt(temp);
+                }
+
+                String label = null;
+                for(String l : labels){
+                    if(tags.containsKey("description") && tags.get("description").indexOf(l) >= 0){
+                        label = l;
+                        break;
+                    }
+                }
+                
+                double v = getFFSpeed(speed_limit);
+                double Q = getCapacity(v);
+                double w = getW(v);
+                
+                Link link = new Link(""+id, coords, dt, v, Q, w, K, lanes);
+                
+                if(label != null){
+                    links.get(label).add(link);
+                }
+            }
+        }
+        
+        filein.close();
+        
+        Map<String, Corridor> output = new HashMap<>();
+        
+        for(String l : labels){
+            output.put(l, new Corridor(links.get(l), dt));
+        }
+        
+        filein = new Scanner(detectors_file);
+        
+        filein.nextLine();
+        
+        Map<String, List<Detector>> detectors = new HashMap<>();
+        
+        while(filein.hasNext()){
+            String[] columns = filein.nextLine().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            
+            
+            String name = columns[2];
+          
+            String location = columns[9];
+            
+            
+            int lane = Integer.parseInt(columns[10]);
+            
+
+            
+            double lat = Double.parseDouble(columns[15]);
+            double lon = Double.parseDouble(columns[16]);
+            
+            LoopDetector loop = new LoopDetector(name, new Coordinate(lat, lon));
+            if(!detectors.containsKey(location)){
+                detectors.put(location, new ArrayList<>());
+            }
+            detectors.get(location).add(loop);
+            
+            filein.nextLine();
+        }
+        
+        for(String name : detectors.keySet()){
+            DetectorGroup group = new DetectorGroup(name, detectors.get(name));
+            
+            for(int i = 0; i < detector_labels.length; i++){
+                if(name.indexOf(detector_labels[i]) >= 0){
+                    output.get(labels[i]).addDetector(group);
+                    break;
+                }
+            }
+        }
+        
+        
+        
+        return output; 
+    }
+    
+    
     
     private void constructCells(){
         
@@ -427,5 +604,15 @@ public class Corridor {
                 Q.setEntry(c.outflow_idx(), c.outflow_idx(), scale);
             }
         }
+    }
+    
+    public boolean addDetector(Detector det){
+        for(Link l : links){
+            if(l.addDetector(det)){
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

@@ -23,10 +23,12 @@ public class Link {
     private double length; // units of miles
     private double cell_len;
     
+    private String name;
+    
     private List<Coordinate> coords;
     
     // dt in sec
-    public Link(double length, double dt, double v, double Q, double w, double K, int numLanes){
+    public Link(String name, double length, double dt, double v, double Q, double w, double K, int numLanes){
         this.length = length;
         this.v = v;
         this.Q = Q;
@@ -51,15 +53,40 @@ public class Link {
         
     }
     
-    public Link(List<Coordinate> coords, double dt, double v, double Q, double w, double K, int numLanes){
-        this(calcLength(coords), dt, v, Q, w, K, numLanes);
+    public Link(String name, List<Coordinate> coords, double dt, double v, double Q, double w, double K, int numLanes){
+        this(name, calcLength(coords), dt, v, Q, w, K, numLanes);
         this.coords = coords;
+    }
+    
+    public boolean addDetector(Detector det){
+
+        Coordinate location = det.getLocation();
+        
+        // also need to determine whether detector is on link
+        for(int i = 0; i < coords.size()-1; i++){
+            // detector should be almost in a straight line on the road
+            
+            double dist1 = Coordinate.dist(coords.get(i), location);
+            double dist2 = Coordinate.dist(location, coords.get(i+1));
+            double total_dist = Coordinate.dist(coords.get(i), coords.get(i+1));
+            
+            
+            // admit 200ft error for curvature, road coordinate differences, etc.
+            // if dist1 + dist2 < total_dist means it is outside of the link
+            if(Math.abs((dist1 + dist2 - total_dist)*5280) <= 200){
+                // now need to compute distance along road
+                addDetector(dist1 + calcLength(coords, i), det);
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     public void addDetector(double position, Detector det){
         assert(position > 0 && position < length);
         
-        int cell_idx = (int)Math.ceil(position / cell_len);
+        int cell_idx = (int)Math.min(cell_len-1, Math.ceil(position / cell_len));
         
         cells[cell_idx].setDetector(det);
     }
@@ -114,11 +141,14 @@ public class Link {
     }
     
     
-    
     public static double calcLength(List<Coordinate> coords){
+        return calcLength(coords, coords.size()-1);
+    }
+    
+    public static double calcLength(List<Coordinate> coords, int stop_idx){
         double total = 0;
         
-        for(int i = 0; i < coords.size()-1; i++){
+        for(int i = 0; i < stop_idx; i++){
             total += Coordinate.dist(coords.get(i), coords.get(i+1));
         }
         
@@ -133,5 +163,9 @@ public class Link {
     
     public int size(){
         return cells.length;
+    }
+    
+    public String toString(){
+        return ""+name;
     }
 }
