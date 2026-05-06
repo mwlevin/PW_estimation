@@ -4,6 +4,8 @@
  */
 package umn.pw_estimation.Input;
 
+import umn.pw_estimation.PW.Coordinate;
+
 /**
  *
  * @author mlevin
@@ -16,6 +18,7 @@ public abstract class Detector {
         this.name = name;
     }
     
+    public abstract Coordinate getLocation();
     
     
     public String getName(){

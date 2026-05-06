@@ -4,6 +4,9 @@
  */
 package umn.pw_estimation.Input;
 
+import java.util.List;
+import umn.pw_estimation.PW.Coordinate;
+
 /**
  *
  * @author mlevin
@@ -14,6 +17,20 @@ public class DetectorGroup extends Detector{
     public DetectorGroup(Detector[] detectors){
         super(createName(detectors));
         this.detectors = detectors;
+    }
+    
+    public DetectorGroup(String name, List<Detector> list){
+        super(name);
+        this.detectors = new Detector[list.size()];
+        
+        for(int i = 0; i < list.size(); i++){
+            detectors[i] = list.get(i);
+        }
+    }
+    
+    public Coordinate getLocation(){
+        // locations should be very close - within 60 feet
+        return detectors[0].getLocation();
     }
     
     public int getLast30sCount(){
@@ -34,7 +51,7 @@ public class DetectorGroup extends Detector{
         return output/weight;
     }
     
-    public static String createName(Detector[] detectors){
+    public static String createName(Detector... detectors){
         String output = "[";
         
         for(int i = 0; i < detectors.length; i++){

@@ -4,14 +4,23 @@
  */
 package umn.pw_estimation.Input;
 
+import umn.pw_estimation.PW.Coordinate;
+
 /**
  *
  * @author mlevin
  */
 public class LoopDetector extends Detector {
     
-    public LoopDetector(String name){
+    private Coordinate loc;
+    
+    public LoopDetector(String name, Coordinate loc){
         super(name);
+        this.loc = loc;
+    }
+    
+    public Coordinate getLocation(){
+        return loc;
     }
     
     public int getLast30sCount(){
