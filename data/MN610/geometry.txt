@@ -1,0 +1,3898 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-04-15T13:12:46Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 18008094,
+  "bounds": {
+    "minlat": 45.1422452,
+    "minlon": -93.2655064,
+    "maxlat": 45.1432284,
+    "maxlon": -93.2600342
+  },
+  "nodes": [
+    186244640,
+    1989407722,
+    9950335697,
+    186307434,
+    9950335696,
+    186307436,
+    9950335695,
+    186307438,
+    186307440
+  ],
+  "geometry": [
+    { "lat": 45.1422452, "lon": -93.2600342 },
+    { "lat": 45.1426876, "lon": -93.2615945 },
+    { "lat": 45.1428283, "lon": -93.2621864 },
+    { "lat": 45.1429550, "lon": -93.2627850 },
+    { "lat": 45.1430707, "lon": -93.2635287 },
+    { "lat": 45.1431580, "lon": -93.2642750 },
+    { "lat": 45.1432012, "lon": -93.2648327 },
+    { "lat": 45.1432230, "lon": -93.2653009 },
+    { "lat": 45.1432284, "lon": -93.2655064 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 18012692,
+  "bounds": {
+    "minlat": 45.1425354,
+    "minlon": -93.2705736,
+    "maxlat": 45.1425608,
+    "maxlon": -93.2695950
+  },
+  "nodes": [
+    260700381,
+    186264851
+  ],
+  "geometry": [
+    { "lat": 45.1425608, "lon": -93.2705736 },
+    { "lat": 45.1425354, "lon": -93.2695950 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 22935947,
+  "bounds": {
+    "minlat": 45.1275658,
+    "minlon": -93.3003403,
+    "maxlat": 45.1281585,
+    "maxlon": -93.2998902
+  },
+  "nodes": [
+    247071892,
+    247071893
+  ],
+  "geometry": [
+    { "lat": 45.1281585, "lon": -93.2998902 },
+    { "lat": 45.1275658, "lon": -93.3003403 }
+  ],
+  "tags": {
+    "description": "westbound 610.; westbound 610",
+    "destination:lanes": "||Minneapolis|Minneapolis",
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "asphalt",
+    "turn:lanes": "||slight_right|slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 22935964,
+  "bounds": {
+    "minlat": 45.1281585,
+    "minlon": -93.2998902,
+    "maxlat": 45.1313796,
+    "maxlon": -93.2974587
+  },
+  "nodes": [
+    260700536,
+    7086908382,
+    247071892
+  ],
+  "geometry": [
+    { "lat": 45.1313796, "lon": -93.2974587 },
+    { "lat": 45.1306773, "lon": -93.2979796 },
+    { "lat": 45.1281585, "lon": -93.2998902 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "description": "westbound 610",
+    "highway": "motorway",
+    "lanes": "4",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 24001779,
+  "bounds": {
+    "minlat": 45.1396034,
+    "minlon": -93.2879101,
+    "maxlat": 45.1396825,
+    "maxlon": -93.2877198
+  },
+  "nodes": [
+    186307395,
+    260252128
+  ],
+  "geometry": [
+    { "lat": 45.1396034, "lon": -93.2879101 },
+    { "lat": 45.1396825, "lon": -93.2877198 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "tiger:cfcc": "A35",
+    "tiger:county": "Anoka, MN",
+    "tiger:name_base": "State Highway 610",
+    "tiger:name_base_1": "State Highway 252",
+    "tiger:reviewed": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 24001781,
+  "bounds": {
+    "minlat": 45.1386263,
+    "minlon": -93.2901896,
+    "maxlat": 45.1396034,
+    "maxlon": -93.2879101
+  },
+  "nodes": [
+    260700487,
+    186307396,
+    186307395
+  ],
+  "geometry": [
+    { "lat": 45.1386263, "lon": -93.2901896 },
+    { "lat": 45.1390211, "lon": -93.2892915 },
+    { "lat": 45.1396034, "lon": -93.2879101 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24001786,
+  "bounds": {
+    "minlat": 45.1397544,
+    "minlon": -93.2879916,
+    "maxlat": 45.1398814,
+    "maxlon": -93.2876864
+  },
+  "nodes": [
+    260252174,
+    260252175
+  ],
+  "geometry": [
+    { "lat": 45.1398814, "lon": -93.2876864 },
+    { "lat": 45.1397544, "lon": -93.2879916 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24001787,
+  "bounds": {
+    "minlat": 45.1388127,
+    "minlon": -93.2902367,
+    "maxlat": 45.1393130,
+    "maxlon": -93.2890419
+  },
+  "nodes": [
+    1816220983,
+    186307475,
+    260700489
+  ],
+  "geometry": [
+    { "lat": 45.1393130, "lon": -93.2890419 },
+    { "lat": 45.1391490, "lon": -93.2894299 },
+    { "lat": 45.1388127, "lon": -93.2902367 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038466,
+  "bounds": {
+    "minlat": 45.1431915,
+    "minlon": -93.2672430,
+    "maxlat": 45.1432416,
+    "maxlon": -93.2655064
+  },
+  "nodes": [
+    186307440,
+    623638730,
+    260700102
+  ],
+  "geometry": [
+    { "lat": 45.1432284, "lon": -93.2655064 },
+    { "lat": 45.1432416, "lon": -93.2661698 },
+    { "lat": 45.1431915, "lon": -93.2672430 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038467,
+  "bounds": {
+    "minlat": 45.1429975,
+    "minlon": -93.2695812,
+    "maxlat": 45.1431915,
+    "maxlon": -93.2672430
+  },
+  "nodes": [
+    260700102,
+    9950335689,
+    260700408
+  ],
+  "geometry": [
+    { "lat": 45.1431915, "lon": -93.2672430 },
+    { "lat": 45.1431316, "lon": -93.2680948 },
+    { "lat": 45.1429975, "lon": -93.2695812 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038497,
+  "bounds": {
+    "minlat": 45.1424038,
+    "minlon": -93.2671926,
+    "maxlat": 45.1424593,
+    "maxlon": -93.2662863
+  },
+  "nodes": [
+    186342734,
+    9950335678,
+    186231838
+  ],
+  "geometry": [
+    { "lat": 45.1424593, "lon": -93.2671926 },
+    { "lat": 45.1424363, "lon": -93.2667443 },
+    { "lat": 45.1424038, "lon": -93.2662863 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038498,
+  "bounds": {
+    "minlat": 45.1422404,
+    "minlon": -93.2662863,
+    "maxlat": 45.1424038,
+    "maxlon": -93.2646393
+  },
+  "nodes": [
+    186231838,
+    186342737,
+    1380588629
+  ],
+  "geometry": [
+    { "lat": 45.1424038, "lon": -93.2662863 },
+    { "lat": 45.1423125, "lon": -93.2652492 },
+    { "lat": 45.1422404, "lon": -93.2646393 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038501,
+  "bounds": {
+    "minlat": 45.1424930,
+    "minlon": -93.2695950,
+    "maxlat": 45.1425354,
+    "maxlon": -93.2682038
+  },
+  "nodes": [
+    186264851,
+    260700351
+  ],
+  "geometry": [
+    { "lat": 45.1425354, "lon": -93.2695950 },
+    { "lat": 45.1424930, "lon": -93.2682038 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none|none;University Avenue",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 24038503,
+  "bounds": {
+    "minlat": 45.1408860,
+    "minlon": -93.2848650,
+    "maxlat": 45.1425596,
+    "maxlon": -93.2796469
+  },
+  "nodes": [
+    186232712,
+    186307390,
+    9950335679,
+    186307388,
+    186307386,
+    186307385,
+    186307384
+  ],
+  "geometry": [
+    { "lat": 45.1408860, "lon": -93.2848650 },
+    { "lat": 45.1415660, "lon": -93.2832310 },
+    { "lat": 45.1418112, "lon": -93.2826087 },
+    { "lat": 45.1420260, "lon": -93.2819800 },
+    { "lat": 45.1422118, "lon": -93.2813464 },
+    { "lat": 45.1423970, "lon": -93.2805820 },
+    { "lat": 45.1425596, "lon": -93.2796469 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038506,
+  "bounds": {
+    "minlat": 45.1428216,
+    "minlon": -93.2787385,
+    "maxlat": 45.1429220,
+    "maxlon": -93.2706686
+  },
+  "nodes": [
+    260700407,
+    9950335688,
+    186307450,
+    9950335687,
+    8993602101,
+    186307454,
+    186307457,
+    704988313,
+    704988314,
+    704988302
+  ],
+  "geometry": [
+    { "lat": 45.1429087, "lon": -93.2706686 },
+    { "lat": 45.1428607, "lon": -93.2715617 },
+    { "lat": 45.1428350, "lon": -93.2724280 },
+    { "lat": 45.1428216, "lon": -93.2732298 },
+    { "lat": 45.1428304, "lon": -93.2740099 },
+    { "lat": 45.1428837, "lon": -93.2759366 },
+    { "lat": 45.1429120, "lon": -93.2768050 },
+    { "lat": 45.1429220, "lon": -93.2774891 },
+    { "lat": 45.1429125, "lon": -93.2781154 },
+    { "lat": 45.1428794, "lon": -93.2787385 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038507,
+  "bounds": {
+    "minlat": 45.1429087,
+    "minlon": -93.2706686,
+    "maxlat": 45.1429975,
+    "maxlon": -93.2695812
+  },
+  "nodes": [
+    260700408,
+    260700407
+  ],
+  "geometry": [
+    { "lat": 45.1429975, "lon": -93.2695812 },
+    { "lat": 45.1429087, "lon": -93.2706686 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038514,
+  "bounds": {
+    "minlat": 45.1311327,
+    "minlon": -93.2972933,
+    "maxlat": 45.1350579,
+    "maxlon": -93.2943193
+  },
+  "nodes": [
+    186307410,
+    7123562169,
+    7123562170,
+    7123562171,
+    7123562172,
+    186202358
+  ],
+  "geometry": [
+    { "lat": 45.1311327, "lon": -93.2972933 },
+    { "lat": 45.1322075, "lon": -93.2964789 },
+    { "lat": 45.1331765, "lon": -93.2957468 },
+    { "lat": 45.1340141, "lon": -93.2951142 },
+    { "lat": 45.1345961, "lon": -93.2946749 },
+    { "lat": 45.1350579, "lon": -93.2943193 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none|none|Coon Rapids Boulevard;East River Road",
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "none|none|none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 24038515,
+  "bounds": {
+    "minlat": 45.1383468,
+    "minlon": -93.2907200,
+    "maxlat": 45.1386263,
+    "maxlon": -93.2901896
+  },
+  "nodes": [
+    260700486,
+    260700487
+  ],
+  "geometry": [
+    { "lat": 45.1383468, "lon": -93.2907200 },
+    { "lat": 45.1386263, "lon": -93.2901896 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 24038516,
+  "bounds": {
+    "minlat": 45.1340800,
+    "minlon": -93.2954192,
+    "maxlat": 45.1384886,
+    "maxlon": -93.2909131
+  },
+  "nodes": [
+    260700488,
+    186307481,
+    9950335683,
+    186307484,
+    9950335682,
+    186307486,
+    186307488,
+    9950335681,
+    186231861
+  ],
+  "geometry": [
+    { "lat": 45.1384886, "lon": -93.2909131 },
+    { "lat": 45.1382351, "lon": -93.2913776 },
+    { "lat": 45.1379030, "lon": -93.2919068 },
+    { "lat": 45.1375450, "lon": -93.2924030 },
+    { "lat": 45.1372354, "lon": -93.2927851 },
+    { "lat": 45.1369060, "lon": -93.2931340 },
+    { "lat": 45.1363795, "lon": -93.2936357 },
+    { "lat": 45.1344833, "lon": -93.2950801 },
+    { "lat": 45.1340800, "lon": -93.2954192 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038517,
+  "bounds": {
+    "minlat": 45.1384886,
+    "minlon": -93.2909131,
+    "maxlat": 45.1388127,
+    "maxlon": -93.2902367
+  },
+  "nodes": [
+    260700489,
+    260700488
+  ],
+  "geometry": [
+    { "lat": 45.1388127, "lon": -93.2902367 },
+    { "lat": 45.1384886, "lon": -93.2909131 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 24038535,
+  "bounds": {
+    "minlat": 45.1280168,
+    "minlon": -93.2996477,
+    "maxlat": 45.1311327,
+    "maxlon": -93.2972933
+  },
+  "nodes": [
+    247071872,
+    186307419,
+    186307417,
+    186307415,
+    186307412,
+    7123527756,
+    186307410
+  ],
+  "geometry": [
+    { "lat": 45.1280168, "lon": -93.2996477 },
+    { "lat": 45.1287426, "lon": -93.2991007 },
+    { "lat": 45.1292504, "lon": -93.2987137 },
+    { "lat": 45.1295787, "lon": -93.2984683 },
+    { "lat": 45.1298759, "lon": -93.2982450 },
+    { "lat": 45.1303100, "lon": -93.2979120 },
+    { "lat": 45.1311327, "lon": -93.2972933 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "4",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 56177932,
+  "bounds": {
+    "minlat": 45.1398814,
+    "minlon": -93.2876864,
+    "maxlat": 45.1427451,
+    "maxlon": -93.2798748
+  },
+  "nodes": [
+    186307465,
+    9950335686,
+    186307467,
+    9950335685,
+    186307469,
+    186307471,
+    186232714,
+    260252174
+  ],
+  "geometry": [
+    { "lat": 45.1427451, "lon": -93.2798748 },
+    { "lat": 45.1426665, "lon": -93.2803309 },
+    { "lat": 45.1425714, "lon": -93.2807765 },
+    { "lat": 45.1424403, "lon": -93.2812987 },
+    { "lat": 45.1423054, "lon": -93.2817631 },
+    { "lat": 45.1419572, "lon": -93.2827477 },
+    { "lat": 45.1410150, "lon": -93.2849921 },
+    { "lat": 45.1398814, "lon": -93.2876864 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 56177933,
+  "bounds": {
+    "minlat": 45.1427451,
+    "minlon": -93.2798748,
+    "maxlat": 45.1428794,
+    "maxlon": -93.2787385
+  },
+  "nodes": [
+    704988302,
+    186307459,
+    704988303,
+    186307465
+  ],
+  "geometry": [
+    { "lat": 45.1428794, "lon": -93.2787385 },
+    { "lat": 45.1428525, "lon": -93.2790214 },
+    { "lat": 45.1428167, "lon": -93.2793303 },
+    { "lat": 45.1427451, "lon": -93.2798748 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 56177934,
+  "bounds": {
+    "minlat": 45.1425822,
+    "minlon": -93.2785414,
+    "maxlat": 45.1427478,
+    "maxlon": -93.2710923
+  },
+  "nodes": [
+    186307378,
+    186307376,
+    186307374,
+    186307372,
+    186307371,
+    186307369,
+    186307367,
+    260700369
+  ],
+  "geometry": [
+    { "lat": 45.1426940, "lon": -93.2785414 },
+    { "lat": 45.1427251, "lon": -93.2779386 },
+    { "lat": 45.1427478, "lon": -93.2772090 },
+    { "lat": 45.1427311, "lon": -93.2763872 },
+    { "lat": 45.1426940, "lon": -93.2753550 },
+    { "lat": 45.1426702, "lon": -93.2744632 },
+    { "lat": 45.1426323, "lon": -93.2731328 },
+    { "lat": 45.1425822, "lon": -93.2710923 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none|University Avenue;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|none|through;right"
+  }
+},
+{
+  "type": "way",
+  "id": 56177935,
+  "bounds": {
+    "minlat": 45.1425596,
+    "minlon": -93.2796469,
+    "maxlat": 45.1426940,
+    "maxlon": -93.2785414
+  },
+  "nodes": [
+    186307384,
+    704988309,
+    704988310,
+    186307378
+  ],
+  "geometry": [
+    { "lat": 45.1425596, "lon": -93.2796469 },
+    { "lat": 45.1426171, "lon": -93.2792950 },
+    { "lat": 45.1426582, "lon": -93.2789085 },
+    { "lat": 45.1426940, "lon": -93.2785414 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 118337603,
+  "bounds": {
+    "minlat": 45.1260404,
+    "minlon": -93.3631269,
+    "maxlat": 45.1292138,
+    "maxlon": -93.3486635
+  },
+  "nodes": [
+    536674278,
+    536674279,
+    536674280,
+    536674281,
+    536674282,
+    536674284,
+    7123132614,
+    7123132615,
+    7123132616,
+    7123349831,
+    7123349832,
+    2637665647,
+    536674160
+  ],
+  "geometry": [
+    { "lat": 45.1292138, "lon": -93.3631269 },
+    { "lat": 45.1291391, "lon": -93.3626614 },
+    { "lat": 45.1290451, "lon": -93.3621025 },
+    { "lat": 45.1289389, "lon": -93.3615505 },
+    { "lat": 45.1288808, "lon": -93.3612610 },
+    { "lat": 45.1288233, "lon": -93.3609879 },
+    { "lat": 45.1285705, "lon": -93.3598820 },
+    { "lat": 45.1278524, "lon": -93.3567125 },
+    { "lat": 45.1276485, "lon": -93.3557942 },
+    { "lat": 45.1270308, "lon": -93.3530397 },
+    { "lat": 45.1266502, "lon": -93.3513562 },
+    { "lat": 45.1264204, "lon": -93.3503442 },
+    { "lat": 45.1260404, "lon": -93.3486635 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 118337674,
+  "bounds": {
+    "minlat": 45.1238294,
+    "minlon": -93.3313189,
+    "maxlat": 45.1239656,
+    "maxlon": -93.3288089
+  },
+  "nodes": [
+    247809873,
+    247809874,
+    9164989095
+  ],
+  "geometry": [
+    { "lat": 45.1238294, "lon": -93.3288089 },
+    { "lat": 45.1238932, "lon": -93.3299096 },
+    { "lat": 45.1239656, "lon": -93.3313189 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52"
+  }
+},
+{
+  "type": "way",
+  "id": 122140994,
+  "bounds": {
+    "minlat": 45.1302717,
+    "minlon": -93.4013166,
+    "maxlat": 45.1303964,
+    "maxlon": -93.3920830
+  },
+  "nodes": [
+    536653554,
+    12378395845,
+    1365567416,
+    7047439402,
+    1365567276,
+    1365567399,
+    7047456005,
+    1365567398
+  ],
+  "geometry": [
+    { "lat": 45.1302717, "lon": -93.3920830 },
+    { "lat": 45.1302806, "lon": -93.3927852 },
+    { "lat": 45.1302759, "lon": -93.3935742 },
+    { "lat": 45.1303020, "lon": -93.3949581 },
+    { "lat": 45.1303178, "lon": -93.3966915 },
+    { "lat": 45.1303405, "lon": -93.3985520 },
+    { "lat": 45.1303603, "lon": -93.3998774 },
+    { "lat": 45.1303964, "lon": -93.4013166 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "cycleway": "no",
+    "foot": "no",
+    "highway": "motorway",
+    "horse": "no",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 123936499,
+  "bounds": {
+    "minlat": 45.1313796,
+    "minlon": -93.2974587,
+    "maxlat": 45.1340800,
+    "maxlon": -93.2954192
+  },
+  "nodes": [
+    186231861,
+    186307490,
+    260700536
+  ],
+  "geometry": [
+    { "lat": 45.1340800, "lon": -93.2954192 },
+    { "lat": 45.1319412, "lon": -93.2970325 },
+    { "lat": 45.1313796, "lon": -93.2974587 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 123936500,
+  "bounds": {
+    "minlat": 45.1257441,
+    "minlon": -93.3013672,
+    "maxlat": 45.1280168,
+    "maxlon": -93.2996477
+  },
+  "nodes": [
+    247070757,
+    7123527754,
+    7123527755,
+    247071871,
+    247071872
+  ],
+  "geometry": [
+    { "lat": 45.1257441, "lon": -93.3013672 },
+    { "lat": 45.1265649, "lon": -93.3007438 },
+    { "lat": 45.1270933, "lon": -93.3003411 },
+    { "lat": 45.1275101, "lon": -93.3000260 },
+    { "lat": 45.1280168, "lon": -93.2996477 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 123936502,
+  "bounds": {
+    "minlat": 45.1369359,
+    "minlon": -93.2926961,
+    "maxlat": 45.1383468,
+    "maxlon": -93.2907200
+  },
+  "nodes": [
+    1380588627,
+    186307406,
+    7123566606,
+    7123566607,
+    186307404,
+    7123566608,
+    260700486
+  ],
+  "geometry": [
+    { "lat": 45.1369359, "lon": -93.2926961 },
+    { "lat": 45.1372772, "lon": -93.2923182 },
+    { "lat": 45.1375519, "lon": -93.2919680 },
+    { "lat": 45.1377943, "lon": -93.2916166 },
+    { "lat": 45.1379878, "lon": -93.2913232 },
+    { "lat": 45.1381734, "lon": -93.2910262 },
+    { "lat": 45.1383468, "lon": -93.2907200 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 123936504,
+  "bounds": {
+    "minlat": 45.1241092,
+    "minlon": -93.3032501,
+    "maxlat": 45.1275658,
+    "maxlon": -93.3003403
+  },
+  "nodes": [
+    247071893,
+    247068975,
+    7047147018,
+    33423470,
+    7047147019,
+    33423362,
+    7086947495,
+    33458062,
+    7086947496,
+    33458068,
+    7086947497,
+    33458064,
+    7047147021
+  ],
+  "geometry": [
+    { "lat": 45.1275658, "lon": -93.3003403 },
+    { "lat": 45.1265941, "lon": -93.3010244 },
+    { "lat": 45.1260104, "lon": -93.3014623 },
+    { "lat": 45.1254712, "lon": -93.3018733 },
+    { "lat": 45.1253124, "lon": -93.3019987 },
+    { "lat": 45.1251208, "lon": -93.3021454 },
+    { "lat": 45.1249681, "lon": -93.3022789 },
+    { "lat": 45.1248198, "lon": -93.3024191 },
+    { "lat": 45.1246784, "lon": -93.3025599 },
+    { "lat": 45.1245402, "lon": -93.3027123 },
+    { "lat": 45.1244105, "lon": -93.3028610 },
+    { "lat": 45.1242908, "lon": -93.3030074 },
+    { "lat": 45.1241092, "lon": -93.3032501 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "asphalt",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52"
+  }
+},
+{
+  "type": "way",
+  "id": 123936512,
+  "bounds": {
+    "minlat": 45.1413094,
+    "minlon": -93.2646393,
+    "maxlat": 45.1422404,
+    "maxlon": -93.2587892
+  },
+  "nodes": [
+    1380588629,
+    186342738,
+    186342740,
+    186342741,
+    9950335675,
+    186311949
+  ],
+  "geometry": [
+    { "lat": 45.1422404, "lon": -93.2646393 },
+    { "lat": 45.1421573, "lon": -93.2639145 },
+    { "lat": 45.1419683, "lon": -93.2626985 },
+    { "lat": 45.1417283, "lon": -93.2612188 },
+    { "lat": 45.1414053, "lon": -93.2594570 },
+    { "lat": 45.1413094, "lon": -93.2587892 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 126705789,
+  "bounds": {
+    "minlat": 45.1375771,
+    "minlon": -93.4653794,
+    "maxlat": 45.1375777,
+    "maxlon": -93.4624627
+  },
+  "nodes": [
+    3134019988,
+    6771954876
+  ],
+  "geometry": [
+    { "lat": 45.1375777, "lon": -93.4653794 },
+    { "lat": 45.1375771, "lon": -93.4624627 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 126784535,
+  "bounds": {
+    "minlat": 45.1299398,
+    "minlon": -93.3898546,
+    "maxlat": 45.1299405,
+    "maxlon": -93.3895764
+  },
+  "nodes": [
+    1365567367,
+    7118941875
+  ],
+  "geometry": [
+    { "lat": 45.1299405, "lon": -93.3898546 },
+    { "lat": 45.1299398, "lon": -93.3895764 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 126784536,
+  "bounds": {
+    "minlat": 45.1299542,
+    "minlon": -93.3909587,
+    "maxlat": 45.1299787,
+    "maxlon": -93.3903410
+  },
+  "nodes": [
+    1365567318,
+    12381917646
+  ],
+  "geometry": [
+    { "lat": 45.1299787, "lon": -93.3909587 },
+    { "lat": 45.1299542, "lon": -93.3903410 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "bridge": "yes",
+    "destination:lanes": "none|none|West Broadway Avenue;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|none|through;right"
+  }
+},
+{
+  "type": "way",
+  "id": 126784539,
+  "bounds": {
+    "minlat": 45.1302239,
+    "minlon": -93.3914944,
+    "maxlat": 45.1302560,
+    "maxlon": -93.3904213
+  },
+  "nodes": [
+    1404539531,
+    12378395844
+  ],
+  "geometry": [
+    { "lat": 45.1302239, "lon": -93.3904213 },
+    { "lat": 45.1302560, "lon": -93.3914944 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "destination:lanes": "none|none|Zachary Lane;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|none|through;right"
+  }
+},
+{
+  "type": "way",
+  "id": 126797017,
+  "bounds": {
+    "minlat": 45.1303757,
+    "minlon": -93.4224563,
+    "maxlat": 45.1303852,
+    "maxlon": -93.4178660
+  },
+  "nodes": [
+    1365567321,
+    1365567467
+  ],
+  "geometry": [
+    { "lat": 45.1303757, "lon": -93.4224563 },
+    { "lat": 45.1303852, "lon": -93.4178660 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 126797018,
+  "bounds": {
+    "minlat": 45.1303575,
+    "minlon": -93.4178660,
+    "maxlat": 45.1303852,
+    "maxlon": -93.4149244
+  },
+  "nodes": [
+    1365567467,
+    7118924491,
+    7118907052
+  ],
+  "geometry": [
+    { "lat": 45.1303852, "lon": -93.4178660 },
+    { "lat": 45.1303739, "lon": -93.4168053 },
+    { "lat": 45.1303575, "lon": -93.4149244 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 188313323,
+  "bounds": {
+    "minlat": 45.1301286,
+    "minlon": -93.4369956,
+    "maxlat": 45.1303650,
+    "maxlon": -93.4230679
+  },
+  "nodes": [
+    1365567342,
+    7118384549,
+    1365567299,
+    7118384548,
+    1897371593,
+    7118391174,
+    7118384547,
+    7118391175,
+    7118391176,
+    7118921659
+  ],
+  "geometry": [
+    { "lat": 45.1302003, "lon": -93.4369956 },
+    { "lat": 45.1301768, "lon": -93.4366060 },
+    { "lat": 45.1301497, "lon": -93.4360453 },
+    { "lat": 45.1301349, "lon": -93.4356044 },
+    { "lat": 45.1301286, "lon": -93.4351197 },
+    { "lat": 45.1301305, "lon": -93.4346689 },
+    { "lat": 45.1301482, "lon": -93.4338338 },
+    { "lat": 45.1302898, "lon": -93.4267910 },
+    { "lat": 45.1303396, "lon": -93.4244641 },
+    { "lat": 45.1303650, "lon": -93.4230679 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 188313347,
+  "bounds": {
+    "minlat": 45.1313593,
+    "minlon": -93.4474833,
+    "maxlat": 45.1339260,
+    "maxlon": -93.4418405
+  },
+  "nodes": [
+    1365567290,
+    7091814204,
+    7047710671,
+    1897371706,
+    7258930043,
+    7091814208,
+    7091814207,
+    1365567360,
+    3134009923,
+    7091827076,
+    3134009924,
+    3134009925,
+    6672532258
+  ],
+  "geometry": [
+    { "lat": 45.1313593, "lon": -93.4418405 },
+    { "lat": 45.1314675, "lon": -93.4421412 },
+    { "lat": 45.1315202, "lon": -93.4422753 },
+    { "lat": 45.1316754, "lon": -93.4426595 },
+    { "lat": 45.1317693, "lon": -93.4428804 },
+    { "lat": 45.1318927, "lon": -93.4431618 },
+    { "lat": 45.1320414, "lon": -93.4434809 },
+    { "lat": 45.1322683, "lon": -93.4439598 },
+    { "lat": 45.1325752, "lon": -93.4446062 },
+    { "lat": 45.1327971, "lon": -93.4450808 },
+    { "lat": 45.1330237, "lon": -93.4455582 },
+    { "lat": 45.1334032, "lon": -93.4463696 },
+    { "lat": 45.1339260, "lon": -93.4474833 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 188375428,
+  "bounds": {
+    "minlat": 45.1223178,
+    "minlon": -93.3146665,
+    "maxlat": 45.1239638,
+    "maxlon": -93.3030580
+  },
+  "nodes": [
+    247070806,
+    7123527720,
+    247070745,
+    7123527739,
+    7123527740,
+    247070746,
+    7123527741,
+    247070747,
+    247070748,
+    7123527742,
+    7123527743,
+    7123527744,
+    247070749,
+    247070750,
+    7123527745,
+    7123527746,
+    247070751,
+    7123527747,
+    247070752,
+    7123527748,
+    247070753,
+    7123527749,
+    247070754
+  ],
+  "geometry": [
+    { "lat": 45.1226768, "lon": -93.3146665 },
+    { "lat": 45.1226264, "lon": -93.3138029 },
+    { "lat": 45.1225910, "lon": -93.3132160 },
+    { "lat": 45.1225173, "lon": -93.3120470 },
+    { "lat": 45.1224588, "lon": -93.3111270 },
+    { "lat": 45.1224034, "lon": -93.3101809 },
+    { "lat": 45.1223542, "lon": -93.3093979 },
+    { "lat": 45.1223178, "lon": -93.3087184 },
+    { "lat": 45.1223180, "lon": -93.3082531 },
+    { "lat": 45.1223419, "lon": -93.3077702 },
+    { "lat": 45.1223763, "lon": -93.3073638 },
+    { "lat": 45.1224200, "lon": -93.3069798 },
+    { "lat": 45.1225183, "lon": -93.3064285 },
+    { "lat": 45.1225980, "lon": -93.3060691 },
+    { "lat": 45.1226965, "lon": -93.3056971 },
+    { "lat": 45.1228115, "lon": -93.3053087 },
+    { "lat": 45.1229218, "lon": -93.3050022 },
+    { "lat": 45.1230591, "lon": -93.3046547 },
+    { "lat": 45.1232205, "lon": -93.3042959 },
+    { "lat": 45.1233956, "lon": -93.3039568 },
+    { "lat": 45.1235643, "lon": -93.3036529 },
+    { "lat": 45.1237572, "lon": -93.3033492 },
+    { "lat": 45.1239638, "lon": -93.3030580 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 188375429,
+  "bounds": {
+    "minlat": 45.1300810,
+    "minlon": -93.3904213,
+    "maxlat": 45.1302239,
+    "maxlon": -93.3828838
+  },
+  "nodes": [
+    260543315,
+    7047439394,
+    7047439395,
+    7047439396,
+    1404539531
+  ],
+  "geometry": [
+    { "lat": 45.1300810, "lon": -93.3828838 },
+    { "lat": 45.1301187, "lon": -93.3850529 },
+    { "lat": 45.1301661, "lon": -93.3877049 },
+    { "lat": 45.1301936, "lon": -93.3891409 },
+    { "lat": 45.1302239, "lon": -93.3904213 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 530854228,
+  "bounds": {
+    "minlat": 45.1379130,
+    "minlon": -93.4948784,
+    "maxlat": 45.1380657,
+    "maxlon": -93.4938824
+  },
+  "nodes": [
+    3134019948,
+    7118173372,
+    3134019949,
+    7118173373,
+    5153921679
+  ],
+  "geometry": [
+    { "lat": 45.1380657, "lon": -93.4948784 },
+    { "lat": 45.1380103, "lon": -93.4946275 },
+    { "lat": 45.1379616, "lon": -93.4943478 },
+    { "lat": 45.1379320, "lon": -93.4941157 },
+    { "lat": 45.1379130, "lon": -93.4938824 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway_link",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 639783534,
+  "bounds": {
+    "minlat": 45.1233314,
+    "minlon": -93.3288089,
+    "maxlat": 45.1238294,
+    "maxlon": -93.3210907
+  },
+  "nodes": [
+    247070996,
+    247809867,
+    7047394220,
+    247809869,
+    12377997630,
+    247809873
+  ],
+  "geometry": [
+    { "lat": 45.1233314, "lon": -93.3210907 },
+    { "lat": 45.1233875, "lon": -93.3220239 },
+    { "lat": 45.1235176, "lon": -93.3241037 },
+    { "lat": 45.1236176, "lon": -93.3257489 },
+    { "lat": 45.1237311, "lon": -93.3272776 },
+    { "lat": 45.1238294, "lon": -93.3288089 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "destination:lanes": "none|none|Zane Avenue;Noble Parkway",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52",
+    "turn:lanes": "none|none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 639783535,
+  "bounds": {
+    "minlat": 45.1226768,
+    "minlon": -93.3272391,
+    "maxlat": 45.1234618,
+    "maxlon": -93.3146665
+  },
+  "nodes": [
+    247809871,
+    247809872,
+    7123559743,
+    247070741,
+    247070742,
+    7123559744,
+    247070743,
+    247070744,
+    7123559745,
+    247070806
+  ],
+  "geometry": [
+    { "lat": 45.1234618, "lon": -93.3272391 },
+    { "lat": 45.1233788, "lon": -93.3258759 },
+    { "lat": 45.1232809, "lon": -93.3243399 },
+    { "lat": 45.1232116, "lon": -93.3231910 },
+    { "lat": 45.1231412, "lon": -93.3220416 },
+    { "lat": 45.1230729, "lon": -93.3209745 },
+    { "lat": 45.1229923, "lon": -93.3196544 },
+    { "lat": 45.1229251, "lon": -93.3185693 },
+    { "lat": 45.1228633, "lon": -93.3175542 },
+    { "lat": 45.1226768, "lon": -93.3146665 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "destination:lanes": "none|none|East River Road;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 639783549,
+  "bounds": {
+    "minlat": 45.1297019,
+    "minlon": -93.3807420,
+    "maxlat": 45.1297929,
+    "maxlon": -93.3768130
+  },
+  "nodes": [
+    536653474,
+    536653475,
+    7123092134,
+    536662660
+  ],
+  "geometry": [
+    { "lat": 45.1297929, "lon": -93.3807420 },
+    { "lat": 45.1297774, "lon": -93.3799541 },
+    { "lat": 45.1297507, "lon": -93.3785659 },
+    { "lat": 45.1297019, "lon": -93.3768130 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "destination:lanes": "none|none|Zane Avenue;West Broadway Avenue",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|none|through;right"
+  }
+},
+{
+  "type": "way",
+  "id": 639783552,
+  "bounds": {
+    "minlat": 45.1298172,
+    "minlon": -93.3776548,
+    "maxlat": 45.1299857,
+    "maxlon": -93.3685080
+  },
+  "nodes": [
+    536662775,
+    7047421904,
+    7047423140,
+    7047423141,
+    7047423142,
+    7975264720,
+    7975264732,
+    246010141
+  ],
+  "geometry": [
+    { "lat": 45.1298172, "lon": -93.3685080 },
+    { "lat": 45.1298283, "lon": -93.3693402 },
+    { "lat": 45.1299012, "lon": -93.3732315 },
+    { "lat": 45.1299354, "lon": -93.3751723 },
+    { "lat": 45.1299592, "lon": -93.3761373 },
+    { "lat": 45.1299662, "lon": -93.3765387 },
+    { "lat": 45.1299701, "lon": -93.3767592 },
+    { "lat": 45.1299857, "lon": -93.3776548 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 640088996,
+  "bounds": {
+    "minlat": 45.1393130,
+    "minlon": -93.2890419,
+    "maxlat": 45.1397544,
+    "maxlon": -93.2879916
+  },
+  "nodes": [
+    260252175,
+    1816220983
+  ],
+  "geometry": [
+    { "lat": 45.1397544, "lon": -93.2879916 },
+    { "lat": 45.1393130, "lon": -93.2890419 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 640088999,
+  "bounds": {
+    "minlat": 45.1396825,
+    "minlon": -93.2877198,
+    "maxlat": 45.1408860,
+    "maxlon": -93.2848650
+  },
+  "nodes": [
+    260252128,
+    186307392,
+    186232712
+  ],
+  "geometry": [
+    { "lat": 45.1396825, "lon": -93.2877198 },
+    { "lat": 45.1406390, "lon": -93.2854390 },
+    { "lat": 45.1408860, "lon": -93.2848650 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none|University Avenue;Coon Rapids Boulevard",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 640115461,
+  "bounds": {
+    "minlat": 45.1375625,
+    "minlon": -93.4938824,
+    "maxlat": 45.1379130,
+    "maxlon": -93.4740132
+  },
+  "nodes": [
+    5153921679,
+    7118173374,
+    3134019951,
+    7118173375,
+    7118282031,
+    3134019952,
+    7118282032,
+    7118173376,
+    7118282033,
+    7118173377,
+    7118173378,
+    7118282034,
+    6607530821,
+    7118282035,
+    7118282036,
+    7118173379,
+    7118173382,
+    7118287291
+  ],
+  "geometry": [
+    { "lat": 45.1379130, "lon": -93.4938824 },
+    { "lat": 45.1378725, "lon": -93.4931990 },
+    { "lat": 45.1378379, "lon": -93.4925993 },
+    { "lat": 45.1377908, "lon": -93.4917512 },
+    { "lat": 45.1376841, "lon": -93.4898519 },
+    { "lat": 45.1375816, "lon": -93.4880101 },
+    { "lat": 45.1375633, "lon": -93.4874075 },
+    { "lat": 45.1375635, "lon": -93.4868124 },
+    { "lat": 45.1375625, "lon": -93.4858529 },
+    { "lat": 45.1375628, "lon": -93.4849254 },
+    { "lat": 45.1375666, "lon": -93.4823751 },
+    { "lat": 45.1375667, "lon": -93.4806374 },
+    { "lat": 45.1375654, "lon": -93.4798191 },
+    { "lat": 45.1375691, "lon": -93.4779216 },
+    { "lat": 45.1375715, "lon": -93.4767769 },
+    { "lat": 45.1375721, "lon": -93.4756220 },
+    { "lat": 45.1375715, "lon": -93.4746820 },
+    { "lat": 45.1375714, "lon": -93.4740132 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 640115499,
+  "bounds": {
+    "minlat": 45.1300156,
+    "minlon": -93.3978624,
+    "maxlat": 45.1301108,
+    "maxlon": -93.3930626
+  },
+  "nodes": [
+    1403875138,
+    7118941868,
+    7118941869
+  ],
+  "geometry": [
+    { "lat": 45.1301108, "lon": -93.3978624 },
+    { "lat": 45.1300796, "lon": -93.3963111 },
+    { "lat": 45.1300156, "lon": -93.3930626 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 676954435,
+  "bounds": {
+    "minlat": 45.1430697,
+    "minlon": -93.4987778,
+    "maxlat": 45.1443184,
+    "maxlon": -93.4984651
+  },
+  "nodes": [
+    7118206028,
+    7118202334,
+    7118275229,
+    6339021140
+  ],
+  "geometry": [
+    { "lat": 45.1443184, "lon": -93.4987778 },
+    { "lat": 45.1440204, "lon": -93.4987552 },
+    { "lat": 45.1434830, "lon": -93.4986200 },
+    { "lat": 45.1430697, "lon": -93.4984651 }
+  ],
+  "tags": {
+    "destination:ref": "MN 610 East",
+    "highway": "motorway_link",
+    "junction:ref": "212",
+    "lanes": "1",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 709789830,
+  "bounds": {
+    "minlat": 45.1337300,
+    "minlon": -93.4480571,
+    "maxlat": 45.1339281,
+    "maxlon": -93.4476339
+  },
+  "nodes": [
+    6672532255,
+    6672532256
+  ],
+  "geometry": [
+    { "lat": 45.1339281, "lon": -93.4480571 },
+    { "lat": 45.1337300, "lon": -93.4476339 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 709789831,
+  "bounds": {
+    "minlat": 45.1302003,
+    "minlon": -93.4476339,
+    "maxlat": 45.1337300,
+    "maxlon": -93.4369956
+  },
+  "nodes": [
+    6672532256,
+    7118321759,
+    3134019964,
+    7118321760,
+    1365567355,
+    1365567376,
+    1897371699,
+    7118334562,
+    1365567330,
+    1897371662,
+    7118334563,
+    1365567403,
+    7118334564,
+    1897371636,
+    7118334565,
+    1365567447,
+    1897371615,
+    1365567294,
+    1365567396,
+    7118384552,
+    7118384553,
+    7118384554,
+    1365567342
+  ],
+  "geometry": [
+    { "lat": 45.1337300, "lon": -93.4476339 },
+    { "lat": 45.1335069, "lon": -93.4471541 },
+    { "lat": 45.1330619, "lon": -93.4462001 },
+    { "lat": 45.1326029, "lon": -93.4452241 },
+    { "lat": 45.1321291, "lon": -93.4442183 },
+    { "lat": 45.1318447, "lon": -93.4436190 },
+    { "lat": 45.1316189, "lon": -93.4431252 },
+    { "lat": 45.1314772, "lon": -93.4427884 },
+    { "lat": 45.1313261, "lon": -93.4424098 },
+    { "lat": 45.1311538, "lon": -93.4419384 },
+    { "lat": 45.1310331, "lon": -93.4415721 },
+    { "lat": 45.1309131, "lon": -93.4411712 },
+    { "lat": 45.1308122, "lon": -93.4408132 },
+    { "lat": 45.1307243, "lon": -93.4404613 },
+    { "lat": 45.1306420, "lon": -93.4401085 },
+    { "lat": 45.1305481, "lon": -93.4396389 },
+    { "lat": 45.1305063, "lon": -93.4394206 },
+    { "lat": 45.1304359, "lon": -93.4389988 },
+    { "lat": 45.1303525, "lon": -93.4384268 },
+    { "lat": 45.1303156, "lon": -93.4381251 },
+    { "lat": 45.1302688, "lon": -93.4377145 },
+    { "lat": 45.1302323, "lon": -93.4373702 },
+    { "lat": 45.1302003, "lon": -93.4369956 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 709789832,
+  "bounds": {
+    "minlat": 45.1339260,
+    "minlon": -93.4479065,
+    "maxlat": 45.1341228,
+    "maxlon": -93.4474833
+  },
+  "nodes": [
+    6672532258,
+    6672532257
+  ],
+  "geometry": [
+    { "lat": 45.1339260, "lon": -93.4474833 },
+    { "lat": 45.1341228, "lon": -93.4479065 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 721913644,
+  "bounds": {
+    "minlat": 45.1341228,
+    "minlon": -93.4619778,
+    "maxlat": 45.1377721,
+    "maxlon": -93.4479065
+  },
+  "nodes": [
+    6672532257,
+    7091827077,
+    6771954799,
+    6771954800,
+    6771954801,
+    6771954802,
+    6771954803,
+    6771954804,
+    7047705055,
+    7091832647,
+    7091832646,
+    7091832645,
+    7091832644,
+    7091832655,
+    6771954809,
+    6771954810,
+    6771954811,
+    7091840796,
+    6771954813,
+    7091840795,
+    6771954814,
+    6771954816,
+    6771954818,
+    7091840797,
+    6771954820,
+    7091840798,
+    6771954822,
+    6771954875
+  ],
+  "geometry": [
+    { "lat": 45.1341228, "lon": -93.4479065 },
+    { "lat": 45.1343159, "lon": -93.4482995 },
+    { "lat": 45.1345368, "lon": -93.4487761 },
+    { "lat": 45.1350555, "lon": -93.4498763 },
+    { "lat": 45.1357258, "lon": -93.4512992 },
+    { "lat": 45.1362602, "lon": -93.4524380 },
+    { "lat": 45.1366462, "lon": -93.4532612 },
+    { "lat": 45.1369040, "lon": -93.4538140 },
+    { "lat": 45.1370206, "lon": -93.4540871 },
+    { "lat": 45.1370949, "lon": -93.4542822 },
+    { "lat": 45.1371716, "lon": -93.4544903 },
+    { "lat": 45.1372539, "lon": -93.4547417 },
+    { "lat": 45.1373608, "lon": -93.4550874 },
+    { "lat": 45.1374549, "lon": -93.4554462 },
+    { "lat": 45.1375553, "lon": -93.4558801 },
+    { "lat": 45.1376074, "lon": -93.4561753 },
+    { "lat": 45.1376697, "lon": -93.4565669 },
+    { "lat": 45.1376940, "lon": -93.4567562 },
+    { "lat": 45.1377134, "lon": -93.4569401 },
+    { "lat": 45.1377439, "lon": -93.4573165 },
+    { "lat": 45.1377651, "lon": -93.4577106 },
+    { "lat": 45.1377721, "lon": -93.4581195 },
+    { "lat": 45.1377639, "lon": -93.4585569 },
+    { "lat": 45.1377519, "lon": -93.4590967 },
+    { "lat": 45.1377417, "lon": -93.4596471 },
+    { "lat": 45.1377294, "lon": -93.4602600 },
+    { "lat": 45.1377170, "lon": -93.4609199 },
+    { "lat": 45.1376952, "lon": -93.4619778 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 721913647,
+  "bounds": {
+    "minlat": 45.1376573,
+    "minlon": -93.4655963,
+    "maxlat": 45.1376878,
+    "maxlon": -93.4624620
+  },
+  "nodes": [
+    6771954874,
+    6771954826,
+    6771954827,
+    6771925663
+  ],
+  "geometry": [
+    { "lat": 45.1376878, "lon": -93.4624620 },
+    { "lat": 45.1376601, "lon": -93.4631202 },
+    { "lat": 45.1376573, "lon": -93.4642835 },
+    { "lat": 45.1376597, "lon": -93.4655963 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none;Maple Grove Parkway",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 721913649,
+  "bounds": {
+    "minlat": 45.1375771,
+    "minlon": -93.4624627,
+    "maxlat": 45.1375780,
+    "maxlon": -93.4619776
+  },
+  "nodes": [
+    6771954876,
+    6771954877
+  ],
+  "geometry": [
+    { "lat": 45.1375771, "lon": -93.4624627 },
+    { "lat": 45.1375780, "lon": -93.4619776 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 721913650,
+  "bounds": {
+    "minlat": 45.1376878,
+    "minlon": -93.4624620,
+    "maxlat": 45.1376952,
+    "maxlon": -93.4619778
+  },
+  "nodes": [
+    6771954875,
+    6771954874
+  ],
+  "geometry": [
+    { "lat": 45.1376952, "lon": -93.4619778 },
+    { "lat": 45.1376878, "lon": -93.4624620 }
+  ],
+  "tags": {
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 721913652,
+  "bounds": {
+    "minlat": 45.1359657,
+    "minlon": -93.4619776,
+    "maxlat": 45.1375836,
+    "maxlon": -93.4523862
+  },
+  "nodes": [
+    6771954877,
+    7118330715,
+    3134019955,
+    3134019956,
+    3134019957,
+    7118300940,
+    6339021091,
+    7118300941,
+    6339021090,
+    7118297610,
+    6339021089,
+    3134019958,
+    7118297611,
+    6339021087,
+    3134019959,
+    3134019960,
+    6339021088,
+    3134019961,
+    9235381961,
+    6339021098
+  ],
+  "geometry": [
+    { "lat": 45.1375780, "lon": -93.4619776 },
+    { "lat": 45.1375820, "lon": -93.4607532 },
+    { "lat": 45.1375834, "lon": -93.4595987 },
+    { "lat": 45.1375836, "lon": -93.4583139 },
+    { "lat": 45.1375806, "lon": -93.4578688 },
+    { "lat": 45.1375741, "lon": -93.4576246 },
+    { "lat": 45.1375595, "lon": -93.4572952 },
+    { "lat": 45.1375242, "lon": -93.4569136 },
+    { "lat": 45.1374829, "lon": -93.4565769 },
+    { "lat": 45.1374539, "lon": -93.4563677 },
+    { "lat": 45.1374199, "lon": -93.4561772 },
+    { "lat": 45.1373673, "lon": -93.4559132 },
+    { "lat": 45.1372867, "lon": -93.4555655 },
+    { "lat": 45.1372070, "lon": -93.4552679 },
+    { "lat": 45.1371060, "lon": -93.4549421 },
+    { "lat": 45.1369807, "lon": -93.4545879 },
+    { "lat": 45.1368112, "lon": -93.4541723 },
+    { "lat": 45.1366339, "lon": -93.4537889 },
+    { "lat": 45.1360054, "lon": -93.4524695 },
+    { "lat": 45.1359657, "lon": -93.4523862 }
+  ],
+  "tags": {
+    "destination:lanes": "none|Zachary Lane;Elm Creek Boulevard",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 754319893,
+  "bounds": {
+    "minlat": 45.1225683,
+    "minlon": -93.3210907,
+    "maxlat": 45.1241092,
+    "maxlon": -93.3032501
+  },
+  "nodes": [
+    7047147021,
+    33422939,
+    7086947498,
+    33424171,
+    7086947499,
+    33423919,
+    34570340,
+    34562776,
+    7047390640,
+    247071077,
+    7086947500,
+    247071078,
+    7047390641,
+    247071079,
+    7086947501,
+    7047390642,
+    7086947502,
+    7047390643,
+    247070991,
+    7047390644,
+    7047390645,
+    247070992,
+    7047390646,
+    247070993,
+    7047390647,
+    247070994,
+    7047390648,
+    7047390649,
+    247070995,
+    7086960460,
+    247070996
+  ],
+  "geometry": [
+    { "lat": 45.1241092, "lon": -93.3032501 },
+    { "lat": 45.1239152, "lon": -93.3035428 },
+    { "lat": 45.1238136, "lon": -93.3037060 },
+    { "lat": 45.1237136, "lon": -93.3038785 },
+    { "lat": 45.1235892, "lon": -93.3041085 },
+    { "lat": 45.1234714, "lon": -93.3043431 },
+    { "lat": 45.1233247, "lon": -93.3046601 },
+    { "lat": 45.1231867, "lon": -93.3050054 },
+    { "lat": 45.1230646, "lon": -93.3053473 },
+    { "lat": 45.1229577, "lon": -93.3056973 },
+    { "lat": 45.1228586, "lon": -93.3060671 },
+    { "lat": 45.1227744, "lon": -93.3064323 },
+    { "lat": 45.1227000, "lon": -93.3068520 },
+    { "lat": 45.1226350, "lon": -93.3073010 },
+    { "lat": 45.1225952, "lon": -93.3077411 },
+    { "lat": 45.1225718, "lon": -93.3081695 },
+    { "lat": 45.1225683, "lon": -93.3085444 },
+    { "lat": 45.1225746, "lon": -93.3089356 },
+    { "lat": 45.1226114, "lon": -93.3095664 },
+    { "lat": 45.1226514, "lon": -93.3102403 },
+    { "lat": 45.1226940, "lon": -93.3108656 },
+    { "lat": 45.1227206, "lon": -93.3113139 },
+    { "lat": 45.1227678, "lon": -93.3120775 },
+    { "lat": 45.1228188, "lon": -93.3128692 },
+    { "lat": 45.1228695, "lon": -93.3136888 },
+    { "lat": 45.1229247, "lon": -93.3145671 },
+    { "lat": 45.1230086, "lon": -93.3159616 },
+    { "lat": 45.1230571, "lon": -93.3167313 },
+    { "lat": 45.1231316, "lon": -93.3178969 },
+    { "lat": 45.1232585, "lon": -93.3199336 },
+    { "lat": 45.1233314, "lon": -93.3210907 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52"
+  }
+},
+{
+  "type": "way",
+  "id": 759073527,
+  "bounds": {
+    "minlat": 45.1304617,
+    "minlon": -93.4286610,
+    "maxlat": 45.1306026,
+    "maxlon": -93.4166195
+  },
+  "nodes": [
+    1365567285,
+    1365567402,
+    1897400066,
+    7047422270,
+    7047422271,
+    7091734697,
+    7047422272,
+    1365567319,
+    7047422273,
+    7047422274,
+    1365567457
+  ],
+  "geometry": [
+    { "lat": 45.1305829, "lon": -93.4166195 },
+    { "lat": 45.1305932, "lon": -93.4177100 },
+    { "lat": 45.1306026, "lon": -93.4190278 },
+    { "lat": 45.1306022, "lon": -93.4203894 },
+    { "lat": 45.1305884, "lon": -93.4220374 },
+    { "lat": 45.1305836, "lon": -93.4226685 },
+    { "lat": 45.1305725, "lon": -93.4232182 },
+    { "lat": 45.1305606, "lon": -93.4237602 },
+    { "lat": 45.1305342, "lon": -93.4251051 },
+    { "lat": 45.1305056, "lon": -93.4264721 },
+    { "lat": 45.1304617, "lon": -93.4286610 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "cycleway": "no",
+    "foot": "no",
+    "highway": "motorway",
+    "horse": "no",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 759272326,
+  "bounds": {
+    "minlat": 45.1376408,
+    "minlon": -93.4901838,
+    "maxlat": 45.1378955,
+    "maxlon": -93.4713454
+  },
+  "nodes": [
+    7092177085,
+    6771954832,
+    6771954833,
+    6771954834,
+    13371153805,
+    6771954835,
+    6771954836,
+    6771954837,
+    6771954838,
+    13371153803,
+    6771954841,
+    6771954842,
+    6771954843,
+    6771954844,
+    7047742258,
+    6771954845,
+    7047742257,
+    6771954846,
+    6771954847,
+    6771954848,
+    6771954849,
+    7092180335,
+    6771954850,
+    6771954851,
+    6771954852,
+    6771954853,
+    6607448761,
+    6771954854,
+    7092180337
+  ],
+  "geometry": [
+    { "lat": 45.1376577, "lon": -93.4713454 },
+    { "lat": 45.1376567, "lon": -93.4719086 },
+    { "lat": 45.1376579, "lon": -93.4730344 },
+    { "lat": 45.1376460, "lon": -93.4738702 },
+    { "lat": 45.1376454, "lon": -93.4744924 },
+    { "lat": 45.1376452, "lon": -93.4747667 },
+    { "lat": 45.1376436, "lon": -93.4755218 },
+    { "lat": 45.1376408, "lon": -93.4763356 },
+    { "lat": 45.1376528, "lon": -93.4771999 },
+    { "lat": 45.1376522, "lon": -93.4781428 },
+    { "lat": 45.1376546, "lon": -93.4790813 },
+    { "lat": 45.1376608, "lon": -93.4798699 },
+    { "lat": 45.1376588, "lon": -93.4806989 },
+    { "lat": 45.1376532, "lon": -93.4813972 },
+    { "lat": 45.1376574, "lon": -93.4822571 },
+    { "lat": 45.1376543, "lon": -93.4831250 },
+    { "lat": 45.1376545, "lon": -93.4836926 },
+    { "lat": 45.1376562, "lon": -93.4842745 },
+    { "lat": 45.1376547, "lon": -93.4850443 },
+    { "lat": 45.1376541, "lon": -93.4856848 },
+    { "lat": 45.1376545, "lon": -93.4864200 },
+    { "lat": 45.1376556, "lon": -93.4867031 },
+    { "lat": 45.1376660, "lon": -93.4869930 },
+    { "lat": 45.1376855, "lon": -93.4874094 },
+    { "lat": 45.1377202, "lon": -93.4878077 },
+    { "lat": 45.1377510, "lon": -93.4882299 },
+    { "lat": 45.1378377, "lon": -93.4893174 },
+    { "lat": 45.1378531, "lon": -93.4896100 },
+    { "lat": 45.1378955, "lon": -93.4901838 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "1",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 759272667,
+  "bounds": {
+    "minlat": 45.1378955,
+    "minlon": -93.4942237,
+    "maxlat": 45.1387632,
+    "maxlon": -93.4901838
+  },
+  "nodes": [
+    7092180337,
+    6771954855,
+    6771954856,
+    7092180336,
+    7047767234,
+    6771954857,
+    7047767235,
+    6771954858,
+    6771954859,
+    7047767236,
+    6771954860,
+    6771954861,
+    7047767237,
+    6771954862
+  ],
+  "geometry": [
+    { "lat": 45.1378955, "lon": -93.4901838 },
+    { "lat": 45.1379378, "lon": -93.4907576 },
+    { "lat": 45.1380137, "lon": -93.4917241 },
+    { "lat": 45.1380305, "lon": -93.4919153 },
+    { "lat": 45.1380529, "lon": -93.4920958 },
+    { "lat": 45.1380980, "lon": -93.4923763 },
+    { "lat": 45.1381502, "lon": -93.4926412 },
+    { "lat": 45.1382077, "lon": -93.4928750 },
+    { "lat": 45.1382851, "lon": -93.4931303 },
+    { "lat": 45.1383556, "lon": -93.4933453 },
+    { "lat": 45.1384532, "lon": -93.4936019 },
+    { "lat": 45.1385603, "lon": -93.4938397 },
+    { "lat": 45.1386469, "lon": -93.4940163 },
+    { "lat": 45.1387632, "lon": -93.4942237 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 759274280,
+  "bounds": {
+    "minlat": 45.1387632,
+    "minlon": -93.4968719,
+    "maxlat": 45.1413147,
+    "maxlon": -93.4942237
+  },
+  "nodes": [
+    6771954862,
+    7047767238,
+    6771954863,
+    6771954864,
+    7047767239,
+    6771954865,
+    7092193691,
+    6771954866,
+    6771954867,
+    7047767240,
+    7092193692,
+    7092193693,
+    7092193694,
+    489776060
+  ],
+  "geometry": [
+    { "lat": 45.1387632, "lon": -93.4942237 },
+    { "lat": 45.1388865, "lon": -93.4944270 },
+    { "lat": 45.1390165, "lon": -93.4946175 },
+    { "lat": 45.1391804, "lon": -93.4948346 },
+    { "lat": 45.1392966, "lon": -93.4949841 },
+    { "lat": 45.1394245, "lon": -93.4951280 },
+    { "lat": 45.1395823, "lon": -93.4953085 },
+    { "lat": 45.1397477, "lon": -93.4954837 },
+    { "lat": 45.1401375, "lon": -93.4958665 },
+    { "lat": 45.1403821, "lon": -93.4960847 },
+    { "lat": 45.1406180, "lon": -93.4962754 },
+    { "lat": 45.1408364, "lon": -93.4964519 },
+    { "lat": 45.1410313, "lon": -93.4966026 },
+    { "lat": 45.1413147, "lon": -93.4968719 }
+  ],
+  "tags": {
+    "highway": "motorway_link",
+    "lanes": "1",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761866958,
+  "bounds": {
+    "minlat": 45.1380657,
+    "minlon": -93.4979558,
+    "maxlat": 45.1416069,
+    "maxlon": -93.4948784
+  },
+  "nodes": [
+    7118275230,
+    6339021137,
+    6339021136,
+    6339021135,
+    7118198921,
+    6339021134,
+    7118275231,
+    6339021133,
+    6339021132,
+    6339021131,
+    6339021130,
+    6339021129,
+    7118275232,
+    3134019944,
+    7118198922,
+    5395332997,
+    7118275233,
+    3134019946,
+    5395332996,
+    5395332995,
+    7118275234,
+    3134019948
+  ],
+  "geometry": [
+    { "lat": 45.1416069, "lon": -93.4979558 },
+    { "lat": 45.1413193, "lon": -93.4978561 },
+    { "lat": 45.1410324, "lon": -93.4977607 },
+    { "lat": 45.1406666, "lon": -93.4976387 },
+    { "lat": 45.1403938, "lon": -93.4975472 },
+    { "lat": 45.1400905, "lon": -93.4974372 },
+    { "lat": 45.1399788, "lon": -93.4973981 },
+    { "lat": 45.1398731, "lon": -93.4973557 },
+    { "lat": 45.1396226, "lon": -93.4972240 },
+    { "lat": 45.1394056, "lon": -93.4970714 },
+    { "lat": 45.1392533, "lon": -93.4969492 },
+    { "lat": 45.1390870, "lon": -93.4967978 },
+    { "lat": 45.1389364, "lon": -93.4966317 },
+    { "lat": 45.1388180, "lon": -93.4964877 },
+    { "lat": 45.1386925, "lon": -93.4963142 },
+    { "lat": 45.1385938, "lon": -93.4961594 },
+    { "lat": 45.1384994, "lon": -93.4960008 },
+    { "lat": 45.1383848, "lon": -93.4957755 },
+    { "lat": 45.1382727, "lon": -93.4955135 },
+    { "lat": 45.1381807, "lon": -93.4952602 },
+    { "lat": 45.1381229, "lon": -93.4950731 },
+    { "lat": 45.1380657, "lon": -93.4948784 }
+  ],
+  "tags": {
+    "highway": "motorway_link",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761867446,
+  "bounds": {
+    "minlat": 45.1375696,
+    "minlon": -93.4733165,
+    "maxlat": 45.1375777,
+    "maxlon": -93.4653794
+  },
+  "nodes": [
+    7118173381,
+    7118173380,
+    7118330713,
+    7118330714,
+    3134019988
+  ],
+  "geometry": [
+    { "lat": 45.1375696, "lon": -93.4733165 },
+    { "lat": 45.1375723, "lon": -93.4713021 },
+    { "lat": 45.1375767, "lon": -93.4683502 },
+    { "lat": 45.1375772, "lon": -93.4669073 },
+    { "lat": 45.1375777, "lon": -93.4653794 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761935730,
+  "bounds": {
+    "minlat": 45.1303650,
+    "minlon": -93.4230679,
+    "maxlat": 45.1303757,
+    "maxlon": -93.4224563
+  },
+  "nodes": [
+    7118921659,
+    1365567321
+  ],
+  "geometry": [
+    { "lat": 45.1303650, "lon": -93.4230679 },
+    { "lat": 45.1303757, "lon": -93.4224563 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "destination:lanes": "none|none|Zachary Lane",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "none|none|right"
+  }
+},
+{
+  "type": "way",
+  "id": 761936161,
+  "bounds": {
+    "minlat": 45.1301108,
+    "minlon": -93.4149244,
+    "maxlat": 45.1303575,
+    "maxlon": -93.3978624
+  },
+  "nodes": [
+    7118907052,
+    7118931044,
+    7118931045,
+    7118931046,
+    7118931047,
+    1365567385,
+    7118931048,
+    7118931049,
+    1403875138
+  ],
+  "geometry": [
+    { "lat": 45.1303575, "lon": -93.4149244 },
+    { "lat": 45.1303039, "lon": -93.4088331 },
+    { "lat": 45.1302695, "lon": -93.4052468 },
+    { "lat": 45.1302429, "lon": -93.4037976 },
+    { "lat": 45.1302160, "lon": -93.4025942 },
+    { "lat": 45.1302076, "lon": -93.4021630 },
+    { "lat": 45.1301661, "lon": -93.4004612 },
+    { "lat": 45.1301223, "lon": -93.3984476 },
+    { "lat": 45.1301108, "lon": -93.3978624 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 761938182,
+  "bounds": {
+    "minlat": 45.1299884,
+    "minlon": -93.3930626,
+    "maxlat": 45.1300156,
+    "maxlon": -93.3915045
+  },
+  "nodes": [
+    7118941869,
+    7118941870,
+    7118941871
+  ],
+  "geometry": [
+    { "lat": 45.1300156, "lon": -93.3930626 },
+    { "lat": 45.1299973, "lon": -93.3920330 },
+    { "lat": 45.1299884, "lon": -93.3915045 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761938183,
+  "bounds": {
+    "minlat": 45.1299787,
+    "minlon": -93.3915045,
+    "maxlat": 45.1299884,
+    "maxlon": -93.3909587
+  },
+  "nodes": [
+    7118941871,
+    1365567318
+  ],
+  "geometry": [
+    { "lat": 45.1299884, "lon": -93.3915045 },
+    { "lat": 45.1299787, "lon": -93.3909587 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "bridge": "yes",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761938185,
+  "bounds": {
+    "minlat": 45.1299383,
+    "minlon": -93.3895764,
+    "maxlat": 45.1299398,
+    "maxlon": -93.3892706
+  },
+  "nodes": [
+    7118941875,
+    7118918880
+  ],
+  "geometry": [
+    { "lat": 45.1299398, "lon": -93.3895764 },
+    { "lat": 45.1299383, "lon": -93.3892706 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761938548,
+  "bounds": {
+    "minlat": 45.1298919,
+    "minlon": -93.3892706,
+    "maxlat": 45.1299383,
+    "maxlon": -93.3862458
+  },
+  "nodes": [
+    7118918880,
+    7118941874,
+    1365567327,
+    7118954786,
+    1365567326
+  ],
+  "geometry": [
+    { "lat": 45.1299383, "lon": -93.3892706 },
+    { "lat": 45.1299323, "lon": -93.3889500 },
+    { "lat": 45.1299181, "lon": -93.3876270 },
+    { "lat": 45.1299019, "lon": -93.3868777 },
+    { "lat": 45.1298919, "lon": -93.3862458 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 761938712,
+  "bounds": {
+    "minlat": 45.1297929,
+    "minlon": -93.3862458,
+    "maxlat": 45.1298919,
+    "maxlon": -93.3807420
+  },
+  "nodes": [
+    1365567326,
+    7118954787,
+    1365567279,
+    1897323342,
+    536653474
+  ],
+  "geometry": [
+    { "lat": 45.1298919, "lon": -93.3862458 },
+    { "lat": 45.1298715, "lon": -93.3851398 },
+    { "lat": 45.1298523, "lon": -93.3839642 },
+    { "lat": 45.1298240, "lon": -93.3825291 },
+    { "lat": 45.1297929, "lon": -93.3807420 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 762333023,
+  "bounds": {
+    "minlat": 45.1295525,
+    "minlon": -93.3745009,
+    "maxlat": 45.1296782,
+    "maxlon": -93.3678994
+  },
+  "nodes": [
+    536674259,
+    536674260,
+    536674261,
+    7123092147,
+    536674263,
+    536674264
+  ],
+  "geometry": [
+    { "lat": 45.1296782, "lon": -93.3745009 },
+    { "lat": 45.1296390, "lon": -93.3724817 },
+    { "lat": 45.1296156, "lon": -93.3711675 },
+    { "lat": 45.1295998, "lon": -93.3702857 },
+    { "lat": 45.1295840, "lon": -93.3694305 },
+    { "lat": 45.1295525, "lon": -93.3678994 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 762384852,
+  "bounds": {
+    "minlat": 45.1239638,
+    "minlon": -93.3030580,
+    "maxlat": 45.1257441,
+    "maxlon": -93.3013672
+  },
+  "nodes": [
+    247070754,
+    7123527750,
+    7123527751,
+    247070755,
+    7123527752,
+    7123527753,
+    247070757
+  ],
+  "geometry": [
+    { "lat": 45.1239638, "lon": -93.3030580 },
+    { "lat": 45.1241882, "lon": -93.3027765 },
+    { "lat": 45.1244464, "lon": -93.3024799 },
+    { "lat": 45.1246644, "lon": -93.3022516 },
+    { "lat": 45.1249952, "lon": -93.3019857 },
+    { "lat": 45.1252613, "lon": -93.3017862 },
+    { "lat": 45.1257441, "lon": -93.3013672 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 762385104,
+  "bounds": {
+    "minlat": 45.1350579,
+    "minlon": -93.2943193,
+    "maxlat": 45.1354108,
+    "maxlon": -93.2940517
+  },
+  "nodes": [
+    186202358,
+    7123562174
+  ],
+  "geometry": [
+    { "lat": 45.1350579, "lon": -93.2943193 },
+    { "lat": 45.1354108, "lon": -93.2940517 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 762385105,
+  "bounds": {
+    "minlat": 45.1354108,
+    "minlon": -93.2940517,
+    "maxlat": 45.1369359,
+    "maxlon": -93.2926961
+  },
+  "nodes": [
+    7123562174,
+    7123562173,
+    7123562176,
+    7123562177,
+    7123562178,
+    186307408,
+    1380588627
+  ],
+  "geometry": [
+    { "lat": 45.1354108, "lon": -93.2940517 },
+    { "lat": 45.1357391, "lon": -93.2937996 },
+    { "lat": 45.1359879, "lon": -93.2936041 },
+    { "lat": 45.1362482, "lon": -93.2933829 },
+    { "lat": 45.1364666, "lon": -93.2931825 },
+    { "lat": 45.1366730, "lon": -93.2929809 },
+    { "lat": 45.1369359, "lon": -93.2926961 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 991949038,
+  "bounds": {
+    "minlat": 45.1264896,
+    "minlon": -93.3639965,
+    "maxlat": 45.1295845,
+    "maxlon": -93.3494952
+  },
+  "nodes": [
+    536674174,
+    7047421900,
+    247810067,
+    536674300,
+    536674301,
+    536674303,
+    536674304,
+    536674306,
+    536674307,
+    536674308,
+    536674212
+  ],
+  "geometry": [
+    { "lat": 45.1264896, "lon": -93.3494952 },
+    { "lat": 45.1283128, "lon": -93.3575785 },
+    { "lat": 45.1288963, "lon": -93.3601657 },
+    { "lat": 45.1290625, "lon": -93.3609086 },
+    { "lat": 45.1291785, "lon": -93.3614615 },
+    { "lat": 45.1292547, "lon": -93.3618536 },
+    { "lat": 45.1293254, "lon": -93.3622503 },
+    { "lat": 45.1293842, "lon": -93.3625979 },
+    { "lat": 45.1294319, "lon": -93.3628922 },
+    { "lat": 45.1294931, "lon": -93.3633149 },
+    { "lat": 45.1295845, "lon": -93.3639965 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52"
+  }
+},
+{
+  "type": "way",
+  "id": 995246743,
+  "bounds": {
+    "minlat": 45.1299857,
+    "minlon": -93.3828838,
+    "maxlat": 45.1300810,
+    "maxlon": -93.3776548
+  },
+  "nodes": [
+    246010141,
+    7047423145,
+    7047439387,
+    260543315
+  ],
+  "geometry": [
+    { "lat": 45.1299857, "lon": -93.3776548 },
+    { "lat": 45.1300310, "lon": -93.3802854 },
+    { "lat": 45.1300527, "lon": -93.3815041 },
+    { "lat": 45.1300810, "lon": -93.3828838 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "||slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 996224887,
+  "bounds": {
+    "minlat": 45.1376550,
+    "minlon": -93.4713454,
+    "maxlat": 45.1376597,
+    "maxlon": -93.4655963
+  },
+  "nodes": [
+    6771925663,
+    6771954828,
+    6771954829,
+    6771954830,
+    6771954831,
+    7092177085
+  ],
+  "geometry": [
+    { "lat": 45.1376597, "lon": -93.4655963 },
+    { "lat": 45.1376550, "lon": -93.4661438 },
+    { "lat": 45.1376559, "lon": -93.4679584 },
+    { "lat": 45.1376566, "lon": -93.4697281 },
+    { "lat": 45.1376586, "lon": -93.4707821 },
+    { "lat": 45.1376577, "lon": -93.4713454 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 996592853,
+  "bounds": {
+    "minlat": 45.1296706,
+    "minlon": -93.3768130,
+    "maxlat": 45.1297019,
+    "maxlon": -93.3745009
+  },
+  "nodes": [
+    536662660,
+    7975264733,
+    7123092146,
+    7975264721,
+    7123092135,
+    536674259
+  ],
+  "geometry": [
+    { "lat": 45.1297019, "lon": -93.3768130 },
+    { "lat": 45.1296959, "lon": -93.3764143 },
+    { "lat": 45.1296901, "lon": -93.3762097 },
+    { "lat": 45.1296869, "lon": -93.3759946 },
+    { "lat": 45.1296706, "lon": -93.3752410 },
+    { "lat": 45.1296782, "lon": -93.3745009 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 996648854,
+  "bounds": {
+    "minlat": 45.1375696,
+    "minlon": -93.4740132,
+    "maxlat": 45.1375714,
+    "maxlon": -93.4733165
+  },
+  "nodes": [
+    7118287291,
+    7118173381
+  ],
+  "geometry": [
+    { "lat": 45.1375714, "lon": -93.4740132 },
+    { "lat": 45.1375696, "lon": -93.4733165 }
+  ],
+  "tags": {
+    "destination:lanes": "none|Elm Creek Boulevard|Maple Grove Parkway",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete",
+    "turn:lanes": "none|none|right"
+  }
+},
+{
+  "type": "way",
+  "id": 997453282,
+  "bounds": {
+    "minlat": 45.1408726,
+    "minlon": -93.2600342,
+    "maxlat": 45.1422452,
+    "maxlon": -93.2552991
+  },
+  "nodes": [
+    186307423,
+    9950335698,
+    186307425,
+    186307427,
+    186244640
+  ],
+  "geometry": [
+    { "lat": 45.1408726, "lon": -93.2552991 },
+    { "lat": 45.1412510, "lon": -93.2567043 },
+    { "lat": 45.1416495, "lon": -93.2580898 },
+    { "lat": 45.1419235, "lon": -93.2590040 },
+    { "lat": 45.1422452, "lon": -93.2600342 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none;University Avenue",
+    "highway": "motorway",
+    "lanes": "2",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 997466582,
+  "bounds": {
+    "minlat": 45.1292138,
+    "minlon": -93.3678994,
+    "maxlat": 45.1295525,
+    "maxlon": -93.3631269
+  },
+  "nodes": [
+    536674264,
+    536674266,
+    536674267,
+    536674268,
+    536674270,
+    536674272,
+    536674273,
+    536674274,
+    536674275,
+    536674277,
+    536674278
+  ],
+  "geometry": [
+    { "lat": 45.1295525, "lon": -93.3678994 },
+    { "lat": 45.1295255, "lon": -93.3666179 },
+    { "lat": 45.1295053, "lon": -93.3661511 },
+    { "lat": 45.1294919, "lon": -93.3658726 },
+    { "lat": 45.1294701, "lon": -93.3654770 },
+    { "lat": 45.1294467, "lon": -93.3651690 },
+    { "lat": 45.1294120, "lon": -93.3647781 },
+    { "lat": 45.1293749, "lon": -93.3643983 },
+    { "lat": 45.1293073, "lon": -93.3638173 },
+    { "lat": 45.1292644, "lon": -93.3634893 },
+    { "lat": 45.1292138, "lon": -93.3631269 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "destination:lanes": "none|Noble Parkway;Zane Avenue",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 998988265,
+  "bounds": {
+    "minlat": 45.1424593,
+    "minlon": -93.2682038,
+    "maxlat": 45.1424930,
+    "maxlon": -93.2671926
+  },
+  "nodes": [
+    260700351,
+    186342734
+  ],
+  "geometry": [
+    { "lat": 45.1424930, "lon": -93.2682038 },
+    { "lat": 45.1424593, "lon": -93.2671926 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 1000512436,
+  "bounds": {
+    "minlat": 45.1339281,
+    "minlon": -93.4523862,
+    "maxlat": 45.1359657,
+    "maxlon": -93.4480571
+  },
+  "nodes": [
+    6339021098,
+    3134019962,
+    7118342193,
+    3134019963,
+    7118321758,
+    6672532255
+  ],
+  "geometry": [
+    { "lat": 45.1359657, "lon": -93.4523862 },
+    { "lat": 45.1357826, "lon": -93.4519902 },
+    { "lat": 45.1355559, "lon": -93.4515035 },
+    { "lat": 45.1352508, "lon": -93.4508586 },
+    { "lat": 45.1346502, "lon": -93.4495811 },
+    { "lat": 45.1339281, "lon": -93.4480571 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1000527664,
+  "bounds": {
+    "minlat": 45.1416069,
+    "minlon": -93.4984651,
+    "maxlat": 45.1430697,
+    "maxlon": -93.4979558
+  },
+  "nodes": [
+    6339021140,
+    6339021139,
+    6339021138,
+    7118275230
+  ],
+  "geometry": [
+    { "lat": 45.1430697, "lon": -93.4984651 },
+    { "lat": 45.1425342, "lon": -93.4982772 },
+    { "lat": 45.1419576, "lon": -93.4980757 },
+    { "lat": 45.1416069, "lon": -93.4979558 }
+  ],
+  "tags": {
+    "highway": "motorway_link",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1000783400,
+  "bounds": {
+    "minlat": 45.1234618,
+    "minlon": -93.3436633,
+    "maxlat": 45.1249337,
+    "maxlon": -93.3272391
+  },
+  "nodes": [
+    247809942,
+    2637294536,
+    247809934,
+    2637294532,
+    247809935,
+    2637294531,
+    247809936,
+    247809937,
+    7123559737,
+    247809938,
+    247809939,
+    7123559738,
+    247809882,
+    7123559739,
+    7123559740,
+    7123559741,
+    247809878,
+    7123559742,
+    247809871
+  ],
+  "geometry": [
+    { "lat": 45.1249337, "lon": -93.3436633 },
+    { "lat": 45.1248017, "lon": -93.3429665 },
+    { "lat": 45.1246681, "lon": -93.3422165 },
+    { "lat": 45.1245717, "lon": -93.3416153 },
+    { "lat": 45.1244842, "lon": -93.3410316 },
+    { "lat": 45.1244116, "lon": -93.3405029 },
+    { "lat": 45.1243360, "lon": -93.3399030 },
+    { "lat": 45.1242542, "lon": -93.3391806 },
+    { "lat": 45.1241761, "lon": -93.3383922 },
+    { "lat": 45.1241158, "lon": -93.3376849 },
+    { "lat": 45.1240703, "lon": -93.3370146 },
+    { "lat": 45.1240213, "lon": -93.3362692 },
+    { "lat": 45.1239853, "lon": -93.3356538 },
+    { "lat": 45.1239043, "lon": -93.3343307 },
+    { "lat": 45.1238081, "lon": -93.3327582 },
+    { "lat": 45.1237124, "lon": -93.3312546 },
+    { "lat": 45.1236288, "lon": -93.3299395 },
+    { "lat": 45.1235528, "lon": -93.3286836 },
+    { "lat": 45.1234618, "lon": -93.3272391 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1000783401,
+  "bounds": {
+    "minlat": 45.1249337,
+    "minlon": -93.3486635,
+    "maxlat": 45.1260404,
+    "maxlon": -93.3436633
+  },
+  "nodes": [
+    536674160,
+    247809940,
+    2637294549,
+    247809942
+  ],
+  "geometry": [
+    { "lat": 45.1260404, "lon": -93.3486635 },
+    { "lat": 45.1254280, "lon": -93.3459477 },
+    { "lat": 45.1251009, "lon": -93.3444731 },
+    { "lat": 45.1249337, "lon": -93.3436633 }
+  ],
+  "tags": {
+    "description": "eastbound 610.",
+    "destination:lanes": "none|none;Noble Parkway",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1000981142,
+  "bounds": {
+    "minlat": 45.1239656,
+    "minlon": -93.3443566,
+    "maxlat": 45.1253337,
+    "maxlon": -93.3313189
+  },
+  "nodes": [
+    9164989095,
+    7086971649,
+    7047394222,
+    7086971650,
+    247809881,
+    247809923,
+    247809924,
+    247809925,
+    247809926,
+    2637294534,
+    247809927,
+    2637294537,
+    2637294538,
+    2637294548,
+    2637294551,
+    247809957
+  ],
+  "geometry": [
+    { "lat": 45.1239656, "lon": -93.3313189 },
+    { "lat": 45.1239680, "lon": -93.3313579 },
+    { "lat": 45.1240553, "lon": -93.3327598 },
+    { "lat": 45.1241120, "lon": -93.3336908 },
+    { "lat": 45.1242296, "lon": -93.3356157 },
+    { "lat": 45.1243228, "lon": -93.3371147 },
+    { "lat": 45.1243671, "lon": -93.3377113 },
+    { "lat": 45.1244541, "lon": -93.3387118 },
+    { "lat": 45.1246061, "lon": -93.3400712 },
+    { "lat": 45.1246765, "lon": -93.3406073 },
+    { "lat": 45.1247612, "lon": -93.3411977 },
+    { "lat": 45.1248417, "lon": -93.3417174 },
+    { "lat": 45.1249368, "lon": -93.3423002 },
+    { "lat": 45.1250428, "lon": -93.3428888 },
+    { "lat": 45.1251773, "lon": -93.3435939 },
+    { "lat": 45.1253337, "lon": -93.3443566 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52"
+  }
+},
+{
+  "type": "way",
+  "id": 1000981143,
+  "bounds": {
+    "minlat": 45.1253337,
+    "minlon": -93.3494952,
+    "maxlat": 45.1264896,
+    "maxlon": -93.3443566
+  },
+  "nodes": [
+    247809957,
+    247809960,
+    7047394223,
+    247810021,
+    536674174
+  ],
+  "geometry": [
+    { "lat": 45.1253337, "lon": -93.3443566 },
+    { "lat": 45.1256832, "lon": -93.3459191 },
+    { "lat": 45.1259144, "lon": -93.3469436 },
+    { "lat": 45.1262828, "lon": -93.3485805 },
+    { "lat": 45.1264896, "lon": -93.3494952 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "destination:lanes": "|West Broadway Avenue;Zane Avenue",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52",
+    "turn:lanes": "|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1002582890,
+  "bounds": {
+    "minlat": 45.1425608,
+    "minlon": -93.2710923,
+    "maxlat": 45.1425822,
+    "maxlon": -93.2705736
+  },
+  "nodes": [
+    260700369,
+    260700381
+  ],
+  "geometry": [
+    { "lat": 45.1425822, "lon": -93.2710923 },
+    { "lat": 45.1425608, "lon": -93.2705736 }
+  ],
+  "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "oneway": "yes",
+    "ref": "MN 610"
+  }
+},
+{
+  "type": "way",
+  "id": 1012088184,
+  "bounds": {
+    "minlat": 45.1295845,
+    "minlon": -93.3685080,
+    "maxlat": 45.1298172,
+    "maxlon": -93.3639965
+  },
+  "nodes": [
+    536674212,
+    536674309,
+    536674310,
+    536674311,
+    536674312,
+    536674313,
+    260543316,
+    7047421903,
+    536662775
+  ],
+  "geometry": [
+    { "lat": 45.1295845, "lon": -93.3639965 },
+    { "lat": 45.1296376, "lon": -93.3644953 },
+    { "lat": 45.1296708, "lon": -93.3648981 },
+    { "lat": 45.1297008, "lon": -93.3652648 },
+    { "lat": 45.1297264, "lon": -93.3656558 },
+    { "lat": 45.1297498, "lon": -93.3660286 },
+    { "lat": 45.1297710, "lon": -93.3665867 },
+    { "lat": 45.1297883, "lon": -93.3673461 },
+    { "lat": 45.1298172, "lon": -93.3685080 }
+  ],
+  "tags": {
+    "description": "westbound 610.",
+    "destination:lanes": "none|none;West Broadway Avenue",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "tiger:cfcc": "A11",
+    "tiger:name_base": "State Highway 252",
+    "tiger:name_base_1": "United States Highway 52",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1014324175,
+  "bounds": {
+    "minlat": 45.1303964,
+    "minlon": -93.4166195,
+    "maxlat": 45.1305829,
+    "maxlon": -93.4013166
+  },
+  "nodes": [
+    1365567398,
+    1365567374,
+    7047456011,
+    7047456010,
+    7047417322,
+    7047417323,
+    1365567377,
+    7047417324,
+    5531835756,
+    7047417326,
+    1365567331,
+    7047417327,
+    1365567285
+  ],
+  "geometry": [
+    { "lat": 45.1303964, "lon": -93.4013166 },
+    { "lat": 45.1304383, "lon": -93.4032579 },
+    { "lat": 45.1304806, "lon": -93.4051979 },
+    { "lat": 45.1304896, "lon": -93.4059189 },
+    { "lat": 45.1305038, "lon": -93.4076101 },
+    { "lat": 45.1305205, "lon": -93.4096899 },
+    { "lat": 45.1305271, "lon": -93.4106079 },
+    { "lat": 45.1305414, "lon": -93.4118666 },
+    { "lat": 45.1305462, "lon": -93.4123760 },
+    { "lat": 45.1305537, "lon": -93.4133343 },
+    { "lat": 45.1305637, "lon": -93.4145225 },
+    { "lat": 45.1305738, "lon": -93.4157242 },
+    { "lat": 45.1305829, "lon": -93.4166195 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "cycleway": "no",
+    "destination:lanes": "none|none;Zachary Lane",
+    "foot": "no",
+    "highway": "motorway",
+    "horse": "no",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1026995354,
+  "bounds": {
+    "minlat": 45.1303375,
+    "minlon": -93.4418405,
+    "maxlat": 45.1313593,
+    "maxlon": -93.4351620
+  },
+  "nodes": [
+    1365567455,
+    7047422281,
+    7047422282,
+    1897371606,
+    6708893751,
+    1365567482,
+    6708893752,
+    6708893753,
+    1365567345,
+    1897371629,
+    7091842608,
+    1897371637,
+    1365567407,
+    7047710665,
+    1897371646,
+    7047710670,
+    1365567328,
+    7047710669,
+    7091814205,
+    1365567290
+  ],
+  "geometry": [
+    { "lat": 45.1303375, "lon": -93.4351620 },
+    { "lat": 45.1303483, "lon": -93.4357290 },
+    { "lat": 45.1303587, "lon": -93.4359549 },
+    { "lat": 45.1303836, "lon": -93.4364698 },
+    { "lat": 45.1304027, "lon": -93.4367279 },
+    { "lat": 45.1304391, "lon": -93.4372102 },
+    { "lat": 45.1304957, "lon": -93.4378066 },
+    { "lat": 45.1305298, "lon": -93.4380986 },
+    { "lat": 45.1305674, "lon": -93.4383945 },
+    { "lat": 45.1306194, "lon": -93.4387853 },
+    { "lat": 45.1306797, "lon": -93.4391511 },
+    { "lat": 45.1307243, "lon": -93.4394088 },
+    { "lat": 45.1307811, "lon": -93.4397061 },
+    { "lat": 45.1308586, "lon": -93.4400768 },
+    { "lat": 45.1309466, "lon": -93.4404404 },
+    { "lat": 45.1310370, "lon": -93.4407962 },
+    { "lat": 45.1311130, "lon": -93.4410688 },
+    { "lat": 45.1311940, "lon": -93.4413328 },
+    { "lat": 45.1312479, "lon": -93.4415065 },
+    { "lat": 45.1313593, "lon": -93.4418405 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "cycleway": "no",
+    "destination:lanes": "none|Maple Grove Parkway;none",
+    "foot": "no",
+    "highway": "motorway",
+    "horse": "no",
+    "lanes": "2",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1026995355,
+  "bounds": {
+    "minlat": 45.1303340,
+    "minlon": -93.4351620,
+    "maxlat": 45.1304617,
+    "maxlon": -93.4286610
+  },
+  "nodes": [
+    1365567457,
+    7047422277,
+    1365567393,
+    7047422278,
+    1365567455
+  ],
+  "geometry": [
+    { "lat": 45.1304617, "lon": -93.4286610 },
+    { "lat": 45.1303708, "lon": -93.4329686 },
+    { "lat": 45.1303406, "lon": -93.4343969 },
+    { "lat": 45.1303340, "lon": -93.4348695 },
+    { "lat": 45.1303375, "lon": -93.4351620 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "cycleway": "no",
+    "destination:lanes": "none|none;Elm Creek Boulevard",
+    "foot": "no",
+    "highway": "motorway",
+    "horse": "no",
+    "lanes": "2",
+    "maxheight:signed": "no",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|through;slight_right"
+  }
+},
+{
+  "type": "way",
+  "id": 1338238690,
+  "bounds": {
+    "minlat": 45.1302560,
+    "minlon": -93.3920830,
+    "maxlat": 45.1302717,
+    "maxlon": -93.3914944
+  },
+  "nodes": [
+    12378395844,
+    536653554
+  ],
+  "geometry": [
+    { "lat": 45.1302560, "lon": -93.3914944 },
+    { "lat": 45.1302717, "lon": -93.3920830 }
+  ],
+  "tags": {
+    "destination:lanes": "none|none|Zachary Lane;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "source": "image",
+    "surface": "concrete",
+    "turn:lanes": "none|none|through;right"
+  }
+},
+{
+  "type": "way",
+  "id": 1338567679,
+  "bounds": {
+    "minlat": 45.1299405,
+    "minlon": -93.3903410,
+    "maxlat": 45.1299542,
+    "maxlon": -93.3898546
+  },
+  "nodes": [
+    12381917646,
+    1365567367
+  ],
+  "geometry": [
+    { "lat": 45.1299542, "lon": -93.3903410 },
+    { "lat": 45.1299405, "lon": -93.3898546 }
+  ],
+  "tags": {
+    "bicycle": "no",
+    "destination:lanes": "none|none|West Broadway Avenue;none",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "65 mph",
+    "name": "MN-610",
+    "oneway": "yes",
+    "ref": "MN 610",
+    "turn:lanes": "none|none|through;right"
+  }
+}
+
+  ]
+}
