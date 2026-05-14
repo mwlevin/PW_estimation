@@ -146,17 +146,17 @@ public class Cell {
         return outflow_idx;
     }
     
-    public double getInflow(){
+    public double getInflow(long t){
         if(inflow_det != null){
-            return inflow_det.getLast30sCount();
+            return inflow_det.getLast30sCount(t);
         }
         
         return 0;
     }
     
-    public double getOutflow(){
+    public double getOutflow(long t){
         if(outflow_det != null){
-            return outflow_det.getLast30sCount();
+            return outflow_det.getLast30sCount(t);
         }
         return 0;
     }

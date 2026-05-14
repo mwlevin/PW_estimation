@@ -10,11 +10,11 @@ import umn.pw_estimation.PW.Coordinate;
  *
  * @author mlevin
  */
-public class LoopDetector extends Detector {
+public class FakeDetector extends Detector {
     
     private Coordinate loc;
     
-    public LoopDetector(String name, Coordinate loc){
+    public FakeDetector(String name, Coordinate loc){
         super(name);
         this.loc = loc;
     }
@@ -23,15 +23,12 @@ public class LoopDetector extends Detector {
         return loc;
     }
     
-    public int getLast30sCount(){
+    public int getLast30sCount(long time){
         return 12;
     }
     
-    public double getLast30sSpeed(){
+    public double getLast30sSpeed(long time){
         return 65;
     }
     
-    public double getLast30sDensity(){
-        return getLast30sFlow() / getLast30sSpeed();
-    }
 }

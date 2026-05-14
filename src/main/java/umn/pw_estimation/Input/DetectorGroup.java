@@ -33,20 +33,20 @@ public class DetectorGroup extends Detector{
         return detectors[0].getLocation();
     }
     
-    public int getLast30sCount(){
+    public int getLast30sCount(long t){
         int output = 0;
         for(Detector d : detectors){
-            output += d.getLast30sCount();
+            output += d.getLast30sCount(t);
         }
         return output;
     }
     
-    public double getLast30sSpeed(){
+    public double getLast30sSpeed(long t){
         double output = 0;
         int weight = 0;
         for(Detector d : detectors){
-            output += d.getLast30sSpeed();
-            weight += d.getLast30sCount();
+            output += d.getLast30sSpeed(t);
+            weight += d.getLast30sCount(t);
         }
         return output/weight;
     }

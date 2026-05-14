@@ -29,15 +29,15 @@ public abstract class Detector {
         return name;
     }
     
-    public abstract int getLast30sCount();
+    public abstract int getLast30sCount(long t);
     
-    public double getLast30sFlow(){
-        return getLast30sCount() * 3600.0/30.0; // units conversion
+    public double getLast30sFlow(long t){
+        return getLast30sCount(t) * 3600.0/30.0; // units conversion
     }
-    public abstract double getLast30sSpeed();
+    public abstract double getLast30sSpeed(long t);
     
-    public double getLast30sDensity(){
-        return getLast30sFlow() / getLast30sSpeed();
+    public double getLast30sDensity(long t){
+        return getLast30sFlow(t) / getLast30sSpeed(t);
     }
     
 }
