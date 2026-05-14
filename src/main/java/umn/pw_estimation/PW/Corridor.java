@@ -336,7 +336,11 @@ public class Corridor {
         x_t_tp.set(0);
         
         
+        int cell_idx = 0;
+        
         for(Cell c : cells){
+            cell_idx ++;
+            
             double C = calcC(c);
                     
             double dx1 = c.getLength();
@@ -385,9 +389,16 @@ public class Corridor {
             double q_i_t = v_i_t * k_i_t;
             
             double k_i_tn = k_i_t + dt/3600.0 * (q_ip_t/dx1 - q_i_t/dx1); // density for cell i at t+1
-            double v_i_tn = v_i_t + dt/3600.0 * (- (v_i_t * v_i_t - v_ip_t * v_ip_t) / (2 * dx1) + (eq_speed - v_i_t)/tau -
+            /*
+            double v_i_tn = v_i_t + dt/3600.0 * ( (-v_i_t * v_i_t + v_ip_t * v_ip_t) / (2 * dx1) + (eq_speed - v_i_t)/tau -
                     C / (k_i_t + chi) * (k_in_t - k_i_t)/dx2 );
+            */
+            
+            double v_i_tn = v_i_t + dt/3600.0 * ( (-v_i_t * v_i_t + v_ip_t * v_ip_t) / (2 * dx1));
 
+            //System.out.println("check "+cell_idx+" "+v_i_tn+" "+v_i_t+" "+v_ip_t);
+            //System.out.println("\t"+(eq_speed - v_i_t)/tau);
+            //System.out.println("\t"+C / (k_i_t + chi) * (k_in_t - k_i_t)/dx2 );
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
             
@@ -411,37 +422,37 @@ public class Corridor {
             }
             
             if(c.getPrev() != null){
-                F_t.setEntry(c.k_idx(), c.k_idx(), 1 + dt / 3600.0/dx1 * c.speed);
+                F_t.setEntry(c.k_idx(), c.k_idx(), 1 - dt / 3600.0/dx1 * c.speed);
             
-                F_t.setEntry(c.k_idx(), c.v_idx(), dt / 3600.0 /dx1 * c.density);
+                F_t.setEntry(c.k_idx(), c.v_idx(), -dt / 3600.0 /dx1 * c.density);
             
-                F_t.setEntry(c.k_idx(), c.getPrev().k_idx(), - dt / 3600.0 /dx1 * c.getPrev().speed);
+                F_t.setEntry(c.k_idx(), c.getPrev().k_idx(), dt / 3600.0 /dx1 * c.getPrev().speed);
                 
-                F_t.setEntry(c.k_idx(), c.getPrev().v_idx(), - dt / 3600.0 /dx1 * c.getPrev().density);
+                F_t.setEntry(c.k_idx(), c.getPrev().v_idx(), dt / 3600.0 /dx1 * c.getPrev().density);
                 
               
                 
-                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt / 3600.0  * -2 * v_ip_t / (2 * dx2));
+                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt / 3600.0  * v_ip_t / dx2);
                         
-                F_t.setEntry(c.v_idx(), c.v_idx(), 1 + dt  / 3600.0 * 2 * v_i_t / (2 * dx2)  - 1/tau);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - dt  / 3600.0 * v_i_t / dx2  - 1/tau);
                
+                
             }
             else{
                 F_t.setEntry(c.k_idx(), c.k_idx(), 1);
             
                 F_t.setEntry(c.k_idx(), c.v_idx(), 0);
                 
-                F_t.setEntry(c.v_idx(), c.v_idx(), - 1/tau);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 1/tau);
             }
             
             
             
             if(c.getNext() != null){
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0  * C / (k_i_t + chi) * 1/dx2 - 
-                        dt / 3600.0  * (k_in_t - k_i_t)/dx2 * C / ((k_i_t + chi) * (k_i_t + chi))  );
-                
-                
-                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/3600 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi) * 1/dx2));
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0 /dx2  * C / (k_i_t + chi) - 
+                        dt / 3600.0 /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))  );
+                                
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/3600/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)));
   
             }
             else{

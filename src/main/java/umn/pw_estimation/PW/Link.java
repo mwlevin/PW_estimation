@@ -12,7 +12,7 @@ import java.util.List;
  * @author mlevin
  */
 public class Link {
-    protected Cell[] cells;
+    public Cell[] cells;
     
     
     private double v; // free flow speed miles/hr

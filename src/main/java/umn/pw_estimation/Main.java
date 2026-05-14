@@ -11,6 +11,7 @@ import umn.pw_estimation.PW.Link;
 import org.apache.commons.math3.linear.RealMatrix;
 import umn.pw_estimation.PW.Corridor;
 import umn.pw_estimation.Input.LoopDetector;
+import umn.pw_estimation.PW.Coordinate;
 /**
  *
  * @author mlevin
@@ -18,14 +19,15 @@ import umn.pw_estimation.Input.LoopDetector;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-
-        Map<String, Corridor> corridors = Corridor.readOSM(new File("data/MN610/geometry.txt"), 6, new String[]{"westbound", "eastbound"}, new File("data/MN610/detectors.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
-        
         
         /*
+        Map<String, Corridor> corridors = Corridor.readOSM(new File("data/MN610/geometry.txt"), 6, new String[]{"westbound", "eastbound"}, new File("data/MN610/detectors.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
+        */
+        
+        
         double dt = 6;
         Link test = new Link("test", 0.3, dt, 60, 2400, 15, 240, 1);
-        test.addDetector(0, new LoopDetector("test"));
+        test.cells[0].setDetector(new LoopDetector("test", new Coordinate(0, 0)));
         
         Corridor corridor = new Corridor(new Link[]{test}, dt);
         
@@ -37,6 +39,6 @@ public class Main {
             corridor.nextTimestep();
         
         }
-        */
+       
     }
 }
