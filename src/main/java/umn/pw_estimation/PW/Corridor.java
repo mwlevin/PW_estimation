@@ -28,7 +28,7 @@ import umn.pw_estimation.Input.HistoricalDetector;
  */
 public class Corridor {
     
-    private double tau = 1; // speed adaptation term
+    private double tau = 6*3600.0; // speed adaptation term
     private double chi = 0.01; // avoid divide by 0 in traffic pressure // originally was 0.0001
     
     private Cell[] cells;
@@ -184,7 +184,8 @@ public class Corridor {
         for(Cell c : cells){
             cell_idx ++;
             
-            double C = calcC(c);
+            double c_0 = calcC(c); // convert m/s to mi/hr
+            double C = c_0*c_0;
                     
             double dx1 = c.getLength();
             double dx2 = (c.getNext() != null? c.getNext().getLength() : c.getLength());
@@ -221,7 +222,7 @@ public class Corridor {
                 k_ip_t = c.density;
                 v_ip_t = c.speed;
                 // starting cell should have a detector
-                q_ip_t = q_ip_t = k_ip_t * v_ip_t;
+                q_ip_t = k_ip_t * v_ip_t;
             }
             
             
@@ -231,17 +232,24 @@ public class Corridor {
             
             double q_i_t = v_i_t * k_i_t;
             
-            double k_i_tn = k_i_t + dt/3600.0 * (q_ip_t/dx1 - q_i_t/dx1); // density for cell i at t+1
+            double k_i_tn = k_i_t + dt/3600.0 / dx1 * (q_ip_t - q_i_t); // density for cell i at t+1
+            
             /*
-            double v_i_tn = v_i_t + dt/3600.0 * ( (-v_i_t * v_i_t + v_ip_t * v_ip_t) / (2 * dx1) + (eq_speed - v_i_t)/tau -
-                    C / (k_i_t + chi) * (k_in_t - k_i_t)/dx2 );
+            if(k_i_tn < 0){
+                k_i_tn = 0;
+            }
             */
             
-            double v_i_tn = v_i_t + dt/3600.0 * ( (-v_i_t * v_i_t + v_ip_t * v_ip_t) / (2 * dx1));
+            double v_i_tn = v_i_t - dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t) + dt/3600.0 * (eq_speed - v_i_t)/tau -
+                    dt/3600.0/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ;
+            
+            
 
-            //System.out.println("check "+cell_idx+" "+v_i_tn+" "+v_i_t+" "+v_ip_t);
-            //System.out.println("\t"+(eq_speed - v_i_t)/tau);
-            //System.out.println("\t"+C / (k_i_t + chi) * (k_in_t - k_i_t)/dx2 );
+            System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
+            //System.out.println("\t"+(k_i_t*dx1)+" "+(q_ip_t * dt/3600)+" "+(q_i_t * dt/3600));
+            System.out.println("\t"+v_i_t+" "+v_ip_t+" "+(v_i_t - v_ip_t)+" "+(dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t)));
+            System.out.println("\t"+eq_speed +" "+(dt * (eq_speed - v_i_t)/(tau)));
+            System.out.println("\t"+k_i_t+" "+k_in_t+" C="+C+" "+(dt/3600.0/dx2 * 100 / (k_i_t + chi) * (k_in_t - k_i_t) ));
             //System.out.println("check "+cell_idx+" "+k_i_tn+" "+q_ip_t+" "+q_i_t+" "+k_i_t);
             
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
@@ -314,7 +322,8 @@ public class Corridor {
     }
     
     private double calcC(Cell cell){
-        return Math.min(20, Math.max(10, cell.getLink().getFFSpeed() / tau));
+        return 10;
+        //return Math.min(20, Math.max(10, cell.getLink().getFFSpeed() / tau)); 
     }
     
  
@@ -439,7 +448,7 @@ public class Corridor {
             // covariance is likely negative: in congestion, larger k => smaller v
             // this is variance due to FD not fully describing traffic evolution
             // I don't know which values these should have
-            double scale = 1;
+            double scale = 1e-6;
             double var_k = 5 * scale;
             double var_v = 1 * scale;
             double cov = - var_k * var_v;

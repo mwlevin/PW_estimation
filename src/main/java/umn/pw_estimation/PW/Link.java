@@ -28,7 +28,7 @@ public class Link {
     private List<Coordinate> coords;
     
     // dt in sec
-    public Link(String name, double length, double dt, double v, double Q, double w, double K, int numLanes){
+    public Link(String name, double length, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
         this.length = length;
         this.v = v;
         this.Q = Q;
@@ -36,13 +36,14 @@ public class Link {
         this.K = K;
         this.numLanes = numLanes;
         
-        double dx = v * dt / 3600.0;
+        double dx = maxspeed * dt / 3600.0;
         
-        int numcells = (int)Math.max(1, Math.ceil(length/dx));
+        int numcells = (int)Math.max(1, Math.floor(length/dx));
         
         cells = new Cell[numcells];
         
         cell_len = length / numcells;
+
         
         Cell prev = null;
         for(int i = 0; i < cells.length; i++){
@@ -53,8 +54,8 @@ public class Link {
         
     }
     
-    public Link(String name, List<Coordinate> coords, double dt, double v, double Q, double w, double K, int numLanes){
-        this(name, calcLength(coords), dt, v, Q, w, K, numLanes);
+    public Link(String name, List<Coordinate> coords, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
+        this(name, calcLength(coords), dt, v, maxspeed, Q, w, K, numLanes);
         this.coords = coords;
     }
     
@@ -96,7 +97,9 @@ public class Link {
         if(k == 0){
             return v;
         }
-        return  Math.min(v, Math.min(getQ() / k,  -w + w * getK()/k));
+        double q = Math.min(v*k, Math.min(getQ(), -w*(k-getK())));
+        return q/k;
+
     }
     
     public double getDerivEqSpeed(double k){

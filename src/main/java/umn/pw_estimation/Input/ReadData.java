@@ -172,7 +172,7 @@ public class ReadData {
                 double Q = getCapacity(v);
                 double w = getW(v);
                 
-                Link link = new Link(""+id, coords, dt, v, Q, w, K, lanes);
+                Link link = new Link(""+id, coords, dt, v, v, Q, w, K, lanes);
                 
                 if(label != null){
                     links.get(label).add(link);

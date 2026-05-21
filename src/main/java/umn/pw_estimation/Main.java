@@ -22,13 +22,16 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         
+        /*
         ReadData read = new ReadData();
         Map<String, Corridor> corridors = read.readOSM(new File("data/MN610/geometry.txt"), 6, new String[]{"westbound", "eastbound"}, new File("data/MN610/detectors.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
         read.readDetectorData(new File("data/MN610/detector_data.csv"));
+        */
         
+        double dt = 3;
+        double maxspeed = 65;
         
-        double dt = 6;
-        Link test = new Link("test", 0.3, dt, 60, 2400, 15, 240, 1);
+        Link test = new Link("test", 0.3, dt, 55, maxspeed, 2400, 15, 240, 1);
         test.cells[0].setDetector(new FakeDetector("test", new Coordinate(0, 0)));
         
         Corridor corridor = new Corridor(new Link[]{test}, dt);
