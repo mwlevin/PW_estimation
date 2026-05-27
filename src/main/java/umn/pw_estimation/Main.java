@@ -30,9 +30,10 @@ public class Main {
         
         double dt = 3;
         double maxspeed = 65;
+        double length = 0.3;
         
-        Link test = new Link("test", 0.3, dt, 55, maxspeed, 2400, 15, 240, 1);
-        test.cells[0].setDetector(new FakeDetector("test", new Coordinate(0, 0)));
+        Link test = new Link("test", length, dt, 55, maxspeed, 2400, 15, 240, 1);
+        test.cells[0].setDetector(new FakeDetector("test", new Coordinate(0, 0), 12, 65));
         
         Corridor corridor = new Corridor(new Link[]{test}, dt);
         
