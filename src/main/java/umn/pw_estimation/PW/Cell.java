@@ -16,6 +16,7 @@ public class Cell {
     
     private int k_idx;
     private int v_idx;
+    public int cell_idx;
     private int inflow_idx, outflow_idx;
     
     private double length;

@@ -15,7 +15,7 @@ public class FakeDetector extends Detector {
     private Coordinate loc;
     
     public FakeDetector(String name, Coordinate loc, int par, int par1){
-        super(name);
+        super(name, Type.Mainline);
         this.loc = loc;
     }
     
@@ -23,7 +23,7 @@ public class FakeDetector extends Detector {
         return loc;
     }
     
-    public int getLast30sCount(long time){
+    public double getLast30sCount(long time){
         return 12;
     }
     

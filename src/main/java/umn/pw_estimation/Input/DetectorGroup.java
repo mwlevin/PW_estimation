@@ -15,12 +15,12 @@ public class DetectorGroup extends Detector{
     private Detector[] detectors;
     
     public DetectorGroup(Detector[] detectors){
-        super(createName(detectors));
+        super(createName(detectors), findType(detectors));
         this.detectors = detectors;
     }
     
     public DetectorGroup(String name, List<Detector> list){
-        super(name);
+        super(createName(list), findType(list));
         this.detectors = new Detector[list.size()];
         
         for(int i = 0; i < list.size(); i++){
@@ -28,27 +28,77 @@ public class DetectorGroup extends Detector{
         }
     }
     
+    private static Type findType(List<Detector> list){
+        Type type = list.get(0).getType();
+        
+        for(int idx = 1; idx < list.size(); idx++){
+            if(type != list.get(idx).getType()){
+                System.out.println(list);
+                throw new RuntimeException("type mismatch in detector group");
+            }
+        }
+        
+        return type;
+    }
+    
+    private static Type findType(Detector[] list){
+        Type type = list[0].getType();
+        
+        for(int idx = 1; idx < list.length; idx++){
+            if(type != list[idx].getType()){
+                System.out.println(list);
+                throw new RuntimeException("type mismatch in detector group");
+            }
+        }
+        
+        return type;
+    }
+    
     public Coordinate getLocation(){
         // locations should be very close - within 60 feet
         return detectors[0].getLocation();
     }
     
-    public int getLast30sCount(long t){
+    public double getLast30sCount(long t){
         int output = 0;
+        int good = 0;
+        
         for(Detector d : detectors){
-            output += d.getLast30sCount(t);
+            double d_out = d.getLast30sCount(t);
+            
+            if(d_out >= 0){
+                output += d_out;
+                good ++;
+            }
         }
-        return output;
+        
+        if(good == 0){
+            return -1;
+        }
+        else{
+            return output * (double) good/detectors.length;
+        }
     }
     
     public double getLast30sSpeed(long t){
         double output = 0;
         int weight = 0;
+        
         for(Detector d : detectors){
-            output += d.getLast30sSpeed(t);
-            weight += d.getLast30sCount(t);
+            double d_speed = d.getLast30sSpeed(t);
+            
+            if(d_speed >= 0){
+                output += d_speed;
+                weight += d.getLast30sCount(t);
+            }
         }
-        return output/weight;
+        
+        if(weight >= 0){
+            return -1;
+        }
+        else{
+            return output/weight;
+        }
     }
     
     public static String createName(Detector... detectors){
@@ -65,4 +115,21 @@ public class DetectorGroup extends Detector{
         
         return output;
     }
+    
+    
+    public static String createName(List<Detector> detectors){
+        String output = "[";
+        
+        for(int i = 0; i < detectors.size(); i++){
+            output += detectors.get(i).getName();
+            
+            if(i < detectors.size()-1){
+                output += ", ";
+            }
+        }
+        output += "]";
+        
+        return output;
+    }
+   
 }

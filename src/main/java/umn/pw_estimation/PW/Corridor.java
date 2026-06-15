@@ -5,7 +5,9 @@
 package umn.pw_estimation.PW;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,21 +39,23 @@ public class Corridor {
     private List<Link> links;
     
     private double dt;
-    private long time;
+    private long time; // units of seconds
+    
+    private String name;
     
     
-    public Corridor(double dt){
-        links = new ArrayList<>();
-        this.dt = dt;
+    public Corridor(String name, double dt){
+        this(name, new ArrayList<Link>(), dt);
     }
     
-    public Corridor(List<Link> links, double dt){
+    public Corridor(String name, List<Link> links, double dt){
+        this.name = name;
         this.links = links;
         this.dt = dt;
     }
     
-    public Corridor(Link[] input, double dt){
-        this(dt);
+    public Corridor(String name, Link[] input, double dt){
+        this(name, dt);
         
         
         for(Link l : input){
@@ -61,7 +65,13 @@ public class Corridor {
     
     
     
+    public String getName(){
+        return name;
+    }
     
+    public String toString(){
+        return name;
+    }
     
     
     
@@ -88,9 +98,11 @@ public class Corridor {
         
         for(Link l : links){
             for(Cell c: l.cells){
-                cells[cell_idx++] = c;
+                cells[cell_idx] = c;
+                c.cell_idx = cell_idx;
                 c.set_k_idx(var_idx++);
                 c.set_v_idx(var_idx++);
+                
                 
                 if(c.hasInflowDet()){
                     c.set_inflow_idx(var_idx++);
@@ -98,6 +110,8 @@ public class Corridor {
                 if(c.hasOutflowDet()){
                     c.set_outflow_idx(var_idx++);
                 }
+                
+                cell_idx++;
             }
         }
     }
@@ -108,6 +122,8 @@ public class Corridor {
     private RealVector y_t;
     
     public void init(long time){
+        this.time = time;
+        
         constructCells();
         
         int size = 0;
@@ -115,10 +131,6 @@ public class Corridor {
         for(Cell c : cells){
             size += c.getNumVariables();
         }
-        
-        
-        
-        
 
         x_t_tp = new ArrayRealVector(size);
         x_t_t = new ArrayRealVector(size);
@@ -127,19 +139,33 @@ public class Corridor {
         
         for(Cell c : cells){
             if(c.hasDetector()){
-                c.density = c.getDetector().getLast30sDensity(time);
-                c.speed = c.getDetector().getLast30sSpeed(time);  // already in m/s; no need for unit conversions
+                // values of -1 indicates bad data or missing data
+                double k = c.getDetector().getLast30sDensity(time);
+                double v = c.getDetector().getLast30sSpeed(time);
+                
+                if(k >= 0 && v >= 0){
+                    c.density = k;
+                    c.speed = v;  // already in m/s; no need for unit conversions
+                }
+                else{
+                    c.density = 0;
+                    c.speed = c.getLink().getFFSpeed();
+                }
             }
             
             x_t_t.setEntry(c.k_idx(), c.density);
             x_t_t.setEntry(c.v_idx(), c.speed);
             
             if(c.hasInflowDet()){
-                x_t_t.setEntry(c.inflow_idx(), c.getInflow(time));
+                double inflow = c.getInflow(time);
+                x_t_t.setEntry(c.inflow_idx(), inflow);
+                c.inflow = inflow;
             }
             
             if(c.hasOutflowDet()){
-                x_t_t.setEntry(c.outflow_idx(), c.getOutflow(time));
+                double outflow = c.getOutflow(time);
+                x_t_t.setEntry(c.outflow_idx(), outflow);
+                c.outflow = outflow;
             }
         }
         
@@ -159,6 +185,79 @@ public class Corridor {
         
     }
     
+    public void estimate(int endTime, PrintStream fileout) throws IOException{
+        
+        if(fileout != null){
+            printHeader(fileout);
+        }
+        
+        while(time < endTime){
+            if(fileout != null){
+                printCellData(fileout);
+            }
+            
+            nextTimestep();
+        }
+        
+        fileout.close();
+    }
+    
+    private void printHeader(PrintStream out){
+        // header
+        String header1 = "";
+        String header2 = "";
+        header1 += "time";
+        
+        
+        for(Cell c : cells){
+            header1 += ", cell "+c.cell_idx+", ";
+            header2 += ", k, u";
+            
+            if(c.hasDetector()){
+                header1 += ", detector "+c.getDetector().getName()+",";
+                header2 += ", k, u";
+            }
+            
+            if(c.hasInflowDet()){
+                header1 += ", inflow";
+                header2 += ", q";
+            }
+            if(c.hasOutflowDet()){
+                header1 += ", outflow";
+                header2 += ", q";
+            }
+        }
+        
+        out.println(header1);
+        out.println(header2);
+    }
+    
+    private void printCellData(PrintStream out){
+        String line = "";
+        
+        line += time;
+        
+        for(Cell c : cells){
+            line += ", "+c.density+", "+c.speed;
+            
+            
+            if(c.hasDetector()){
+                Detector det = c.getDetector();
+                line += ", "+det.getLast30sDensity(time);
+                line += ", "+det.getLast30sSpeed(time);
+            }
+            
+            if(c.hasInflowDet()){
+                line += ", "+c.getInflowDet().getLast30sFlow(time);
+            }
+            if(c.hasOutflowDet()){
+                line += ", "+c.getOutflowDet().getLast30sFlow(time);
+            }
+        }
+        
+        out.println(line);
+    }
+    
     public void nextTimestep(){
         
         predict(); // this populates P_t_tp and x_t_tp
@@ -169,12 +268,10 @@ public class Corridor {
         // if so, I will copy values from the cells into an array and process that array. Copying should be fast enough to not cause a synchronization error.
         saveValuesInCells(); // moves x_t_t values to cells
         
-        time += dt * 1000;
+        time += dt;
     }
     
     private void predict(){
-        
-        
         // vector of (k, v) per cell
         x_t_tp.set(0);
         
@@ -182,7 +279,7 @@ public class Corridor {
         int cell_idx = 0;
         
         for(Cell c : cells){
-            cell_idx ++;
+            
             
             double c_0 = calcC(c);
             double C = c_0*c_0;
@@ -201,12 +298,6 @@ public class Corridor {
             if(c.hasOutflowDet()){
                 outflow = c.outflow;
             }
-
-            
-            // assume added flow enters cell, so it increases occupancy (increases density)
-            // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
-            k_i_t += (inflow - outflow) / c.getLength();
-            
 
             double v_i_t = c.speed;
             double v_ip_t = 0; // in refers to i-next
@@ -234,17 +325,22 @@ public class Corridor {
             
             double k_i_tn = k_i_t + dt / dx1 * (q_ip_t - q_i_t); // density for cell i at time t+1
             
-            /*
-            if(k_i_tn < 0){
-                k_i_tn = 0;
-            }
-            */
-            
-            double v_i_tn = v_i_t - dt /dx1 * v_i_t * (v_i_t - v_ip_t) + dt * (eq_speed - v_i_t)/tau -
-                    dt/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ;
-            
-            
+            // assume added flow enters cell, so it increases occupancy (increases density)
+            // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
+            k_i_tn += (inflow - outflow) * dt / dx1;
 
+            
+            // speed pressure term is becoming overlarge because k_i_t is small while k_in_t is large.
+            double k_i_t_pressure = k_i_t;
+            if(k_i_t < 0.001 && c.getNext() != null && c.getNext().hasDetector()){
+                k_i_t_pressure = k_in_t;
+            }
+            
+            double v_i_tn = v_i_t - dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t) + dt/3600.0 * (eq_speed - v_i_t)/tau -
+                    dt/3600.0/dx2 * C / (k_i_t_pressure + chi) * (k_in_t - k_i_t_pressure);
+            
+            
+            /*
             //System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
             //System.out.println("\t"+cell_idx+"    "+(k_i_t*dx1)+"    "+(q_ip_t * dt)+"    "+(q_i_t * dt));  // no. of cars in cell i; no. of cars entering cell i; no. of cars leaving cell i
             //System.out.println("\t"+cell_idx+"  v_i_t="+v_i_t+"   v_ip_t="+v_ip_t+"  diff="+(v_i_t - v_ip_t)+" term1="+(dt /dx1 * v_i_t * (v_i_t - v_ip_t)));
@@ -255,7 +351,14 @@ public class Corridor {
             //System.out.println("\t" +c.getLength());
             //System.out.println("\t" +(c.getNext() != null? c.getNext().getLength() : c.getLength()));
             System.out.println("\t........................");
-              
+            */
+            
+            
+            // this prevents excessive values
+            v_i_tn = Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
+            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
+            
+            
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
             
@@ -270,12 +373,12 @@ public class Corridor {
             
             if(c.hasInflowDet()){
                 F_t.setEntry(c.inflow_idx(), c.inflow_idx(), 1);
-                F_t.setEntry(c.k_idx(), c.inflow_idx(), 1.0 / c.getLength());
+                F_t.setEntry(c.k_idx(), c.inflow_idx(), dt / dx1);
             }
             
             if(c.hasOutflowDet()){
                 F_t.setEntry(c.outflow_idx(), c.outflow_idx(), 1);
-                F_t.setEntry(c.k_idx(), c.outflow_idx(), -1.0 / c.getLength());
+                F_t.setEntry(c.k_idx(), c.outflow_idx(), -dt / dx1);
             }
             
             if(c.getPrev() != null){
@@ -319,6 +422,8 @@ public class Corridor {
             else{
                 F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
             }
+            
+            cell_idx ++;
         }
         
         
@@ -341,8 +446,17 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // this is the measurement residual
-                double residual_k = c.getDetector().getLast30sDensity(time) - x_t_tp.getEntry(c.k_idx());
-                double residual_v = c.getDetector().getLast30sSpeed(time) - x_t_tp.getEntry(c.v_idx());
+                double k_observed = c.getDetector().getLast30sDensity(time);
+                double v_observed = c.getDetector().getLast30sSpeed(time);
+                
+                double residual_k = 0;
+                double residual_v = 0;
+                
+                // data = -1 indicates no values found or bad data
+                if(k_observed >= 0 && v_observed >= 0){
+                    residual_k = k_observed - x_t_tp.getEntry(c.k_idx());
+                    residual_v = v_observed - x_t_tp.getEntry(c.v_idx());
+                }
                 
                 y_t.setEntry(c.k_idx(), residual_k);
                 y_t.setEntry(c.v_idx(), residual_v);
@@ -355,7 +469,7 @@ public class Corridor {
                     double residual_outflow = c.getOutflow(time) - x_t_tp.getEntry(c.outflow_idx());
                     y_t.setEntry(c.outflow_idx(), residual_outflow);
                 }
-                System.out.println(c.getDetector().getLast30sDensity(time));
+                //System.out.println("det density="+c.getDetector().getLast30sDensity(time));
                 //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
             }
         }

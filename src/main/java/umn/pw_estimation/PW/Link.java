@@ -22,6 +22,7 @@ public class Link {
     private int numLanes;
     private double length; // units of meters
     private double cell_len;
+    private double maxspeed; // exceeding this violates CFL
     
     private String name;
     
@@ -29,12 +30,14 @@ public class Link {
     
     // dt in sec
     public Link(String name, double length, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
+        this.name = name;
         this.length = length * 1609.3;  // miles to meters
         this.v = v / 2.237;  // converting units here, mph to m/s
         this.Q = Q / 3600.0;  // veh/hr to veh/s
         this.w = w / 2.237;
         this.K = K / 1609.3;  // veh/mi to veh/m
         this.numLanes = numLanes;
+        this.maxspeed = maxspeed / 2.237;
         
         double dx = maxspeed / 2.237 * dt;  // converts mph to m/s
         
@@ -61,6 +64,10 @@ public class Link {
         this.coords = coords;
     }
     
+    public double getMaxSpeed(){
+        return maxspeed;
+    }
+    
     public boolean addDetector(Detector det){
 
         Coordinate location = det.getLocation();
@@ -73,12 +80,16 @@ public class Link {
             double dist2 = Coordinate.dist(location, coords.get(i+1));
             double total_dist = Coordinate.dist(coords.get(i), coords.get(i+1));
             
+            //System.out.println("\ttrying to add "+det+" "+name+" "+dist1+" "+dist2+" "+total_dist+" "+(5280*(dist1+dist2-total_dist)));
             
-            // admit 200ft error for curvature, road coordinate differences, etc.
+            // admit some error for curvature, road coordinate differences, etc.
             // if dist1 + dist2 < total_dist means it is outside of the link
-            if(Math.abs((dist1 + dist2 - total_dist)*5280) <= 200){
+            if(Math.abs((dist1 + dist2 - total_dist)*5280) <= 50){
                 // now need to compute distance along road
-                addDetector(dist1 + calcLength(coords, i), det);
+                // distance is in miles so convert to meters
+                
+                
+                addDetector((dist1 + calcLength(coords, i))*1609.3, det);
                 return true;
             }
         }
@@ -89,7 +100,7 @@ public class Link {
     public void addDetector(double position, Detector det){
         assert(position > 0 && position < length);
         
-        int cell_idx = (int)Math.min(cell_len-1, Math.ceil(position / cell_len));
+        int cell_idx = (int)Math.min(cells.length-1, Math.ceil(position / cell_len));
         
         cells[cell_idx].setDetector(det);
     }

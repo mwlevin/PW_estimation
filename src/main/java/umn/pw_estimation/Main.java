@@ -5,7 +5,9 @@
 package umn.pw_estimation;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Map;
 import umn.pw_estimation.PW.Link;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -22,12 +24,26 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         
-        /*
-        ReadData read = new ReadData();
-        Map<String, Corridor> corridors = read.readOSM(new File("data/MN610/geometry.txt"), 6, new String[]{"westbound", "eastbound"}, new File("data/MN610/detectors.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
-        read.readDetectorData(new File("data/MN610/detector_data.csv"));
-        */
+        double dt = 3;
         
+        ReadData read = new ReadData();
+        Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610 edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
+        read.readDetectorData(new File("data/MN610/detector_data.csv"));
+       
+        for(String direction : corridors.keySet()){
+            Corridor corridor = corridors.get(direction);
+            corridor.init(0);
+        }
+        
+        for(String direction : corridors.keySet()){
+            Corridor corridor = corridors.get(direction);
+            PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
+            int duration = (int)(0.5*60); // in seconds
+            corridor.estimate(duration, fileout); // this creates a CSV file
+            fileout.close();
+        }
+        
+        /*
         double dt = 3;
         double maxspeed = 80.8;
         
@@ -45,9 +61,8 @@ public class Main {
         
             corridor.nextTimestep();
             
- 
-        
         } 
+        */
        
     }
 } /* t=12.00 --  //with maxspeed 45 mph

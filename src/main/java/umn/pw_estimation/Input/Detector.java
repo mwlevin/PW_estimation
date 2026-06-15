@@ -12,10 +12,35 @@ import umn.pw_estimation.PW.Coordinate;
  */
 public abstract class Detector {
     
-    private String name;
+    public static enum Type{
+        Mainline,
+        Merge,
+        Exit
+    }
     
-    public Detector(String name){
+    public static Type getType(String name){
+        if(name.equalsIgnoreCase("Mainline")){
+            return Type.Mainline;
+        }
+        else if(name.equalsIgnoreCase("Merge")){
+            return Type.Merge;
+        }
+        else if(name.equalsIgnoreCase("Exit")){
+            return Type.Exit;
+        }
+        else{
+            return null;
+        }
+    }
+    
+    
+    
+    private String name;
+    private Type type;
+    
+    public Detector(String name, Type type){
         this.name = name;
+        this.type = type;
     }
     
     public abstract Coordinate getLocation();
@@ -25,19 +50,39 @@ public abstract class Detector {
         return name;
     }
     
+    public Type getType(){
+        return type;
+    }
+    
     public String toString(){
         return name;
     }
     
-    public abstract int getLast30sCount(long t);
+    // every count is an int. But extrapolation for missing detectors may be a double.
+    public abstract double getLast30sCount(long t);
     
     public double getLast30sFlow(long t){
-        return getLast30sCount(t) / 30.0;
+        double count = getLast30sCount(t);
+                
+        if(count >= 0){
+            return count / 30.0;
+        }
+        else{
+            return -1;
+        }
     }
     public abstract double getLast30sSpeed(long t);
     
     public double getLast30sDensity(long t){
-        return getLast30sFlow(t) / getLast30sSpeed(t);
+        double flow = getLast30sFlow(t);
+        double speed = getLast30sSpeed(t);
+        
+        if(flow >= 0 && speed >= 0){
+            return flow / speed;
+        }
+        else{
+            return -1;
+        }
     }
     
 }

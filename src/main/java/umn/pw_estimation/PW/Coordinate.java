@@ -39,4 +39,23 @@ public class Coordinate {
         double c = 2 * Math.asin(Math.sqrt(a));
         return rad * c;
     }
+    
+    public static double bearing(Coordinate c1, Coordinate c2){
+        double lat1Rad = Math.toRadians(c1.lat);
+        double lat2Rad = Math.toRadians(c2.lat);
+        double lonDiffRad = Math.toRadians(c2.lon - c1.lon);
+
+        // Calculate the bearing
+        double y = Math.sin(lonDiffRad) * Math.cos(lat2Rad);
+        double x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+                   Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(lonDiffRad);
+
+        double bearingRad = Math.atan2(y, x);
+
+        // Convert radians to degrees
+        double bearingDeg = Math.toDegrees(bearingRad);
+
+        // Normalize the bearing to 0 - 360 degrees
+        return (bearingDeg + 360) % 360;
+    }
 }

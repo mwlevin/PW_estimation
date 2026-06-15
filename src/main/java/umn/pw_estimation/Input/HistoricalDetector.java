@@ -17,44 +17,50 @@ public class HistoricalDetector extends Detector {
     
     private Coordinate loc;
     
-    public List<Double> speeds;
-    public List<Integer> counts;
+    private List<Double> speeds;
+    private List<Integer> counts;
     
-    public HistoricalDetector(String name, Coordinate loc){
-        super(name);
+    public HistoricalDetector(String name, Coordinate loc, Type type){
+        super(name, type);
         this.loc = loc;
         
         counts = new ArrayList<>();
         speeds = new ArrayList<>();
     }
     
+    public void addPoint(int count, double speed){
+        counts.add(count);
+        speeds.add(speed);
+    }
+    
     public Coordinate getLocation(){
         return loc;
     }
     
-    public int getLast30sCount(long t){
+    public double getLast30sCount(long t){
         int idx = (int)(t/30);
+        
         if(idx < counts.size()){
             int output = counts.get(idx);
             if(output >= 0){
                 return output;
             }
-            
         }
 
-        return 0;
+        return -1;
         
     }
     
     public double getLast30sSpeed(long t){
         int idx = (int)(t/30);
-        if(idx < counts.size()){
-            int output = counts.get(idx);
+        if(idx < speeds.size()){
+            double output = speeds.get(idx);
             if(output >= 0){
                 return output;
             }
         }
-        return 65;
+        
+        return -1;
         
     }
 }
