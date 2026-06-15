@@ -15,12 +15,12 @@ public class Link {
     public Cell[] cells;
     
     
-    private double v; // free flow speed miles/hr
-    private double Q; // capacity per lane veh/hr
-    private double w; // congested wave speed miles/hr
-    private double K; // jam density per lane veh/mile
+    private double v; // free flow speed m/s
+    private double Q; // capacity per lane veh/s
+    private double w; // congested wave speed m/s
+    private double K; // jam density per lane veh/m
     private int numLanes;
-    private double length; // units of miles
+    private double length; // units of meters
     private double cell_len;
     
     private String name;
@@ -29,20 +29,22 @@ public class Link {
     
     // dt in sec
     public Link(String name, double length, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
-        this.length = length;
-        this.v = v;
-        this.Q = Q;
-        this.w = w;
-        this.K = K;
+        this.length = length * 1609.3;  // miles to meters
+        this.v = v / 2.237;  // converting units here, mph to m/s
+        this.Q = Q / 3600.0;  // veh/hr to veh/s
+        this.w = w / 2.237;
+        this.K = K / 1609.3;  // veh/mi to veh/m
         this.numLanes = numLanes;
         
-        double dx = maxspeed * dt / 3600.0;
+        double dx = maxspeed / 2.237 * dt;  // converts mph to m/s
         
-        int numcells = (int)Math.max(1, Math.floor(length/dx));
+        int numcells = (int)Math.max(1, Math.floor(this.length/dx));
         
         cells = new Cell[numcells];
         
-        cell_len = length / numcells;
+        cell_len = this.length / numcells;
+        
+        //System.out.println("check cell length "+cell_len);
 
         
         Cell prev = null;

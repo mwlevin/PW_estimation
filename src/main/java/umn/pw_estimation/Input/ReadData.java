@@ -152,7 +152,7 @@ public class ReadData {
                 
                 int lanes = tags.containsKey("lanes")? Integer.parseInt(tags.get("lanes")) : 3;
                 
-                int speed_limit = 65;
+                int speed_limit = 45;
                 
                 if(tags.containsKey("maxspeed")){
                     temp = tags.get("maxspeed");

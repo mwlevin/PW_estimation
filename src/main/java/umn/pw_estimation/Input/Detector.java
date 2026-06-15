@@ -32,7 +32,7 @@ public abstract class Detector {
     public abstract int getLast30sCount(long t);
     
     public double getLast30sFlow(long t){
-        return getLast30sCount(t) * 3600.0/30.0; // units conversion
+        return getLast30sCount(t) / 30.0;
     }
     public abstract double getLast30sSpeed(long t);
     

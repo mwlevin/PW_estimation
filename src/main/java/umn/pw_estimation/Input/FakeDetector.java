@@ -13,14 +13,10 @@ import umn.pw_estimation.PW.Coordinate;
 public class FakeDetector extends Detector {
     
     private Coordinate loc;
-    private double speed;
-    private int count;
     
-    public FakeDetector(String name, Coordinate loc, int count, double speed){
+    public FakeDetector(String name, Coordinate loc, int par, int par1){
         super(name);
         this.loc = loc;
-        this.count = count;
-        this.speed = speed;
     }
     
     public Coordinate getLocation(){
@@ -28,11 +24,11 @@ public class FakeDetector extends Detector {
     }
     
     public int getLast30sCount(long time){
-        return count;
+        return 12;
     }
     
     public double getLast30sSpeed(long time){
-        return speed;
+        return 35 * 0.447;  // mph to m/s conversion
     }
     
 }

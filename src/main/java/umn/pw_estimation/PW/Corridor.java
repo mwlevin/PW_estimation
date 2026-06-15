@@ -28,8 +28,8 @@ import umn.pw_estimation.Input.HistoricalDetector;
  */
 public class Corridor {
     
-    private double tau = 6*3600.0; // speed adaptation term
-    private double chi = 0.01; // avoid divide by 0 in traffic pressure // originally was 0.0001
+    private double tau = 0.1 * 3600.0; // speed adaptation term
+    private double chi = 0.12; // avoid divide by 0 in traffic pressure // originally was 0.0001
     
     private Cell[] cells;
     
@@ -128,7 +128,7 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 c.density = c.getDetector().getLast30sDensity(time);
-                c.speed = c.getDetector().getLast30sSpeed(time);
+                c.speed = c.getDetector().getLast30sSpeed(time);  // already in m/s; no need for unit conversions
             }
             
             x_t_t.setEntry(c.k_idx(), c.density);
@@ -184,7 +184,7 @@ public class Corridor {
         for(Cell c : cells){
             cell_idx ++;
             
-            double c_0 = calcC(c); // convert m/s to mi/hr
+            double c_0 = calcC(c);
             double C = c_0*c_0;
                     
             double dx1 = c.getLength();
@@ -232,7 +232,7 @@ public class Corridor {
             
             double q_i_t = v_i_t * k_i_t;
             
-            double k_i_tn = k_i_t + dt/3600.0 / dx1 * (q_ip_t - q_i_t); // density for cell i at t+1
+            double k_i_tn = k_i_t + dt / dx1 * (q_ip_t - q_i_t); // density for cell i at time t+1
             
             /*
             if(k_i_tn < 0){
@@ -240,18 +240,22 @@ public class Corridor {
             }
             */
             
-            double v_i_tn = v_i_t - dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t) + dt/3600.0 * (eq_speed - v_i_t)/tau -
-                    dt/3600.0/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ;
+            double v_i_tn = v_i_t - dt /dx1 * v_i_t * (v_i_t - v_ip_t) + dt * (eq_speed - v_i_t)/tau -
+                    dt/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ;
             
             
 
-            System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
-            //System.out.println("\t"+(k_i_t*dx1)+" "+(q_ip_t * dt/3600)+" "+(q_i_t * dt/3600));
-            System.out.println("\t"+v_i_t+" "+v_ip_t+" "+(v_i_t - v_ip_t)+" "+(dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t)));
-            System.out.println("\t"+eq_speed +" "+(dt * (eq_speed - v_i_t)/(tau)));
-            System.out.println("\t"+k_i_t+" "+k_in_t+" C="+C+" "+(dt/3600.0/dx2 * 100 / (k_i_t + chi) * (k_in_t - k_i_t) ));
-            //System.out.println("check "+cell_idx+" "+k_i_tn+" "+q_ip_t+" "+q_i_t+" "+k_i_t);
-            
+            //System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
+            //System.out.println("\t"+cell_idx+"    "+(k_i_t*dx1)+"    "+(q_ip_t * dt)+"    "+(q_i_t * dt));  // no. of cars in cell i; no. of cars entering cell i; no. of cars leaving cell i
+            //System.out.println("\t"+cell_idx+"  v_i_t="+v_i_t+"   v_ip_t="+v_ip_t+"  diff="+(v_i_t - v_ip_t)+" term1="+(dt /dx1 * v_i_t * (v_i_t - v_ip_t)));
+            //System.out.println("\t  eq_speed="+eq_speed +"  term2="+(dt * (eq_speed - v_i_t)/(tau)));
+            System.out.println("\t"+cell_idx+"  k_i_t="+k_i_t+" k_in_t="+k_in_t+"   C="+C+" term3="+(dt/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ));
+            System.out.println("\t  dt/dx1="+dt/dx1+" q_ip_t="+q_ip_t+" q_i_t="+q_i_t+" term2k="+(dt/dx1 * (q_ip_t - q_i_t)));
+            //System.out.println("\t"+cell_idx+"    "+k_i_tn+"    "+q_ip_t+"    "+q_i_t+"    "+k_i_t);
+            //System.out.println("\t" +c.getLength());
+            //System.out.println("\t" +(c.getNext() != null? c.getNext().getLength() : c.getLength()));
+            System.out.println("\t........................");
+              
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
             
@@ -275,20 +279,24 @@ public class Corridor {
             }
             
             if(c.getPrev() != null){
-                F_t.setEntry(c.k_idx(), c.k_idx(), 1 - dt / 3600.0/dx1 * c.speed);
+                F_t.setEntry(c.k_idx(), c.k_idx(), 1 - dt /dx1 * c.speed);
             
-                F_t.setEntry(c.k_idx(), c.v_idx(), -dt / 3600.0 /dx1 * c.density);
+                F_t.setEntry(c.k_idx(), c.v_idx(), -dt /dx1 * c.density);
             
-                F_t.setEntry(c.k_idx(), c.getPrev().k_idx(), dt / 3600.0 /dx1 * c.getPrev().speed);
+                F_t.setEntry(c.k_idx(), c.getPrev().k_idx(), dt /dx1 * c.getPrev().speed);
                 
-                F_t.setEntry(c.k_idx(), c.getPrev().v_idx(), dt / 3600.0 /dx1 * c.getPrev().density);
+                F_t.setEntry(c.k_idx(), c.getPrev().v_idx(), dt /dx1 * c.getPrev().density);
                 
               
                 
-                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt / 3600.0  * v_ip_t / dx2);
+                /* F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * v_ip_t / dx2);  
                         
-                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - dt  / 3600.0 * v_i_t / dx2  - 1/tau);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - dt * v_i_t / dx2  - 1/tau); */
                
+              
+                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * v_i_t / dx2);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 2 * dt * v_i_t / dx2 - dt /tau + dt * v_ip_t / dx2);
+                      
                 
             }
             else{
@@ -296,20 +304,20 @@ public class Corridor {
             
                 F_t.setEntry(c.k_idx(), c.v_idx(), 0);
                 
-                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 1/tau);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - dt /tau);
             }
             
             
             
             if(c.getNext() != null){
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0 /dx2  * C / (k_i_t + chi) - 
-                        dt / 3600.0 /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))  );
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) - 
+                        dt /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))  ); 
                                 
-                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/3600/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)));
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)));
   
             }
             else{
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt / 3600.0  * c.getLink().getDerivEqSpeed(k_in_t)/tau);
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
             }
         }
         
@@ -322,7 +330,7 @@ public class Corridor {
     }
     
     private double calcC(Cell cell){
-        return 10;
+        return 40.25;  // m/s
         //return Math.min(20, Math.max(10, cell.getLink().getFFSpeed() / tau)); 
     }
     
@@ -347,7 +355,7 @@ public class Corridor {
                     double residual_outflow = c.getOutflow(time) - x_t_tp.getEntry(c.outflow_idx());
                     y_t.setEntry(c.outflow_idx(), residual_outflow);
                 }
-                
+                System.out.println(c.getDetector().getLast30sDensity(time));
                 //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
             }
         }
@@ -407,9 +415,9 @@ public class Corridor {
         // E[1/v] is approximately 1/mu + sigma^2/mu^3
         // variance(1/v) is approximately sigma^2/mu^4
         
-        double len_mean = 14.7;
+        double len_mean = 4.48;  // units of meters; 14.7 ft
         
-        double len_stdev = 1.5; // stdev in vehicle length
+        double len_stdev = 0.46; // stdev in vehicle length; 1.5 ft
         double len_var = len_stdev * len_stdev;
         
         double E_inv_len = 1/len_mean + len_stdev * len_stdev / (len_mean * len_mean * len_mean); // approximation
