@@ -272,6 +272,7 @@ public class Corridor {
     }
     
     private void predict(){
+        System.out.println("time = "+time);
         // vector of (k, v) per cell
         x_t_tp.set(0);
         
@@ -324,6 +325,9 @@ public class Corridor {
             double q_i_t = v_i_t * k_i_t;
             
             double k_i_tn = k_i_t + dt / dx1 * (q_ip_t - q_i_t); // density for cell i at time t+1
+            /*if (k_i_t == -1){
+                k_i_tn = -1;
+            }*/
             
             // assume added flow enters cell, so it increases occupancy (increases density)
             // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
@@ -343,10 +347,10 @@ public class Corridor {
             /*
             //System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
             //System.out.println("\t"+cell_idx+"    "+(k_i_t*dx1)+"    "+(q_ip_t * dt)+"    "+(q_i_t * dt));  // no. of cars in cell i; no. of cars entering cell i; no. of cars leaving cell i
-            //System.out.println("\t"+cell_idx+"  v_i_t="+v_i_t+"   v_ip_t="+v_ip_t+"  diff="+(v_i_t - v_ip_t)+" term1="+(dt /dx1 * v_i_t * (v_i_t - v_ip_t)));
-            //System.out.println("\t  eq_speed="+eq_speed +"  term2="+(dt * (eq_speed - v_i_t)/(tau)));
-            System.out.println("\t"+cell_idx+"  k_i_t="+k_i_t+" k_in_t="+k_in_t+"   C="+C+" term3="+(dt/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ));
-            System.out.println("\t  dt/dx1="+dt/dx1+" q_ip_t="+q_ip_t+" q_i_t="+q_i_t+" term2k="+(dt/dx1 * (q_ip_t - q_i_t)));
+            System.out.println("\t"+cell_idx+"  v_i_t="+v_i_t+"   v_ip_t="+v_ip_t+"  diff="+(v_i_t - v_ip_t)+"   term1="+(dt /dx1 * v_i_t * (v_i_t - v_ip_t)));
+            System.out.println("\t  eq_speed="+eq_speed +"  term2="+(dt * (eq_speed - v_i_t)/(tau)));
+            System.out.println("\t  k_i_t="+k_i_t+"   k_in_t="+k_in_t+"   k_i_t_pressure="+k_i_t_pressure+"   C="+C+"     term3="+(dt/dx2 * C / (k_i_t + chi) * (k_in_t - k_i_t) ));
+            System.out.println("\t  dt/dx1="+dt/dx1+"   q_ip_t="+q_ip_t+"   q_i_t="+q_i_t+"   term2k="+(dt/dx1 * (q_ip_t - q_i_t)));
             //System.out.println("\t"+cell_idx+"    "+k_i_tn+"    "+q_ip_t+"    "+q_i_t+"    "+k_i_t);
             //System.out.println("\t" +c.getLength());
             //System.out.println("\t" +(c.getNext() != null? c.getNext().getLength() : c.getLength()));
@@ -399,6 +403,7 @@ public class Corridor {
               
                 F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * v_i_t / dx2);
                 F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 2 * dt * v_i_t / dx2 - dt /tau + dt * v_ip_t / dx2);
+                //System.out.println("\t    dx2="+dx2);
                       
                 
             }
@@ -431,7 +436,15 @@ public class Corridor {
         // moving on to next time step, so t -> tp
         P_t_tp = F_t.multiply(P_t_t).multiply(F_t.transpose()).add(Q);
         
-        
+        /*
+        System.out.println("\t   F_t="+F_t);
+        System.out.println("\t   P_t_t="+P_t_t);
+        System.out.println("\t   F_t.transpose="+F_t.transpose());
+        System.out.println("\t   Q="+Q);
+        System.out.println("\t   R_t="+R_t);
+        System.out.println("\t   "+F_t.multiply(P_t_t));
+        System.out.println("\t   "+F_t.multiply(P_t_t).multiply(F_t.transpose()));
+        */
     }
     
     private double calcC(Cell cell){
@@ -483,17 +496,37 @@ public class Corridor {
         
         //System.out.println("S_t="+S_t);
         //System.out.println("det="+determinant);
+        //System.out.println("\t   R_t="+R_t);
         
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
         
+        //System.out.println("\t   P_t_tp="+P_t_tp);
+        //System.out.println("\t   S_t="+S_t);
+        //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));
         
-        x_t_t = x_t_tp.add(K_t.operate(y_t));
+        x_t_t = x_t_tp.add(K_t.operate(y_t));  //this is causing the NaN issue
+        /*
+        System.out.println("\t   x_t_t="+x_t_t);
+        System.out.println("\t   x_t_tp="+x_t_tp);
+        System.out.println("\t   K_t="+K_t);
+        System.out.println("\t   y_t="+y_t);
+        System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));
+        */
         
         P_t_t = I.subtract(K_t).multiply(P_t_tp);
         
-        
-        
+        /*
+        System.out.println("\t    P_t_t="+P_t_t);
+        //System.out.println("\t    I="+I);
+        System.out.println("\t    K_t="+K_t);
+        System.out.println("\t    P_t_tp="+P_t_tp);
+        //System.out.println("\t    I.sub(K_t)="+I.subtract(K_t));
+        //System.out.println("\t    I.sub(K_t).mult(P_t_tp)="+I.subtract(K_t).multiply(P_t_tp));
+        System.out.println("\t    S_t="+S_t);
+        //System.out.println("\t    Inverse(S_t)="+MatrixUtils.inverse(S_t));
+        System.out.println("\t........................");
+        */
     }
     
     private void saveValuesInCells(){
@@ -539,7 +572,7 @@ public class Corridor {
         double variance_inv_len = len_stdev * len_stdev / (len_mean * len_mean * len_mean * len_mean);
         
         for(Cell c : cells){
-            if(c.hasDetector()){
+            if(c.hasDetector() && c.getDetector().getLast30sCount(time) > 0){
                 
                 double q = c.getDetector().getLast30sFlow(time);
                 
@@ -560,8 +593,30 @@ public class Corridor {
                 
                 R_t.setEntry(c.k_idx(), c.k_idx(), q * variance_inv_len);
             }
-        }
+            else 
+            {
+                // inflow/outflow is handled by a different detector, so assume 0 covariance
+                // also assume 0 variance (perfect information)
+                if(c.hasInflowDet()){
+                    R_t.setEntry(c.inflow_idx(), c.inflow_idx(), 0);
+                }
+                if(c.hasOutflowDet()){
+                    R_t.setEntry(c.outflow_idx(), c.outflow_idx(), 0);
+                }
+                
+                R_t.setEntry(c.v_idx(), c.v_idx(), 0);
+                
+             
+                R_t.setEntry(c.v_idx(), c.k_idx(), 0);
+                R_t.setEntry(c.k_idx(), c.v_idx(), 0);
+                
+                R_t.setEntry(c.k_idx(), c.k_idx(), 0);
+            }
+        } 
+        //System.out.println("\t  R_t="+R_t);
     }
+    
+    
     
     public void calcQ(){
         

@@ -133,54 +133,54 @@
 132,3449,4175,S999,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.47 NB/T.H.610,1,Mainline,Active,L2458, ,45.14140967,-93.26998142,2025-04-29
 133,4641,4176,S999,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.47 NB/T.H.610,2,Mainline,Active,L2458, ,45.14141214,-93.2700232,2025-04-29
 134,18929,4193, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/East River Rd,0,Passage,Active,L3129,"2771-117,0217-16",45.13661931,-93.29396733,2025-04-29
-135,7542,7008, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Exit,Active,L726,2771-38,45.12827021,-93.39201093,2025-04-29
-136,6899,7728, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Maple Grove Pkwy,0,Merge,Active,L1858,2771-37,45.13862484,-93.47296619,2025-04-29
-137,6818,7725, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,I-94 WB/T.H.610,0,Merge,Active,L1856,2771-37,45.13965895,-93.49537919,2025-04-29
+135,7542,7008, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Exit,Active,L726,2771-38,45.1300465,-93.3969185,2025-04-29
+136,6899,7728, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Maple Grove Pkwy,0,Exit,Active,L1858,2771-37,45.137704,-93.466126,2025-04-29
+137,6818,7725, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,I-94 WB/T.H.610,0,Merge,Active,L1856,2771-37,45.140933,-93.496552,2025-04-29
 138,10620,4193, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/East River Rd,0,Passage,Active,L3129, ,45.13660282,-93.29394721,2025-04-29
 139,6358,6996, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zachary Ln,0,Queue,Active,L730,2771-38,45.12919701,-93.42143274,2025-04-29
 140,6141,7015, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Bypass,Active,L726,2771-38,45.12942431,-93.38511779,2025-04-29
-141,5920,7010, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Exit,Active,L726,2771-38,45.1285889,-93.38930708,2025-04-29
-142,5604,7025, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zachary Ln,0,Exit,Active,L730,2771-38,45.13077366,-93.41979699,2025-04-29
+141,5920,7010, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Exit,Active,L726,2771-38,45.129882,-93.389485,2025-04-29
+142,5604,7025, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zachary Ln,0,Exit,Active,L730,2771-38,45.130616,-93.417837,2025-04-29
 143,5580,6997, ,Loop Detector,MnDOT,RTMC,Inplace,GPS Sub Meter,T.H.610 EB/Zachary Ln,0,Bypass,Active,L730,2771-38,45.12986557,-93.42043844,2025-04-29
-144,5278,7007, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Exit,Active,L727,2771-38,45.13162399,-93.39260411,2025-04-29
-145,3383,4163, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/T.H.47,0,Merge,Active,L2458, ,45.14303848,-93.27368094,2025-04-29
-146,5050,7733, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/C.S.A.H.81,0,Exit,Active,L1861,2771-37,45.1347137,-93.45011748,2025-04-29
-147,4506,6995, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zachary Ln,0,Exit,Active,L730,2771-38,45.13007469,-93.42115738,2025-04-29
-148,2087,4102, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/University Ave,0,Exit,Active,L2456, ,45.1427322,-93.2612246,2025-04-29
-149,4417,7005, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Exit,Active,L726,2771-38,45.1312146,-93.38850362,2025-04-29
+144,5278,7007, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Exit,Active,L727,2771-38,45.130315,-93.392333,2025-04-29
+145,3383,4163, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/T.H.47,0,Merge,Active,L2458, ,45.142923,-93.275415,2025-04-29
+146,5050,7733, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/C.S.A.H.81,0,Exit,Active,L1861,2771-37,45.135718,-93.451934,2025-04-29
+147,4506,6995, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zachary Ln,0,Exit,Active,L730,2771-38,45.130346,-93.421789,2025-04-29
+148,2087,4102, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/University Ave,0,Exit,Active,L2456, ,45.142229,-93.259926,2025-04-29
+149,4417,7005, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Exit,Active,L726,2771-38,45.130131,-93.384019,2025-04-29
 150,4416,7009, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Queue,Active,L726,2771-38,45.12856628,-93.38821754,2025-04-29
-151,4088,7731, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Maple Grove Pkwy,0,Exit,Active,L1858,2771-37,45.13693642,-93.47102514,2025-04-29
-152,7438,4177, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/T.H.47,0,Exit,Active,L2458, ,45.14136979,-93.26965431,2025-04-29
+151,4088,7731, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Maple Grove Pkwy,0,Exit,Active,L1858,2771-37,45.137535,-93.471994,2025-04-29
+152,7438,4177, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/T.H.47,0,Exit,Active,L2458, ,45.142511,-93.270378,2025-04-29
 153,3411,6990, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Co Rd 81,0,Passage,Active,L731,2771-38,45.13037348,-93.43973932,2025-04-29
 154,3294,7727, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,I-94 WB/T.H.610,0,Queue,Active,L1856,2771-37,45.13789273,-93.49000328,2025-04-29
-155,3248,4064, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Coon Rapids Blvd,0,Exit, , ,0217-16,45.14173894,-93.28189712,2025-04-29
-156,8589,4178, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/University Ave,0,Merge,Active,L2457, ,45.14362341,-93.26485421,2025-04-29
+155,3248,4064, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Coon Rapids Blvd,0,Exit, , ,0217-16,45.140959,-93.284532,2025-04-29
+156,8589,4178, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/University Ave,0,Merge,Active,L2457, ,45.143192,-93.267671,2025-04-29
 157,3134,4192, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/East River Rd,0,Bypass,Active,L3129, ,45.13662348,-93.29406038,2025-04-29
-158,6734,4061, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/University Ave,0,Exit,Active,L2456, ,45.14097844,-93.26538741,2025-04-29
+158,6734,4061, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/University Ave,0,Exit,Active,L2456, ,45.142414,-93.267301,2025-04-29
 159,2502,7032, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Passage,Active,L727,2771-38,45.12923258,-93.39282088,2025-04-29
 160,2026,7726, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,I-94 WB/T.H.610,0,Passage,Active,L1856,2771-37,45.13820479,-93.49289203,2025-04-29
-161,10895,7729, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Maple Grove Pkwy,0,Exit,Active,L1858,2771-37,45.13794636,-93.46936066,2025-04-29
+161,10895,7729, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Maple Grove Pkwy,0,Exit,Active,L1858,2771-37,45.137707,-93.466196,2025-04-29
 162,10673,7016, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/U.S.169,0,Passage,Active,L726,2771-38,45.12949856,-93.38513444,2025-04-29
 163,10578,7006, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Passage,Active,L726,2771-38,45.13079914,-93.38909164,2025-04-29
-164,6613,4054, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/East River Rd,0,Exit,Active,L3129, ,45.13658783,-93.29251407,2025-04-29
+164,6613,4054, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/East River Rd,0,Exit,Active,L3129, ,45.135422,-93.293942,2025-04-29
 165,10236,7028, ,Loop Detector,MnDOT,RTMC,Inplace,GPS Sub Meter,T.H.610 WB/Zachary Ln,0,Passage,Active,L730,2771-38,45.13068647,-93.42505111,2025-04-29
-166,9992,7732, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Maple Grove Pkwy,0,Merge,Active,L1858,2771-37,45.13733439,-93.46836053,2025-04-29
+166,9992,7732, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Maple Grove Pkwy,0,Merge,Active,L1858,2771-37,45.137523,-93.466319,2025-04-29
 167,6583,4179, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/University Ave,0,Bypass,Active,L2457, ,45.14358338,-93.26475596,2025-04-29
-168,9430,7031, ,Loop Detector,MnDOT,RTMC,Inplace,GPS Sub Meter,T.H.610 WB/Elm Creek Blvd,0,Exit,Active,L731,2771-38,45.13068034,-93.43794457,2025-04-29
+168,9430,7031, ,Loop Detector,MnDOT,RTMC,Inplace,GPS Sub Meter,T.H.610 WB/Elm Creek Blvd,0,Exit,Active,L731,2771-38,45.130392,-93.436049,2025-04-29
 169,8992,7020, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/U.S.169,0,Passage,Active,L727,2771-38,45.13069792,-93.39647445,2025-04-29
 170,8522,6998, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zachary Ln,0,Passage,Active,L730,2771-38,45.12991035,-93.42054652,2025-04-29
-171,8356,7730, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/C.S.A.H.81,0,Merge,Active,L1861,2771-37,45.1363544,-93.45218731,2025-04-29
-172,7036,4186, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Coon Rapids Blvd,1,Merge, , ,0217-16,45.14255197,-93.28239187,2025-04-29
+171,8356,7730, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/C.S.A.H.81,0,Merge,Active,L1861,2771-37,45.137359,-93.45497,2025-04-29
+172,7036,4186, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Coon Rapids Blvd,1,Merge, , ,0217-16,45.14124,-93.28461,2025-04-29
 173,11694,8281, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/W Broadway Ave,1,Bypass,Active,L3102,"2771-15,2771-117",45.13051595,-93.37431035,2025-04-29
 174,11515,8214, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/W Broadway Ave,1,Bypass,Active,L3102,"2771-15,2771-117",45.12902763,-93.37223067,2025-04-29
 175,11365,8221, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zane Ave,1,Passage,Active,L3105,"2771-14,2771-117",45.12654524,-93.3526081,2025-04-29
 176,11149,8274, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zane Ave,1,Passage,Active,L3105,"2771-14,2771-117",45.12924249,-93.36009081,2025-04-29
 177,11118,8222, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zane Ave,1,Bypass,Active,L3105,"2771-14,2771-117",45.12646865,-93.35260545,2025-04-29
-178,11020,8269, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zane Ave,1,Exit,Active,L3105,"2771-14,2771-117",45.12735332,-93.35223855,2025-04-29
-179,10996,8217, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zane Ave,1,Exit,Active,L3105,"2771-14,2771-117",45.12836579,-93.36019367,2025-04-29
+178,11020,8269, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zane Ave,1,Exit,Active,L3105,"2771-14,2771-117",45.126704,-93.350295,2025-04-29
+179,10996,8217, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zane Ave,1,Exit,Active,L3105,"2771-14,2771-117",45.129063,-93.362404,2025-04-29
 180,10904,8220, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/Zane Ave,1,Queue,Active,L3105,"2771-14,2771-117",45.12657719,-93.35510614,2025-04-29
 181,18515,8212, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/W Broadway Ave,1,Queue,Active,L3102,2771-117,45.12827675,-93.37460984,2025-04-29
-182,18505,8278, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/W Broadway Ave,1,Exit,Active,L3102,2771-117,45.13078999,-93.37316946,2025-04-29
+182,18505,8278, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/W Broadway Ave,1,Exit,Active,L3102,2771-117,45.129851,-93.368923,2025-04-29
 183,12065,8280, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/W Broadway Ave,1,Passage,Active,L3102,"2771-15,2771-117",45.13052042,-93.37441694,2025-04-29
 184,12068,8273, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Zane Ave,1,Bypass,Active,L3105,"2771-14,2771-117",45.12933874,-93.36008518,2025-04-29
 185,12079,8213, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 EB/W Broadway Ave,1,Passage,Active,L3102,"2771-15,2771-117",45.12909735,-93.37229279,2025-04-29
@@ -188,10 +188,29 @@
 187,18623,8248, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/East River Rd,1,Queue,Active,L3129,2771-117,45.13851688,-93.29214639,2025-04-29
 188,18581,8230, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Noble Pkwy,1,Passage,Active,L3107,2771-117,45.12346389,-93.33178759,2025-04-29
 189,18580,8231, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Noble Pkwy,1,Bypass,Active,L3107,2771-117,45.12338567,-93.33176757,2025-04-29
-190,18579,8260, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Noble Pkwy,1,Exit,Active,L3107,2771-117,45.12441088,-93.33225986,2025-04-29
+190,18579,8260, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Noble Pkwy,1,Exit,Active,L3107,2771-117,45.123916,-93.329429,2025-04-29
 191,18578,8229, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Noble Pkwy,1,Queue,Active,L3107,2771-117,45.12320338,-93.33444809,2025-04-29
-192,18577,8226, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Noble Pkwy,1,Exit,Active,L3107,2771-117,45.12386934,-93.33922017,2025-04-29
+192,18577,8226, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/Noble Pkwy,1,Exit,Active,L3107,2771-117,45.124768,-93.34299,2025-04-29
 193,18567,8264, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Noble Pkwy,1,Bypass,Active,L3107,2771-117,45.12516968,-93.33911497,2025-04-29
 194,18566,8264, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 WB/Noble Pkwy,1,Bypass,Active,L3107,2771-117,45.12509581,-93.33911541,2025-04-29
-195,4401,4187, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Coon Rapids Blvd,2,Merge, , ,0217-16,45.14247829,-93.28230269,2025-04-29
+195,4401,4187, ,Loop Detector,MnDOT,RTMC,Inplace,Hand Drawn,T.H.610 WB/Coon Rapids Blvd,2,Merge, , ,0217-16,45.14124,-93.28461,2025-04-29
 196,7796,7758, ,Loop Detector,MnDOT,RTMC,Inplace,CADD Imported,T.H.610 EB/I-94,2,Mainline,Active,L1856,2771-37,45.13785592,-93.49288764,2025-04-29
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,

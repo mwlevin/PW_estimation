@@ -83,6 +83,7 @@ public class DetectorGroup extends Detector{
     public double getLast30sSpeed(long t){
         double output = 0;
         int weight = 0;
+        int good = 0;
         
         for(Detector d : detectors){
             double d_speed = d.getLast30sSpeed(t);
@@ -90,10 +91,11 @@ public class DetectorGroup extends Detector{
             if(d_speed >= 0){
                 output += d_speed;
                 weight += d.getLast30sCount(t);
+                good ++;
             }
         }
         
-        if(weight >= 0){
+        if(good == 0 || weight == 0){
             return -1;
         }
         else{
@@ -124,7 +126,7 @@ public class DetectorGroup extends Detector{
             output += detectors.get(i).getName();
             
             if(i < detectors.size()-1){
-                output += ", ";
+                output += "+";
             }
         }
         output += "]";

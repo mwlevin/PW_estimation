@@ -77,7 +77,10 @@ public abstract class Detector {
         double flow = getLast30sFlow(t);
         double speed = getLast30sSpeed(t);
         
-        if(flow >= 0 && speed >= 0){
+        if(flow >= 0 && speed < 0){
+            return 0;
+        }
+        else if(flow >= 0 && speed > 0){
             return flow / speed;
         }
         else{

@@ -88,6 +88,7 @@ public class ReadData {
                 // it is possible to give data for a detector that is not being used (e.g. passage instead of merge). Ignore it.
                 if(saved_detectors.containsKey(id)){
                     saved_detectors.get(id).addPoint(count, speed);
+                    
                 }
             }
         }
