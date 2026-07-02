@@ -24,7 +24,12 @@ public class FakeDetector extends Detector {
     }
     
     public double getLast30sCount(long time){
-        return 12;
+        if (time >= 5*3){  // 5 time steps of 3 seconds each
+            return 12;
+        }
+        else{
+            return 0;
+        }
     }
     
     public double getLast30sSpeed(long time){

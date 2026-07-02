@@ -140,8 +140,8 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // values of -1 indicates bad data or missing data
-                double k = c.getDetector().getLast30sDensity(time);
-                double v = c.getDetector().getLast30sSpeed(time);
+                double k = Math.max(c.getDetector().getLast30sDensity(time), 0);
+                double v = Math.max(c.getDetector().getLast30sSpeed(time), 0);
                 
                 if(k >= 0 && v >= 0){
                     c.density = k;
@@ -151,8 +151,9 @@ public class Corridor {
                     c.density = 0;
                     c.speed = c.getLink().getFFSpeed();
                 }
+                System.out.println("\t   ff speed= "+c.getLink().getFFSpeed());
             }
-            
+
             x_t_t.setEntry(c.k_idx(), c.density);
             x_t_t.setEntry(c.v_idx(), c.speed);
             
@@ -272,7 +273,7 @@ public class Corridor {
     }
     
     private void predict(){
-        System.out.println("time = "+time);
+        //System.out.println("time = "+time);
         // vector of (k, v) per cell
         x_t_tp.set(0);
         
@@ -344,6 +345,10 @@ public class Corridor {
                     dt/3600.0/dx2 * C / (k_i_t_pressure + chi) * (k_in_t - k_i_t_pressure);
             
             
+            //System.out.println("\t   cell "+cell_idx);
+            //System.out.println("\t   eq speed="+c.getLink().getEquilibriumSpeed(c.k_idx()));
+            //System.out.println("\t   ......................");
+            
             /*
             //System.out.println("check "+cell_idx+" "+k_i_tn+" "+v_i_tn);
             //System.out.println("\t"+cell_idx+"    "+(k_i_t*dx1)+"    "+(q_ip_t * dt)+"    "+(q_i_t * dt));  // no. of cars in cell i; no. of cars entering cell i; no. of cars leaving cell i
@@ -362,6 +367,7 @@ public class Corridor {
             v_i_tn = Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
             k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
             
+            //System.out.println("\t    max speed="+c.getLink().getMaxSpeed());
             
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
@@ -372,6 +378,17 @@ public class Corridor {
             if(c.hasOutflowDet()){
                 x_t_tp.setEntry(c.outflow_idx(), outflow);
             }
+            
+            /* System.out.println("\t   cell "+cell_idx);
+            System.out.println("\t   speed="+v_i_t);
+            System.out.println("\t   density="+k_i_t);
+            System.out.println("\t   output density="+x_t_t.getEntry(c.k_idx()));
+            System.out.println("\t   prev flow="+q_ip_t);
+            System.out.println("\t   cell flow="+q_i_t);
+            System.out.println("\t   difference="+(q_ip_t - q_i_t));
+            System.out.println("\t   dt/dx="+dt/dx1);
+            System.out.println("\t   k_i_tn="+(k_i_t + dt / dx1 * (q_ip_t - q_i_t)));
+            System.out.println("\t   ................."); */
             
             // now need to calculate F, which is the Jacobian matrix of df/dx where f is the PW state update equation
             
@@ -429,6 +446,17 @@ public class Corridor {
             }
             
             cell_idx ++;
+            
+            /*System.out.println("\t   cell "+cell_idx);
+            System.out.println("\t   speed="+v_i_t);
+            System.out.println("\t   density="+k_i_t);
+            System.out.println("\t   output density="+x_t_t.getEntry(c.k_idx()));
+            System.out.println("\t   prev flow="+q_ip_t);
+            System.out.println("\t   cell flow="+q_i_t);
+            System.out.println("\t   difference="+(q_ip_t - q_i_t));
+            System.out.println("\t   dt/dx="+dt/dx1);
+            System.out.println("\t   k_i_tn="+(k_i_t + dt / dx1 * (q_ip_t - q_i_t)));
+            System.out.println("\t   ................."); */
         }
         
         
@@ -442,8 +470,8 @@ public class Corridor {
         System.out.println("\t   F_t.transpose="+F_t.transpose());
         System.out.println("\t   Q="+Q);
         System.out.println("\t   R_t="+R_t);
-        System.out.println("\t   "+F_t.multiply(P_t_t));
-        System.out.println("\t   "+F_t.multiply(P_t_t).multiply(F_t.transpose()));
+        System.out.println("\t   F*P="+F_t.multiply(P_t_t));
+        System.out.println("\t   F*P*F_t="+F_t.multiply(P_t_t).multiply(F_t.transpose()));
         */
     }
     
@@ -459,8 +487,8 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // this is the measurement residual
-                double k_observed = c.getDetector().getLast30sDensity(time);
-                double v_observed = c.getDetector().getLast30sSpeed(time);
+                double k_observed = Math.max(c.getDetector().getLast30sDensity(time), 0);
+                double v_observed = Math.max(c.getDetector().getLast30sSpeed(time), 0);
                 
                 double residual_k = 0;
                 double residual_v = 0;
@@ -505,14 +533,13 @@ public class Corridor {
         //System.out.println("\t   S_t="+S_t);
         //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));
         
-        x_t_t = x_t_tp.add(K_t.operate(y_t));  //this is causing the NaN issue
-        /*
-        System.out.println("\t   x_t_t="+x_t_t);
+        x_t_t = x_t_tp.add(K_t.operate(y_t));  //this was causing the NaN issue; there was an infinity in Q
+        
+        /*System.out.println("\t   x_t_t="+x_t_t);
         System.out.println("\t   x_t_tp="+x_t_tp);
         System.out.println("\t   K_t="+K_t);
         System.out.println("\t   y_t="+y_t);
-        System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));
-        */
+        System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
         
         P_t_t = I.subtract(K_t).multiply(P_t_tp);
         
@@ -531,7 +558,7 @@ public class Corridor {
     
     private void saveValuesInCells(){
         for(Cell c : cells){
-            c.density = x_t_t.getEntry(c.k_idx());
+            c.density = x_t_t.getEntry(c.k_idx());  // Math.max(x_t_t.getEntry(c.k_idx()), 0)
             c.speed = x_t_t.getEntry(c.v_idx());
             
             if(c.hasInflowDet()){
@@ -540,11 +567,15 @@ public class Corridor {
             if(c.hasOutflowDet()){
                 c.outflow = x_t_t.getEntry(c.outflow_idx());
             }
+            /*System.out.println("\t   actual output density="+x_t_t.getEntry(c.k_idx()));
+            System.out.println("\t   c.density="+c.density);
+            System.out.println("\t ................");*/
+            
         }
     }
     
     public void printCells(){
-        System.out.println("t="+String.format("%.2f", time/1000.0)+" --");
+        System.out.println("t="+String.format("%.2f", time*1.0)+" --");
         for(Cell c : cells){
             System.out.println(c.k_idx()/2+"\t"+c.density+"\t"+c.speed);
         }
@@ -625,7 +656,7 @@ public class Corridor {
             // covariance is likely negative: in congestion, larger k => smaller v
             // this is variance due to FD not fully describing traffic evolution
             // I don't know which values these should have
-            double scale = 1e-6;
+            double scale = 1e-2;
             double var_k = 5 * scale;
             double var_v = 1 * scale;
             double cov = - var_k * var_v;
@@ -646,6 +677,7 @@ public class Corridor {
                 Q.setEntry(c.outflow_idx(), c.outflow_idx(), scale);
             }
         }
+                
     }
     
     public boolean addDetector(Detector det){

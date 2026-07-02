@@ -53,8 +53,9 @@ public class HistoricalDetector extends Detector {
     
     public double getLast30sSpeed(long t){
         int idx = (int)(t/30);
+        double maxspeed = 36.12;
         if(idx < speeds.size()){
-            double output = speeds.get(idx);
+            double output = Math.min(maxspeed, speeds.get(idx));
             if(output >= 0){
                 return output;
             }

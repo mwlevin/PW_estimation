@@ -35,7 +35,7 @@ public class Link {
         this.v = v / 2.237;  // converting units here, mph to m/s
         this.Q = Q / 3600.0;  // veh/hr to veh/s
         this.w = w / 2.237;
-        this.K = K / 1609.3;  // veh/mi to veh/m
+        this.K = K / 1609.3;  // veh/mi to veh/m  // K = jam density
         this.numLanes = numLanes;
         this.maxspeed = maxspeed / 2.237;
         
@@ -106,13 +106,27 @@ public class Link {
     }
     
     public double getEquilibriumSpeed(double k){
+                
+                /*System.out.println("\t   v="+v);
+                System.out.println("\t   k="+k);
+                System.out.println("\t   v*k="+(v*k));
+                System.out.println("\t   w="+w);
+                System.out.println("\t   K="+K);
+                System.out.println("\t   Q="+getQ());
+                System.out.println("\t   -w*(k-getK)="+(-w*(k-getK())));
+                System.out.println("\t   min 1="+Math.min(getQ(), -w*(k-getK())));
+                System.out.println("\t   min 2="+(Math.min(v*k, Math.min(getQ(), -w*(k-getK())))));
+                System.out.println("\t ......................");*/
         
         if(k == 0){
             return v;
         }
         double q = Math.min(v*k, Math.min(getQ(), -w*(k-getK())));
+                //System.out.println("\t   q="+q);
+                //System.out.println("\t   q/k="+(q/k));
+                //System.out.println("\t ......................");
         return q/k;
-
+        
     }
     
     public double getDerivEqSpeed(double k){
