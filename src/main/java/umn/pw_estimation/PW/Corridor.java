@@ -566,9 +566,12 @@ public class Corridor {
         }
         
         // H is the identity matrix
+        RealMatrix H_t = I;
+         
+         
         calcR();
         
-        RealMatrix S_t = P_t_tp.add(R_t);
+        RealMatrix S_t = H_t.multiply(P_t_tp).multiply(H_t.transpose()).add(R_t);
         
         //double determinant = new LUDecomposition(S_t).getDeterminant();
         
@@ -576,8 +579,10 @@ public class Corridor {
         //System.out.println("det="+determinant);
         //System.out.println("\t   R_t="+R_t);
         
+        
+       
         // Kalman gain
-        RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
+        RealMatrix K_t = P_t_tp.multiply(H_t.transpose()).multiply(MatrixUtils.inverse(S_t));
         
         //System.out.println("\t   P_t_tp="+P_t_tp);
         //System.out.println("\t   S_t="+S_t);
@@ -654,7 +659,8 @@ public class Corridor {
         //changing this to Joseph form of update
         
         
-        P_t_t = I.subtract(K_t).multiply(P_t_tp).multiply(I.subtract(K_t).transpose()).add(K_t.multiply(R_t).multiply(K_t.transpose()));
+        RealMatrix KH = K_t.multiply(H_t);
+        P_t_t = I.subtract(KH).multiply(P_t_tp).multiply(I.subtract(KH).transpose()).add(K_t.multiply(R_t).multiply(K_t.transpose()));
         
         P_t_t = P_t_t.add(P_t_t.transpose()).scalarMultiply(0.5);
         
