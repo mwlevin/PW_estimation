@@ -93,6 +93,8 @@ public class Corridor {
         
         cells = new Cell[total_size];
         
+        
+        
         int var_idx = 0;
         int cell_idx = 0;
         
@@ -114,7 +116,11 @@ public class Corridor {
                 cell_idx++;
             }
         }
+        
+        
     }
+    
+    private String[] indices;
     
     private RealMatrix Q, F_t, I;
     private RealMatrix P_t_tp, P_t_t, R_t;
@@ -130,6 +136,21 @@ public class Corridor {
 
         for(Cell c : cells){
             size += c.getNumVariables();
+        }
+        
+        indices = new String[size];
+        
+        for(Cell c : cells){
+            indices[c.k_idx()] = c.cell_idx+" k";
+            indices[c.v_idx()] = c.cell_idx+" v";
+            
+            if(c.hasInflowDet()){
+                indices[c.inflow_idx()] = c.cell_idx+" inflow";
+            }
+            
+            if(c.hasOutflowDet()){
+                indices[c.outflow_idx()] = c.cell_idx+" outflow";
+            }
         }
 
         x_t_tp = new ArrayRealVector(size);
@@ -365,7 +386,7 @@ public class Corridor {
             
             // this prevents excessive values
             v_i_tn = Math.min(v_i_tn, c.getLink().getMaxSpeed());  // Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
-            k_i_tn = Math.min(k_i_tn, c.getLink().getK());  // Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
+            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));  // Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
             
             //System.out.println("\t    max speed="+c.getLink().getMaxSpeed());
             
@@ -440,7 +461,12 @@ public class Corridor {
                                 
                 F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );  // probably wrong; eq speed shouldn't be here*/
                 
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
+                //F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
+                
+                
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t) + dt/dx2 * C/(k_i_t+chi) - dt/dx2 * C * k_i_t / (k_i_t+chi) / (k_i_t+chi));
+                
+                
                 F_t.setEntry(c.v_idx(), c.getNext().k_idx(), - dt/dx2  * C / (k_i_t + chi) );
   
             }
@@ -553,39 +579,84 @@ public class Corridor {
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
         
-        System.out.println("\t   P_t_tp="+P_t_tp);
-        /*System.out.println("\t   S_t="+S_t);
-        System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
+        //System.out.println("\t   P_t_tp="+P_t_tp);
+        //System.out.println("\t   S_t="+S_t);
+        //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
         
         x_t_t = x_t_tp.add(K_t.operate(y_t));  //this was causing the NaN issue; there was an infinity in Q
         
+        RealVector adjustment = K_t.operate(y_t);
+        
+        //System.out.println("K_t="+K_t);
+        
         for(Cell c : cells){
-            if(x_t_t.getEntry(c.k_idx()) < -0.001){
+            //if(Math.abs(x_t_t.getEntry(c.k_idx())) > 0.001 && Math.abs(adjustment.getEntry(c.k_idx())) > 0.001)
+            if(x_t_t.getEntry(c.k_idx()) < -0.001)
+            {
+                System.out.println("k is "+x_t_t.getEntry(c.k_idx())+"  k_t_tp="+x_t_tp.getEntry(c.k_idx())+" cell_idx="+c.cell_idx);
+                System.out.println("v is "+x_t_t.getEntry(c.v_idx())+"  v_t_tp="+x_t_tp.getEntry(c.v_idx())+" cell_idx="+c.cell_idx);
+                
+                
+                
+                System.out.println("k y_t="+y_t.getEntry(c.k_idx())+" adjustment="+adjustment.getEntry(c.k_idx()));
+                System.out.println("v y_t="+y_t.getEntry(c.v_idx())+" adjustment="+adjustment.getEntry(c.v_idx()));
+                
+                for(int i = 0; i < K_t.getColumnDimension(); i++){
+                    if(Math.abs(y_t.getEntry(i)) > 0.0001 && Math.abs(K_t.getEntry(c.k_idx(), i)) > 0.0001){
+                        System.out.println("K_t entry "+K_t.getEntry(c.k_idx(), i)+" y_t="+y_t.getEntry(i)+" x_t_tp="+x_t_tp.getEntry(i)+" var="+indices[i]);
+                        
+                    }
+                    
+                    if(Math.abs(P_t_tp.getEntry(c.k_idx(), i)) > 0.0001){
+                        System.out.println("\t"+indices[c.k_idx()]+" P_t="+P_t_tp.getEntry(c.k_idx(), i)+" var="+indices[i]);
+                    }
+                    
+                    if(Math.abs(P_t_tp.getEntry(c.v_idx(), i)) > 0.0001){
+                        System.out.println("\t"+indices[c.v_idx()]+" P_t="+P_t_tp.getEntry(c.v_idx(), i)+" var="+indices[i]);
+                    }
+                    
+                }
+                
                 for(Cell j : cells){
                     if(F_t.getEntry(c.k_idx(), j.k_idx()) != 0){
-                        System.out.println(F_t.getEntry(c.k_idx(), j.k_idx()));
+                        System.out.println("\tdk/dk "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.k_idx())+" "+j.density);
                     }
                     if(F_t.getEntry(c.k_idx(), j.v_idx()) != 0){
-                        System.out.println(F_t.getEntry(c.k_idx(), j.v_idx()));
+                        System.out.println("\tdk/dv "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.v_idx())+" "+j.speed);
                     }
-                    if(j.hasOutflowDet() && F_t.getEntry(c.k_idx(), j.outflow_idx()) != 0){ 
-                        System.out.println("\t  outflow="+F_t.getEntry(c.k_idx(), j.outflow_idx())); 
+                    
+                    if(F_t.getEntry(c.v_idx(), j.k_idx()) != 0){
+                        System.out.println("\tdv/dk "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.k_idx())+" "+j.density);
                     }
-                    if(j.hasInflowDet() && F_t.getEntry(c.k_idx(), j.inflow_idx()) != 0){ 
-                        System.out.println("\t  inflow="+F_t.getEntry(c.k_idx(), j.inflow_idx())); 
+                    if(F_t.getEntry(c.v_idx(), j.v_idx()) != 0){
+                        System.out.println("\tdv/dv "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.v_idx())+" "+j.speed);
                     }
+                    
+                    
                 }
+            }
+            
+            if(x_t_t.getEntry(c.k_idx()) < -0.001){
+                System.exit(0);
             }
         }
         
-        System.out.println("\t   x_t_t="+x_t_t);
-        System.out.println("\t   x_t_tp="+x_t_tp);
+        //System.out.println("\t   x_t_t="+x_t_t);
+        //System.out.println("\t   x_t_tp="+x_t_tp);
         /*System.out.println("\t   K_t="+K_t);
         System.out.println("\t   y_t="+y_t);
         System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
         System.out.println("\t   .....................");
         
-        P_t_t = I.subtract(K_t).multiply(P_t_tp);
+        
+        
+        //P_t_t = I.subtract(K_t).multiply(P_t_tp);
+        //changing this to Joseph form of update
+        
+        
+        P_t_t = I.subtract(K_t).multiply(P_t_tp).multiply(I.subtract(K_t).transpose()).add(K_t.multiply(R_t).multiply(K_t.transpose()));
+        
+        P_t_t = P_t_t.add(P_t_t.transpose()).scalarMultiply(0.5);
         
         /*
         System.out.println("\t    P_t_t="+P_t_t);
@@ -637,19 +708,20 @@ public class Corridor {
         // E[1/v] is approximately 1/mu + sigma^2/mu^3
         // variance(1/v) is approximately sigma^2/mu^4
         
+        double scale = 10;
+        
         double len_mean = 4.48;  // units of meters; 14.7 ft
         
         double len_stdev = 0.46; // stdev in vehicle length; 1.5 ft
         double len_var = len_stdev * len_stdev;
         
-        double E_inv_len = 1/len_mean + len_stdev * len_stdev / (len_mean * len_mean * len_mean); // approximation
         
-        double variance_inv_len = len_stdev * len_stdev / (len_mean * len_mean * len_mean * len_mean);
         
         for(Cell c : cells){
             if(c.hasDetector() && c.getDetector().getLast30sCount(time) > 0){
                 
                 double q = c.getDetector().getLast30sFlow(time);
+                double occ = len_mean / c.getDetector().getLast30sSpeed(time);
                 
                 // inflow/outflow is handled by a different detector, so assume 0 covariance
                 // also assume 0 variance (perfect information)
@@ -660,13 +732,16 @@ public class Corridor {
                     R_t.setEntry(c.outflow_idx(), c.outflow_idx(), 0);
                 }
                 
-                R_t.setEntry(c.v_idx(), c.v_idx(), len_var * len_var / c.getDetector().getLast30sCount(time));
+                R_t.setEntry(c.v_idx(), c.v_idx(), scale * len_var / (occ * occ)); // formula from Gemini
                 
-                double cov = q * (1 - len_mean * E_inv_len); 
+                
+                double cov = 0; // this is intentionally set to 0
+                
                 R_t.setEntry(c.v_idx(), c.k_idx(), cov);
                 R_t.setEntry(c.k_idx(), c.v_idx(), cov);
                 
-                R_t.setEntry(c.k_idx(), c.k_idx(), q * variance_inv_len);
+                R_t.setEntry(c.k_idx(), c.k_idx(), scale * len_var * q * q * occ * occ / (len_mean * len_mean * len_mean * len_mean)); // formula from Gemini
+                
             }
             else 
             {
@@ -700,10 +775,10 @@ public class Corridor {
             // covariance is likely negative: in congestion, larger k => smaller v
             // this is variance due to FD not fully describing traffic evolution
             // I don't know which values these should have
-            double scale = 1e-2;
+            double scale = 1e-1;
             double var_k = 5 * scale;
             double var_v = 1 * scale;
-            double cov = - var_k * var_v;
+            double cov = 0; // this is intentionally set to 0
             
             double cov_inflow = 5 * scale;
             
@@ -720,6 +795,8 @@ public class Corridor {
             if(c.hasOutflowDet()){
                 Q.setEntry(c.outflow_idx(), c.outflow_idx(), scale);
             }
+            
+            //System.out.println("Q="+var_k+" "+var_v+" "+cov);
         }
             //System.out.println("\t   ..............");
     }

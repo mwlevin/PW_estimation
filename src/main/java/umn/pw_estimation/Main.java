@@ -24,6 +24,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         
+        
         double dt = 3;
         
         ReadData read = new ReadData();
@@ -38,30 +39,32 @@ public class Main {
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
-            int duration = (int)(90); // in seconds
+            int duration = (int)(120); // in seconds
             corridor.estimate(duration, fileout); // this creates a CSV file
             fileout.close();
-        }//*/
+        }
         
         
-        /*double dt = 3;
+        /*
+        double dt = 3;
         double maxspeed = 80.8;
         
-        Link test = new Link("test", 0.8, dt, 35, maxspeed, 2400, 15, 240, 1);
+        Link test = new Link("test", 0.2, dt, 35, maxspeed, 2400, 15, 240, 1);
         test.cells[0].setDetector(new FakeDetector("test", new Coordinate(0, 0), 12, 35)); 
         //test.cells[3].addInflowDet(new FakeDetector("test", new Coordinate(0, 0), 12, 35)); 
-        test.cells[7].addOutflowDet(new FakeDetector("test", new Coordinate(0, 0), 12, 35));
+        //test.cells[7].addOutflowDet(new FakeDetector("test", new Coordinate(0, 0), 12, 35));
         //test.cells[5].setDetector(new FakeDetector("test", new Coordinate(0, 0), 12, 35));
         
         Corridor corridor = new Corridor("test corridor", new Link[]{test}, dt);
         
         corridor.init(0);
         
-        for(int t = 0; t <= 20; t++){
+        for(int t = 0; t <= 60; t++){
             corridor.printCells();
         
             corridor.nextTimestep();
             
-        }*/
+        }
+        */
     }
 }
