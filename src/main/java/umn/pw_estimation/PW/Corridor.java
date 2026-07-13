@@ -464,7 +464,8 @@ public class Corridor {
                 //F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
                 
                 
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t) + dt/dx2 * C/(k_i_t+chi) - dt/dx2 * C * k_i_t / (k_i_t+chi) / (k_i_t+chi));
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t) 
+                        + dt/dx2 * C/(k_i_t+chi) - dt/dx2 * C * k_i_t / (k_i_t+chi) / (k_i_t+chi));
                 
                 
                 F_t.setEntry(c.v_idx(), c.getNext().k_idx(), - dt/dx2  * C / (k_i_t + chi) );
@@ -584,7 +585,7 @@ public class Corridor {
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(H_t.transpose()).multiply(MatrixUtils.inverse(S_t));
         
-        //System.out.println("\t   P_t_tp="+P_t_tp);
+        System.out.println("\t   P_t_tp="+P_t_tp);
         //System.out.println("\t   S_t="+S_t);
         //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
         
@@ -646,8 +647,8 @@ public class Corridor {
             }
         }
         
-        //System.out.println("\t   x_t_t="+x_t_t);
-        //System.out.println("\t   x_t_tp="+x_t_tp);
+        System.out.println("\t   x_t_t="+x_t_t);
+        System.out.println("\t   x_t_tp="+x_t_tp);
         /*System.out.println("\t   K_t="+K_t);
         System.out.println("\t   y_t="+y_t);
         System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
@@ -714,7 +715,7 @@ public class Corridor {
         // E[1/v] is approximately 1/mu + sigma^2/mu^3
         // variance(1/v) is approximately sigma^2/mu^4
         
-        double scale = 10;
+        double scale = 1;
         
         double len_mean = 4.48;  // units of meters; 14.7 ft
         
@@ -781,7 +782,7 @@ public class Corridor {
             // covariance is likely negative: in congestion, larger k => smaller v
             // this is variance due to FD not fully describing traffic evolution
             // I don't know which values these should have
-            double scale = 1e-1;
+            double scale = 1e-2;
             double var_k = 5 * scale;
             double var_v = 1 * scale;
             double cov = 0; // this is intentionally set to 0
