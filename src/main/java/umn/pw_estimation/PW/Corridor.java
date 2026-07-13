@@ -30,7 +30,7 @@ import umn.pw_estimation.Input.HistoricalDetector;
  */
 public class Corridor {
     
-    private double tau = 0.1 * 3600.0; // speed adaptation term
+    private double tau = 0.1*3600; // speed adaptation term
     private double chi = 0.12; // avoid divide by 0 in traffic pressure // originally was 0.0001
     
     private Cell[] cells;
@@ -140,8 +140,8 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // values of -1 indicates bad data or missing data
-                double k = Math.max(c.getDetector().getLast30sDensity(time), 0);
-                double v = Math.max(c.getDetector().getLast30sSpeed(time), 0);
+                double k = c.getDetector().getLast30sDensity(time);  // Math.max(c.getDetector().getLast30sDensity(time), 0);
+                double v = c.getDetector().getLast30sSpeed(time);  // Math.max(c.getDetector().getLast30sSpeed(time), 0);
                 
                 if(k >= 0 && v >= 0){
                     c.density = k;
@@ -151,7 +151,7 @@ public class Corridor {
                     c.density = 0;
                     c.speed = c.getLink().getFFSpeed();
                 }
-                System.out.println("\t   ff speed= "+c.getLink().getFFSpeed());
+                //System.out.println("\t   ff speed= "+c.getLink().getFFSpeed());
             }
 
             x_t_t.setEntry(c.k_idx(), c.density);
@@ -364,8 +364,8 @@ public class Corridor {
             
             
             // this prevents excessive values
-            v_i_tn = Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
-            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
+            v_i_tn = Math.min(v_i_tn, c.getLink().getMaxSpeed());  // Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
+            k_i_tn = Math.min(k_i_tn, c.getLink().getK());  // Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
             
             //System.out.println("\t    max speed="+c.getLink().getMaxSpeed());
             
@@ -435,18 +435,39 @@ public class Corridor {
             
             
             if(c.getNext() != null){
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) - 
-                        dt /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))  ); 
+                /*F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) - 
+                        dt /dx2  * (k_in_t - k_i_t) * C / ((k_i_t + chi) * (k_i_t + chi))  );  // possibly a sign error on their part or mine
                                 
-                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)));
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );  // probably wrong; eq speed shouldn't be here*/
+                
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), - dt/dx2  * C / (k_i_t + chi) );
   
             }
             else{
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);  // also probably wrong; still shouldn't have eq speed; also possibly missing a dx2 below dt?
+                
             }
             
             cell_idx ++;
             
+            //System.out.println("\t   F_t="+F_t);
+            /*System.out.println("\t   c.speed="+c.speed);
+            System.out.println("\t   dx1="+dx1);
+            System.out.println("\t   dt="+dt);
+            System.out.println("\t   dt/dx1="+(dt/dx1));
+            System.out.println("\t   F_t_1="+(1 - dt /dx1 * c.speed));*/
+            //System.out.println("\t   );
+            //System.out.println("\t   F_t_2="+(-dt /dx1 * c.density));
+            //System.out.println("\t   F_t_3="+(dt /dx1 * c.getPrev().speed));
+            //System.out.println("\t   F_t_4="+(dt /dx1 * c.getPrev().density));
+            //System.out.println("\t   F_t_5="+(dt * v_i_t / dx2));
+            //System.out.println("\t   F_t_6="+(1 - 2 * dt * v_i_t / dx2 - dt /tau + dt * v_ip_t / dx2));
+            //System.out.println("\t   F_t_7="+(dt /dx2  * C / (k_i_t + chi) - 
+                        //dt /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))));
+            //System.out.println("\t   F_t_8="+(dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi))));
+            //System.out.println("\t   deriv eq speed="+(c.getLink().getDerivEqSpeed(k_in_t)));
+            //System.out.println("\t   eq speed="+(eq_speed));
             /*System.out.println("\t   cell "+cell_idx);
             System.out.println("\t   speed="+v_i_t);
             System.out.println("\t   density="+k_i_t);
@@ -464,15 +485,13 @@ public class Corridor {
         // moving on to next time step, so t -> tp
         P_t_tp = F_t.multiply(P_t_t).multiply(F_t.transpose()).add(Q);
         
-        /*
-        System.out.println("\t   F_t="+F_t);
-        System.out.println("\t   P_t_t="+P_t_t);
-        System.out.println("\t   F_t.transpose="+F_t.transpose());
-        System.out.println("\t   Q="+Q);
-        System.out.println("\t   R_t="+R_t);
+        //System.out.println("\t   P_t_t="+P_t_t);
+        //System.out.println("\t   F_t.transpose="+F_t.transpose());
+        //System.out.println("\t   Q="+Q);
+        /*System.out.println("\t   R_t="+R_t);
         System.out.println("\t   F*P="+F_t.multiply(P_t_t));
-        System.out.println("\t   F*P*F_t="+F_t.multiply(P_t_t).multiply(F_t.transpose()));
-        */
+        System.out.println("\t   F*P*F_t="+F_t.multiply(P_t_t).multiply(F_t.transpose()));*/
+        
     }
     
     private double calcC(Cell cell){
@@ -487,8 +506,8 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // this is the measurement residual
-                double k_observed = Math.max(c.getDetector().getLast30sDensity(time), 0);
-                double v_observed = Math.max(c.getDetector().getLast30sSpeed(time), 0);
+                double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
+                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
                 
                 double residual_k = 0;
                 double residual_v = 0;
@@ -512,6 +531,11 @@ public class Corridor {
                 }
                 //System.out.println("det density="+c.getDetector().getLast30sDensity(time));
                 //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
+                /*System.out.println("\t   k_obs="+k_observed);
+                System.out.println("\t   v_obs="+v_observed);
+                System.out.println("\t   x_t_tp.k="+x_t_tp.getEntry(c.k_idx()));
+                System.out.println("\t   x_t_tp.v="+x_t_tp.getEntry(c.v_idx()));
+                System.out.println("\t   .....................");*/
             }
         }
         
@@ -529,17 +553,37 @@ public class Corridor {
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(MatrixUtils.inverse(S_t));
         
-        //System.out.println("\t   P_t_tp="+P_t_tp);
-        //System.out.println("\t   S_t="+S_t);
-        //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));
+        System.out.println("\t   P_t_tp="+P_t_tp);
+        /*System.out.println("\t   S_t="+S_t);
+        System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
         
         x_t_t = x_t_tp.add(K_t.operate(y_t));  //this was causing the NaN issue; there was an infinity in Q
         
-        /*System.out.println("\t   x_t_t="+x_t_t);
+        for(Cell c : cells){
+            if(x_t_t.getEntry(c.k_idx()) < -0.001){
+                for(Cell j : cells){
+                    if(F_t.getEntry(c.k_idx(), j.k_idx()) != 0){
+                        System.out.println(F_t.getEntry(c.k_idx(), j.k_idx()));
+                    }
+                    if(F_t.getEntry(c.k_idx(), j.v_idx()) != 0){
+                        System.out.println(F_t.getEntry(c.k_idx(), j.v_idx()));
+                    }
+                    if(j.hasOutflowDet() && F_t.getEntry(c.k_idx(), j.outflow_idx()) != 0){ 
+                        System.out.println("\t  outflow="+F_t.getEntry(c.k_idx(), j.outflow_idx())); 
+                    }
+                    if(j.hasInflowDet() && F_t.getEntry(c.k_idx(), j.inflow_idx()) != 0){ 
+                        System.out.println("\t  inflow="+F_t.getEntry(c.k_idx(), j.inflow_idx())); 
+                    }
+                }
+            }
+        }
+        
+        System.out.println("\t   x_t_t="+x_t_t);
         System.out.println("\t   x_t_tp="+x_t_tp);
-        System.out.println("\t   K_t="+K_t);
+        /*System.out.println("\t   K_t="+K_t);
         System.out.println("\t   y_t="+y_t);
         System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
+        System.out.println("\t   .....................");
         
         P_t_t = I.subtract(K_t).multiply(P_t_tp);
         
@@ -558,8 +602,8 @@ public class Corridor {
     
     private void saveValuesInCells(){
         for(Cell c : cells){
-            c.density = x_t_t.getEntry(c.k_idx());  // Math.max(x_t_t.getEntry(c.k_idx()), 0)
-            c.speed = x_t_t.getEntry(c.v_idx());
+            c.density = Math.min(Math.max(x_t_t.getEntry(c.k_idx()), 0), c.getLink().getK());
+            c.speed = Math.min(Math.max(x_t_t.getEntry(c.v_idx()), 0), c.getLink().getMaxSpeed());
             
             if(c.hasInflowDet()){
                 c.inflow = x_t_t.getEntry(c.inflow_idx());
@@ -677,7 +721,7 @@ public class Corridor {
                 Q.setEntry(c.outflow_idx(), c.outflow_idx(), scale);
             }
         }
-                
+            //System.out.println("\t   ..............");
     }
     
     public boolean addDetector(Detector det){
