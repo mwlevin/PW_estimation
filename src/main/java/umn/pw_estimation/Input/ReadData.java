@@ -227,7 +227,10 @@ public class ReadData {
         Map<String, List<Detector>> detectors = new HashMap<>();
         
         while(filein.hasNext()){
-            String[] columns = filein.nextLine().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            String line = filein.nextLine();
+            
+            String[] columns = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
             
             if(columns.length == 0){
                 break;
@@ -237,14 +240,16 @@ public class ReadData {
             String name = columns[2];
             
             String typename = columns[11];
+            
+            if(typename.equals("Auxiliary")){
+                typename = "Mainline";
+            }
           
             String location = columns[9];
             String loc_name = location+"-"+typename;
             
             
             int lane = Integer.parseInt(columns[10]);
-            
-
             
             double lat = Double.parseDouble(columns[15]);
             double lon = Double.parseDouble(columns[16]);
@@ -263,7 +268,6 @@ public class ReadData {
                 saved_detectors.put(loop.getName(), loop);
             }
             
-            filein.nextLine();
         }
         
         for(String name : detectors.keySet()){
@@ -274,7 +278,7 @@ public class ReadData {
                     boolean success = output.get(labels[i]).addDetector(group);
                     
                     if(success){
-                        System.out.println("added detector "+name+" - "+group);
+                        System.out.println("added detector "+name+" - "+group+" "+group.getType());
                     }
                     else{
                         System.out.println("failed to add detector "+group);

@@ -102,7 +102,15 @@ public class Link {
         
         int cell_idx = (int)Math.min(cells.length-1, Math.ceil(position / cell_len));
         
-        cells[cell_idx].setDetector(det);
+        if(det.getType() == Detector.Type.Exit){
+            cells[cell_idx].addOutflowDet(det);
+        }
+        else if(det.getType() == Detector.Type.Merge){
+            cells[cell_idx].addInflowDet(det);
+        }
+        else{
+            cells[cell_idx].setDetector(det);
+        }
     }
     
     public double getEquilibriumSpeed(double k){
