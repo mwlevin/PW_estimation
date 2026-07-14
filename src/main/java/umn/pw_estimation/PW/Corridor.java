@@ -585,7 +585,7 @@ public class Corridor {
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(H_t.transpose()).multiply(MatrixUtils.inverse(S_t));
         
-        System.out.println("\t   P_t_tp="+P_t_tp);
+        //System.out.println("\t   P_t_tp="+P_t_tp);
         //System.out.println("\t   S_t="+S_t);
         //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
         
@@ -647,12 +647,12 @@ public class Corridor {
             }
         }
         
-        System.out.println("\t   x_t_t="+x_t_t);
-        System.out.println("\t   x_t_tp="+x_t_tp);
+        //System.out.println("\t   x_t_t="+x_t_t);
+        //System.out.println("\t   x_t_tp="+x_t_tp);
         /*System.out.println("\t   K_t="+K_t);
         System.out.println("\t   y_t="+y_t);
         System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
-        System.out.println("\t   .....................");
+        //System.out.println("\t   .....................");
         
         
         
