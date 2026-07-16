@@ -39,7 +39,7 @@ public class Main {
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
-            int duration = (int)(3600); // in seconds
+            int duration = (int)(90); // in seconds
             corridor.estimate(duration, fileout); // this creates a CSV file
             fileout.close();
         }

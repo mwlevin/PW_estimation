@@ -457,9 +457,9 @@ public class Corridor {
             
             if(c.getNext() != null){
                 /*F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) - 
-                        dt /dx2  * (k_in_t - k_i_t) * C / ((k_i_t + chi) * (k_i_t + chi))  );  // possibly a sign error on their part or mine
+                        dt /dx2  * (k_in_t - k_i_t) * C / ((k_i_t + chi) * (k_i_t + chi))  );
                                 
-                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );  // probably wrong; eq speed shouldn't be here*/
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );*/
                 
                 //F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
                 
@@ -472,7 +472,7 @@ public class Corridor {
   
             }
             else{
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);  // also probably wrong; still shouldn't have eq speed; also possibly missing a dx2 below dt?
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
                 
             }
             
@@ -540,7 +540,8 @@ public class Corridor {
                 double residual_v = 0;
                 
                 // data = -1 indicates no values found or bad data
-                if(k_observed >= 0 && v_observed >= 0){
+                //if(k_observed >= 0 && v_observed >= 0){
+                if(c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){
                     residual_k = k_observed - x_t_tp.getEntry(c.k_idx());
                     residual_v = v_observed - x_t_tp.getEntry(c.v_idx());
                 }
@@ -782,7 +783,7 @@ public class Corridor {
             // covariance is likely negative: in congestion, larger k => smaller v
             // this is variance due to FD not fully describing traffic evolution
             // I don't know which values these should have
-            double scale = 1e-2;
+            double scale = 1e-3;
             double var_k = 5 * scale;
             double var_v = 1 * scale;
             double cov = 0; // this is intentionally set to 0
