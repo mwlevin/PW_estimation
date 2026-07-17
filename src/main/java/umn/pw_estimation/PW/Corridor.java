@@ -232,12 +232,12 @@ public class Corridor {
         
         
         for(Cell c : cells){
-            header1 += ", cell "+c.cell_idx+", ";
-            header2 += ", k, u";
+            header1 += ", cell "+c.cell_idx+",,";
+            header2 += ", k, u, q";
             
             if(c.hasDetector()){
-                header1 += ", detector "+c.getDetector().getName()+",";
-                header2 += ", k, u";
+                header1 += ", detector "+c.getDetector().getName()+",,";
+                header2 += ", k, u, q";
             }
             
             if(c.hasInflowDet()){
@@ -260,13 +260,14 @@ public class Corridor {
         line += time;
         
         for(Cell c : cells){
-            line += ", "+c.density+", "+c.speed;
+            line += ", "+c.density+", "+c.speed+", "+(c.density * c.speed);
             
             
             if(c.hasDetector()){
                 Detector det = c.getDetector();
                 line += ", "+det.getLast30sDensity(time);
                 line += ", "+det.getLast30sSpeed(time);
+                line += ", "+det.getLast30sFlow(time);
             }
             
             if(c.hasInflowDet()){
