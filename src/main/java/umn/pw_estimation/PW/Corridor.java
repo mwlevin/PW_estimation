@@ -241,11 +241,11 @@ public class Corridor {
             }
             
             if(c.hasInflowDet()){
-                header1 += ", inflow";
+                header1 += ", inflow "+c.getInflowDet().getName();
                 header2 += ", q";
             }
             if(c.hasOutflowDet()){
-                header1 += ", outflow";
+                header1 += ", outflow "+c.getOutflowDet().getName();
                 header2 += ", q";
             }
         }
