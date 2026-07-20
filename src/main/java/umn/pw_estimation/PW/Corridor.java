@@ -161,12 +161,12 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector()){
                 // values of -1 indicates bad data or missing data
-                double k = c.getDetector().getLast30sDensity(time);  // Math.max(c.getDetector().getLast30sDensity(time), 0);
-                double v = c.getDetector().getLast30sSpeed(time);  // Math.max(c.getDetector().getLast30sSpeed(time), 0);
+                double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
+                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
                 
-                if(k >= 0 && v >= 0){
-                    c.density = k;
-                    c.speed = v;  // already in m/s; no need for unit conversions
+                if(k_observed >= 0 && v_observed >= 0){
+                    c.density = k_observed;
+                    c.speed = v_observed;  // already in m/s; no need for unit conversions
                 }
                 else{
                     c.density = 0;
@@ -232,20 +232,20 @@ public class Corridor {
         
         
         for(Cell c : cells){
-            header1 += ", cell "+c.cell_idx+", ";
-            header2 += ", k, u";
+            header1 += ", cell "+c.cell_idx+",,";
+            header2 += ", k, u, q";
             
             if(c.hasDetector()){
-                header1 += ", detector "+c.getDetector().getName()+",";
-                header2 += ", k, u";
+                header1 += ", detector "+c.getDetector().getName()+",,";
+                header2 += ", k, u, q";
             }
             
             if(c.hasInflowDet()){
-                header1 += ", inflow";
+                header1 += ", inflow "+c.getInflowDet().getName();
                 header2 += ", q";
             }
             if(c.hasOutflowDet()){
-                header1 += ", outflow";
+                header1 += ", outflow "+c.getOutflowDet().getName();
                 header2 += ", q";
             }
         }
@@ -260,13 +260,14 @@ public class Corridor {
         line += time;
         
         for(Cell c : cells){
-            line += ", "+c.density+", "+c.speed;
+            line += ", "+c.density+", "+c.speed+", "+(c.density * c.speed);
             
             
             if(c.hasDetector()){
                 Detector det = c.getDetector();
                 line += ", "+det.getLast30sDensity(time);
                 line += ", "+det.getLast30sSpeed(time);
+                line += ", "+det.getLast30sFlow(time);
             }
             
             if(c.hasInflowDet()){
