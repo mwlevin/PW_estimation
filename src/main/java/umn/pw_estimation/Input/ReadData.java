@@ -99,7 +99,7 @@ public class ReadData {
     public Map<String, Corridor> readOSM(String corridor_name, File osm_file, double dt, String[] labels, File detectors_file, String[] detector_labels) throws IOException {
         
         saved_detectors = new HashMap<>();
-        double K = 5280.0/AVG_VEH_LEN;
+        double K = 5280.0/AVG_VEH_LEN;  // veh/mi
                 
         Map<String, List<Link>> links = new HashMap<>();
         
@@ -295,7 +295,7 @@ public class ReadData {
         return output; 
     }
     
-    static public final double AVG_VEH_LEN = 27.6;
+    static public final double AVG_VEH_LEN = 27.6;  // ft
     
     private static double getCapacity(double ffspeed){
 

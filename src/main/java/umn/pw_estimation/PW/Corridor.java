@@ -478,6 +478,9 @@ public class Corridor {
             
             cell_idx ++;
             
+            if (c.hasDetector()){
+            System.out.println("\t   cell "+cell_idx+"   flow="+(c.getDetector().getLast30sFlow(time)));
+            }
             //System.out.println("\t   F_t="+F_t);
             /*System.out.println("\t   c.speed="+c.speed);
             System.out.println("\t   dx1="+dx1);
