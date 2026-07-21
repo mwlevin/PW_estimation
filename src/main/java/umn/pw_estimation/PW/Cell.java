@@ -149,7 +149,7 @@ public class Cell {
     
     public double getInflow(long t){
         if(inflow_det != null){
-            return inflow_det.getLast30sCount(t);
+            return inflow_det.getLast30sCount(t)/30;
         }
         
         return 0;
@@ -157,7 +157,7 @@ public class Cell {
     
     public double getOutflow(long t){
         if(outflow_det != null){
-            return outflow_det.getLast30sCount(t);
+            return outflow_det.getLast30sCount(t)/30;
         }
         return 0;
     }
