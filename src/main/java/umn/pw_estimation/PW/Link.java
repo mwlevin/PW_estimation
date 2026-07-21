@@ -46,16 +46,13 @@ public class Link {
         cells = new Cell[numcells];
         
         cell_len = Math.max(this.length / numcells, dx);
-        
-        //System.out.println("check cell length "+cell_len);
 
-        
         Cell prev = null;
         for(int i = 0; i < cells.length; i++){
             cells[i] = new Cell(cell_len, this, prev);
             prev = cells[i];
         }
-     
+        
         
     }
     

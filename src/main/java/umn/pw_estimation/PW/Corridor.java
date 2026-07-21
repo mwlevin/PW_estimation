@@ -260,7 +260,7 @@ public class Corridor {
         line += time;
         
         for(Cell c : cells){
-            line += ", "+c.density+", "+c.speed+", "+(c.density * c.speed);
+            line += ", "+(c.density * 1609.34)+", "+(c.speed * 2.237)+", "+((c.density * 1609.34) * (c.speed * 2.237));
             
             
             if(c.hasDetector()){
@@ -321,8 +321,13 @@ public class Corridor {
             }
             if(c.hasOutflowDet()){
                 outflow = c.outflow;
+                /*
+                if(c.outflow > k_i_t){
+                    k_i_t = c.outflow;
+                }
+                */
             }
-
+            
             double v_i_t = c.speed;
             double v_ip_t = 0; // in refers to i-next
             double k_ip_t = 0;
@@ -348,14 +353,38 @@ public class Corridor {
             double q_i_t = v_i_t * k_i_t;
             
             double k_i_tn = k_i_t + dt / dx1 * (q_ip_t - q_i_t); // density for cell i at time t+1
-            /*if (k_i_t == -1){
-                k_i_tn = -1;
+            
+            /*if (c.getDetector() != null){
+                if (Math.min(c.getDetector().getLast30sDensity(time), c.getLink().getK()) <= 0){
+                k_i_tn = dt / dx1 * (q_ip_t - q_i_t);
+            }
             }*/
             
             // assume added flow enters cell, so it increases occupancy (increases density)
             // assume counts on inflow/outflow are correct, and only counts are used, so 0 noise
             k_i_tn += (inflow - outflow) * dt / dx1;
-
+            
+            /*if (inflow > 0.0){
+            System.out.println("\t   cell "+cell_idx+"   at time "+time);
+            System.out.println("\t   inflow="+inflow);
+            System.out.println("\t   outflow="+outflow);
+            System.out.println("\t   diff="+(inflow - outflow));
+            System.out.println("\t   dt="+dt);
+            System.out.println("\t   dx1="+dx1);
+            System.out.println("\t   dt/dx1="+ (dt / dx1));
+            System.out.println("\t   ..................");
+            }
+            
+            if (outflow > 0.0 && inflow <= 0.0){
+            System.out.println("\t   cell "+cell_idx+"   at time "+time);
+            System.out.println("\t   inflow="+inflow);
+            System.out.println("\t   outflow="+outflow);
+            System.out.println("\t   diff="+(inflow - outflow));
+            System.out.println("\t   dt="+dt);
+            System.out.println("\t   dx1="+dx1);
+            System.out.println("\t   dt/dx1="+ (dt / dx1));
+            System.out.println("\t   ..................");
+            }*/
             
             // speed pressure term is becoming overlarge because k_i_t is small while k_in_t is large.
             double k_i_t_pressure = k_i_t;
@@ -479,9 +508,9 @@ public class Corridor {
             
             cell_idx ++;
             
-            if (c.hasDetector()){
+            /*if (c.hasDetector()){
             System.out.println("\t   cell "+cell_idx+"   flow="+(c.getDetector().getLast30sFlow(time)));
-            }
+            }*/
             //System.out.println("\t   F_t="+F_t);
             /*System.out.println("\t   c.speed="+c.speed);
             System.out.println("\t   dx1="+dx1);
