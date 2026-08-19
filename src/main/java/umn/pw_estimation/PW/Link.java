@@ -210,17 +210,17 @@ public class Link {
         return ""+name;
     }
     
-    TrafficRegime[] array = new TrafficRegime[8];
+    TrafficRegime[] array = new TrafficRegime[9];
     
     public void regimeArray(){
-        array[0] = new TrafficRegime(v, 0);
-        array[1] = new TrafficRegime(v, (0.9/2.1)*Q);
-        array[2] = new TrafficRegime(v, (1.9/2.1)*Q);
-        array[3] = new TrafficRegime(v, Q);
-        array[4] = new TrafficRegime(Q/(K-(Q/w)), Q);
-        array[5] = new TrafficRegime((0.8/1.1)*(Q/(K-(Q/w))), (0.85/1.45)*Q);
-        array[6] = new TrafficRegime((0.45/1.1)*(Q/(K-(Q/w))), (0.25/1.45)*Q);
-        array[7] = new TrafficRegime(0, 0);
+        array[1] = new TrafficRegime(v, 0);
+        array[2] = new TrafficRegime(v, (0.9/2.1)*Q);
+        array[3] = new TrafficRegime(v, (1.9/2.1)*Q);
+        array[4] = new TrafficRegime(v, Q);
+        array[5] = new TrafficRegime(Q/(K-(Q/w)), Q);
+        array[6] = new TrafficRegime((0.8/1.1)*(Q/(K-(Q/w))), (0.85/1.45)*Q);
+        array[7] = new TrafficRegime((0.45/1.1)*(Q/(K-(Q/w))), (0.25/1.45)*Q);
+        array[8] = new TrafficRegime(0, 0);
     }
     public TrafficRegime[] array(){
         return array;

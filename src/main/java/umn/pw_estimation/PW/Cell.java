@@ -245,7 +245,7 @@ public class Cell {
         TrafficRegime[] array = link.array();
         
         
-        for(int i = 0; i < array.length; i++){
+        for(int i = 1; i <= array.length - 1; i++){
             double sse = array[i].getSSE(getFlow(), getSpeed());
             if(sse < best_sse){
             best_sse = sse;
