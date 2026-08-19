@@ -30,7 +30,7 @@ public class Main {
         ReadData read = new ReadData();
         Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
         read.readDetectorData(new File("data/MN610/detector_data.csv"));
-       
+        
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             corridor.init(0);

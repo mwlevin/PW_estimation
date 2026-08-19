@@ -303,7 +303,7 @@ public class ReadData {
         return Math.min(2400, 2200 + 10 * (ffspeed - 50));
     }
     public static double getW(double ffspeed){
-        return ffspeed/2;
+        return 34;
     }
 
     private static double getFFSpeed(double speed_limit){

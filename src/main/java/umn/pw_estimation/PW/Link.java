@@ -53,7 +53,7 @@ public class Link {
             prev = cells[i];
         }
         
-        
+        regimeArray();
     }
     
     public Link(String name, List<Coordinate> coords, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
@@ -114,11 +114,11 @@ public class Link {
                 
                 /*System.out.println("\t   v="+v);
                 System.out.println("\t   k="+k);
-                System.out.println("\t   v*k="+(v*k));
-                System.out.println("\t   w="+w);
-                System.out.println("\t   K="+K);
-                System.out.println("\t   Q="+getQ());
-                System.out.println("\t   -w*(k-getK)="+(-w*(k-getK())));
+                //System.out.println("\t   v*k="+(v*k));
+                System.out.println("\t   w="+w); */
+                System.out.println("\t   K per lane ="+getK_perLane());
+                System.out.println("\t   Q per lane ="+getQ_perLane());
+                /*System.out.println("\t   -w*(k-getK)="+(-w*(k-getK())));
                 System.out.println("\t   min 1="+Math.min(getQ(), -w*(k-getK())));
                 System.out.println("\t   min 2="+(Math.min(v*k, Math.min(getQ(), -w*(k-getK())))));
                 System.out.println("\t ......................");*/
@@ -126,8 +126,14 @@ public class Link {
         if(k == 0){
             return v;
         }
-        double q = Math.min(v*k, Math.min(getQ(), -w*(k-getK())));
+        double q = Math.min(v*k, Math.min(getQ_perLane(), -w*(k-getK_perLane())));  // previously no _perLane on Q or K
+        
+        if(k > 0.07){
+            //System.out.println("\t   q="+q);
+            //System.out.println("\t   k="+k);
+        }
                 //System.out.println("\t   q="+q);
+                //System.out.println("\t   k="+k);
                 //System.out.println("\t   q/k="+(q/k));
                 //System.out.println("\t ......................");
         return q/k;
@@ -202,5 +208,21 @@ public class Link {
     
     public String toString(){
         return ""+name;
+    }
+    
+    TrafficRegime[] array = new TrafficRegime[8];
+    
+    public void regimeArray(){
+        array[0] = new TrafficRegime(v, 0);
+        array[1] = new TrafficRegime(v, (0.9/2.1)*Q);
+        array[2] = new TrafficRegime(v, (1.9/2.1)*Q);
+        array[3] = new TrafficRegime(v, Q);
+        array[4] = new TrafficRegime(Q/(K-(Q/w)), Q);
+        array[5] = new TrafficRegime((0.8/1.1)*(Q/(K-(Q/w))), (0.85/1.45)*Q);
+        array[6] = new TrafficRegime((0.45/1.1)*(Q/(K-(Q/w))), (0.25/1.45)*Q);
+        array[7] = new TrafficRegime(0, 0);
+    }
+    public TrafficRegime[] array(){
+        return array;
     }
 }

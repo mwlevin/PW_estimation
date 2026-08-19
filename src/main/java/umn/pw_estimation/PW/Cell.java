@@ -179,4 +179,79 @@ public class Cell {
     protected double getFlow(){
         return speed * density;
     }
+    
+    protected double getSpeed(){
+        return speed;
+    }
+    
+    public int getTrafficRegime(){
+        /*double Q = link.getQ();
+        double K = link.getK();
+        double w = link.getW();*/
+        
+        /*double sd1 = (v_idx() - speed) * (v_idx() - speed);
+        double sd2 = (v_idx() - Q/(K-(Q/w))) * (v_idx() - Q/(K-(Q/w)));
+        double sd3 = (v_idx() - (0.8/1.1)*(Q/(K-(Q/w)))) * (v_idx() - (0.8/1.1)*(Q/(K-(Q/w))));
+        double sd4 = (v_idx() - (0.45/1.1)*(Q/(K-(Q/w)))) * (v_idx() - (0.45/1.1)*(Q/(K-(Q/w))));
+        double sd5 = (v_idx() - 0) * (v_idx() - 0);
+        
+        double fd1 = (getFlow() - 0) * (getFlow() - 0);
+        double fd2 = (getFlow() - (0.9/2.1)*Q) * (getFlow() - (0.9/2.1)*Q);
+        double fd3 = (getFlow() - (1.9/2.1)*Q) * (getFlow() - (1.9/2.1)*Q);
+        double fd4 = (getFlow() - Q) * (getFlow() - Q);
+        double fd5 = (getFlow() - (0.85/1.45)*Q) * (getFlow() - (0.85/1.45)*Q);
+        double fd6 = (getFlow() - (0.25/1.45)*Q) * (getFlow() - (0.25/1.45)*Q);*/
+        
+        /*double sse1 = sd1 + fd1;
+        double sse2 = sd1 + fd2;
+        double sse3 = sd1 + fd3;
+        double sse4 = sd1 + fd4;
+        double sse5 = sd2 + fd4;
+        double sse6 = sd3 + fd5;
+        double sse7 = sd4 + fd6;
+        double sse8 = sd5 + fd1;
+        
+        double min = Math.min(sse1, Math.min(sse2, Math.min(sse3, Math.min(sse4, Math.min(sse5, Math.min(sse6, Math.min(sse7, sse8)))))));
+        */
+        /*if(min == sse1){
+        return 0;
+        }
+        if(min == sse2){
+        return 1;
+        }
+        if(min == sse3){
+        return 2;
+        }
+        if(min == sse4){
+        return 3;
+        }
+        if(min == sse5){
+        return 4;
+        }
+        if(min == sse6){
+        return 5;
+        }
+        if(min == sse7){
+        return 6;
+        }
+        if(min == sse8){
+        return 7;
+        }
+        return -1;*/
+        
+        double best_sse = Double.MAX_VALUE;
+        int best = -1;
+        
+        TrafficRegime[] array = link.array();
+        
+        
+        for(int i = 0; i < array.length; i++){
+            double sse = array[i].getSSE(getFlow(), getSpeed());
+            if(sse < best_sse){
+            best_sse = sse;
+            best = i;
+            }
+        }
+        return best;
+    }
 }

@@ -159,12 +159,12 @@ public class Corridor {
         y_t = new ArrayRealVector(size);
         
         for(Cell c : cells){
-            if(c.hasDetector()){
+            if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously only hasDetector
                 // values of -1 indicates bad data or missing data
                 double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
                 double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
                 
-                if(k_observed >= 0 && v_observed >= 0){
+                if(k_observed >= 0 && v_observed >= 0){  // change to strictly inequality?
                     c.density = k_observed;
                     c.speed = v_observed;  // already in m/s; no need for unit conversions
                 }
@@ -232,8 +232,8 @@ public class Corridor {
         
         
         for(Cell c : cells){
-            header1 += ", cell "+c.cell_idx+",,";
-            header2 += ", k, u, q";
+            header1 += ", cell "+c.cell_idx+",,,";
+            header2 += ", k, u, q, regime";
             
             if(c.hasDetector()){
                 header1 += ", detector "+c.getDetector().getName()+",,";
@@ -260,21 +260,36 @@ public class Corridor {
         line += time;
         
         for(Cell c : cells){
-            line += ", "+(c.density * 1609.34)+", "+(c.speed * 2.237)+", "+((c.density * 1609.34) * (c.speed * 2.237));
+            line += ", "+(c.density * 1609.34)+", "+(c.speed * 2.237)+", "+((c.density * 1609.34) * (c.speed * 2.237))+", "+c.getTrafficRegime();
             
             
             if(c.hasDetector()){
                 Detector det = c.getDetector();
-                line += ", "+det.getLast30sDensity(time);
-                line += ", "+det.getLast30sSpeed(time);
-                line += ", "+det.getLast30sFlow(time);
+                if(det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
+                line += ", "+(det.getLast30sDensity(time) * 1609.34);
+                line += ", "+(det.getLast30sSpeed(time) * 2.237);
+                line += ", "+(det.getLast30sFlow(time) * 1609.34 * 2.237);
+                }
+                else{
+                line += ", "+(det.getLast30sDensity(time));
+                line += ", "+(det.getLast30sSpeed(time));
+                line += ", "+(det.getLast30sFlow(time));
+                }
             }
             
-            if(c.hasInflowDet()){
-                line += ", "+c.getInflowDet().getLast30sFlow(time);
+            if(c.hasInflowDet() && c.getInflowDet().getLast30sFlow(time) >= 0){
+                line += ", "+(c.getInflowDet().getLast30sFlow(time) * 1609.34 * 2.237);
             }
-            if(c.hasOutflowDet()){
-                line += ", "+c.getOutflowDet().getLast30sFlow(time);
+            if(c.hasInflowDet() && c.getInflowDet().getLast30sFlow(time) < 0){
+                line += ", "+(c.getInflowDet().getLast30sFlow(time));
+            }
+            
+            if(c.hasOutflowDet() && c.getOutflowDet().getLast30sFlow(time) >= 0){
+                line += ", "+(c.getOutflowDet().getLast30sFlow(time) * 1609.34 * 2.237);
+            }
+            
+            if(c.hasOutflowDet() && c.getOutflowDet().getLast30sFlow(time) < 0){
+                line += ", "+(c.getOutflowDet().getLast30sFlow(time));
             }
         }
         
@@ -329,7 +344,7 @@ public class Corridor {
             }
             
             double v_i_t = c.speed;
-            double v_ip_t = 0; // in refers to i-next
+            double v_ip_t = 0; // in refers to i-next, ip is i-previous
             double k_ip_t = 0;
             double q_ip_t = 0;
             
@@ -415,8 +430,8 @@ public class Corridor {
             
             
             // this prevents excessive values
-            v_i_tn = Math.min(v_i_tn, c.getLink().getMaxSpeed());  // Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));
-            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));  // Math.max(0, Math.min(k_i_tn, c.getLink().getK()));
+            v_i_tn = Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));  // Math.min(v_i_tn, c.getLink().getMaxSpeed());
+            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));  // Math.min(k_i_tn, c.getLink().getK());
             
             //System.out.println("\t    max speed="+c.getLink().getMaxSpeed());
             
@@ -564,7 +579,7 @@ public class Corridor {
     private void update(){
         // obtain detector data
         for(Cell c : cells){
-            if(c.hasDetector()){
+            if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously just if c.hasDetector()
                 // this is the measurement residual
                 double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
                 double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
@@ -573,7 +588,6 @@ public class Corridor {
                 double residual_v = 0;
                 
                 // data = -1 indicates no values found or bad data
-                //if(k_observed >= 0 && v_observed >= 0){
                 if(c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){
                     residual_k = k_observed - x_t_tp.getEntry(c.k_idx());
                     residual_v = v_observed - x_t_tp.getEntry(c.v_idx());
@@ -733,7 +747,7 @@ public class Corridor {
     public void printCells(){
         System.out.println("t="+String.format("%.2f", time*1.0)+" --");
         for(Cell c : cells){
-            System.out.println(c.k_idx()/2+"\t"+c.density+"\t"+c.speed);
+            System.out.println(c.k_idx()/2+"\t"+c.density+"\t"+c.speed+"\t"+c.getTrafficRegime());
         }
         System.out.println("--");
     }
@@ -759,7 +773,7 @@ public class Corridor {
         
         
         for(Cell c : cells){
-            if(c.hasDetector() && c.getDetector().getLast30sCount(time) > 0){
+            if(c.hasDetector() && c.getDetector().getLast30sCount(time) > 0 && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously only hasDetector and Last30sCount > 0
                 
                 double q = c.getDetector().getLast30sFlow(time);
                 double occ = len_mean / c.getDetector().getLast30sSpeed(time);
