@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import umn.pw_estimation.PW.Link;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -16,6 +18,7 @@ import umn.pw_estimation.PW.Corridor;
 import umn.pw_estimation.Input.HistoricalDetector;
 import umn.pw_estimation.Input.ReadData;
 import umn.pw_estimation.PW.Coordinate;
+import umn.pw_estimation.PW.DrawOSM;
 /**
  *
  * @author mlevin
@@ -36,6 +39,14 @@ public class Main {
             corridor.init(0);
         }
         
+        List<Corridor> list = new ArrayList<Corridor>();
+        for(String s : corridors.keySet()){
+            list.add(corridors.get(s));
+            break;
+        }
+        DrawOSM.draw(list);
+        
+        /*
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
@@ -43,7 +54,7 @@ public class Main {
             corridor.estimate(duration, fileout); // this creates a CSV file
             fileout.close();
         }
-    
+        */
         
         /*
         double dt = 3;

@@ -16,6 +16,16 @@ public class Coordinate {
         this.lon = lon;
     }
     
+    public String toString(){
+        return "("+lat+","+lon+")";
+    }
+    
+    public boolean equals(Object o){
+        Coordinate rhs = (Coordinate)o;
+        
+        return lat == rhs.lat && lon == rhs.lon;
+    }
+    
     public static double dist(Coordinate c1, Coordinate c2){
         double lat1 = c1.lat;
         double lon1 = c1.lon;

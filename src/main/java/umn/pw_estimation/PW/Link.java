@@ -11,7 +11,10 @@ import java.util.List;
  *
  * @author mlevin
  */
-public class Link {
+public class Link implements Comparable<Link> {
+    
+    private static Coordinate base = new Coordinate(0, 0);
+    
     public Cell[] cells;
     
     
@@ -54,11 +57,43 @@ public class Link {
         }
         
         regimeArray();
+        
+        
     }
     
     public Link(String name, List<Coordinate> coords, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
         this(name, calcLength(coords), dt, v, maxspeed, Q, w, K, numLanes);
         this.coords = coords;
+        
+        // I don't care what this is! I just need any reference point
+        base = coords.get(0); 
+    }
+    
+    public int compareTo(Link rhs){
+        double distToBase = Coordinate.dist(coords.get(0), base)*1609.3;
+        double rhsDistToBase = Coordinate.dist(rhs.coords.get(0), base)*1609.3;
+        
+        if(distToBase > rhsDistToBase){
+            return 1;
+        }
+        else if(distToBase < rhsDistToBase){
+            return -1;
+        }
+        else{
+            return 0;
+        }
+    }
+    
+    public List<Coordinate> getCoordinates(){
+        return coords;
+    }
+    
+    public Coordinate getFirstCoordinate(){
+        return coords.get(0);
+    }
+    
+    public Coordinate getLastCoordinate(){
+        return coords.get(coords.size()-1);
     }
     
     public double getMaxSpeed(){

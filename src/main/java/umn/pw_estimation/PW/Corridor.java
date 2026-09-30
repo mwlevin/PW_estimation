@@ -9,7 +9,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -63,7 +65,9 @@ public class Corridor {
         }
     }
     
-    
+    public List<Link> getLinks(){
+        return links;
+    }
     
     public String getName(){
         return name;
@@ -128,6 +132,9 @@ public class Corridor {
     private RealVector y_t;
     
     public void init(long time){
+        
+        sortLinks();
+        
         this.time = time;
         
         constructCells();
@@ -864,5 +871,39 @@ public class Corridor {
         }
         
         return false;
+    }
+    
+    
+    public void sortLinks(){
+        // links may not be sorted...
+        // Collections.sort didn't work!
+        
+        LinkedList<Link> ll = new LinkedList<>();
+        
+        ll.add(links.get(0));
+        // assume that endpoints match
+        while(ll.size() < links.size()){
+            // can I find the matching link to the start endpoint?
+            Coordinate start = ll.getFirst().getFirstCoordinate();
+            
+            for(Link l : links){
+                if(l.getLastCoordinate().equals(start)){
+                    ll.addFirst(l);
+                    break;
+                }
+            }
+            
+            // if not (or even if so), what about the end endpoint?
+            Coordinate end = ll.getLast().getLastCoordinate();
+            for(Link l : links){
+                if(l.getFirstCoordinate().equals(end)){
+                    ll.addLast(l);
+                    break;
+                }
+            }
+        }
+        
+        // I don't want to use a LinkedList, convert back...
+        links = new ArrayList<Link>(ll);
     }
 }
