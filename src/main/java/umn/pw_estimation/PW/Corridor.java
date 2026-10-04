@@ -905,5 +905,18 @@ public class Corridor {
         
         // I don't want to use a LinkedList, convert back...
         links = new ArrayList<Link>(ll);
+        
+        double avg_bearing = 0;
+        double total_weight = 0;
+        
+        for(Link l : links){
+            double bearing = Coordinate.bearing(l.getFirstCoordinate(), l.getLastCoordinate());
+            avg_bearing += bearing * l.getLength();
+            total_weight += l.getLength();
+        }
+        
+        avg_bearing = avg_bearing / total_weight;
+        
+        System.out.println(name+" avg direction: "+avg_bearing);
     }
 }

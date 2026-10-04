@@ -100,6 +100,10 @@ public class Link implements Comparable<Link> {
         return maxspeed;
     }
     
+    public double getLength(){
+        return length;
+    }
+    
     public boolean addDetector(Detector det){
 
         Coordinate location = det.getLocation();
