@@ -214,7 +214,79 @@ public class Corridor {
         
     }
     
+    public CellRecord[][] records;
+    private long startTime;
+    private int time_idx;
+    
+    public void recordCellData(long time){
+        for(int i = 0; i < cells.length; i++){
+            records[i][time_idx] = cells[i].createCellRecord(time);
+        }
+        time_idx ++;
+    }
+    
+    public void printCrashData(File file, long crash_time, Coordinate location, int upstream_cells, int timestep, int num_timesteps) throws IOException{
+        
+        // what if crash_time isn't aligned with a time step
+        crash_time -= crash_time % dt;
+        
+        Cell cell = findCell(location);
+        int cell_idx = cell.cell_idx;
+        
+        int start_cell = cell_idx - upstream_cells;
+        
+        
+        
+        long start_time = crash_time - timestep * num_timesteps;
+        
+        PrintStream fileout = new PrintStream(new FileOutputStream(file), true);
+        String header1 = "time";
+        String header2 = "";
+        
+
+        for(int i = 0; i < upstream_cells+1; i++){
+            header1 += ",cell "+i+",,";
+            header2 += ",density,speed,regime";
+        }
+        
+        fileout.println(header1);
+        fileout.println(header2);
+        
+        
+        for(long time = start_time; time <= crash_time; time += timestep){
+            int time_idx = (int)Math.round( (double)(time - this.startTime)/dt);
+            
+            String line = ""+time;
+            
+            for(int i = 0; i < upstream_cells+1; i++){
+                CellRecord c = records[start_cell+i][time_idx];
+                line += ","+c.density+","+c.speed+","+c.regime;
+            }
+            
+            fileout.println(line);
+        }
+            
+        fileout.close();
+    }
+    
+    public Cell findCell(Coordinate location){
+        for(Link l : links){
+            Cell output = l.findCell(location);
+            
+            if(output != null){
+                return output;
+            }
+        }
+        
+        return null;
+    }
+    
     public void estimate(int endTime, PrintStream fileout) throws IOException{
+        
+        startTime = time;
+        time_idx = 0;
+        
+        records = new CellRecord[cells.length][ (int)Math.ceil( ( (double)endTime - startTime)/dt)];
         
         if(fileout != null){
             printHeader(fileout);
@@ -224,6 +296,8 @@ public class Corridor {
             if(fileout != null){
                 printCellData(fileout);
             }
+            
+            recordCellData(time);
             
             nextTimestep();
         }

@@ -104,11 +104,7 @@ public class Link implements Comparable<Link> {
         return length;
     }
     
-    public boolean addDetector(Detector det){
-
-        Coordinate location = det.getLocation();
-        
-        // also need to determine whether detector is on link
+    public Cell findCell(Coordinate location){
         for(int i = 0; i < coords.size()-1; i++){
             // detector should be almost in a straight line on the road
             
@@ -125,29 +121,48 @@ public class Link implements Comparable<Link> {
                 // distance is in miles so convert to meters
                 
                 
-                addDetector((dist1 + calcLength(coords, i))*1609.3, det);
-                return true;
+                return findCell((dist1 + calcLength(coords, i))*1609.3);
             }
         }
         
-        return false;
+        return null;
     }
     
-    public void addDetector(double position, Detector det){
+   
+    public boolean addDetector(Detector det){
+
+        Coordinate location = det.getLocation();
+        
+        Cell cell = findCell(det.getLocation());
+       
+        if(cell != null){
+            
+            if(det.getType() == Detector.Type.Exit){
+                cell.addOutflowDet(det);
+            }
+            else if(det.getType() == Detector.Type.Merge){
+                cell.addInflowDet(det);
+            }
+            else{
+                cell.setDetector(det);
+            }
+
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    
+    public Cell findCell(double position){
         assert(position > 0 && position < length);
         
         int cell_idx = (int)Math.min(cells.length-1, Math.ceil(position / cell_len));
         
-        if(det.getType() == Detector.Type.Exit){
-            cells[cell_idx].addOutflowDet(det);
-        }
-        else if(det.getType() == Detector.Type.Merge){
-            cells[cell_idx].addInflowDet(det);
-        }
-        else{
-            cells[cell_idx].setDetector(det);
-        }
+        return cells[cell_idx];
     }
+             
+
     
     public double getEquilibriumSpeed(double k){
                 

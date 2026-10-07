@@ -44,17 +44,32 @@ public class Main {
             list.add(corridors.get(s));
             break;
         }
-        DrawOSM.draw(list);
         
-        /*
+        
+
+        
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
-            int duration = (int)(60); // in seconds
+            int duration = (int)(600); // in seconds
             corridor.estimate(duration, fileout); // this creates a CSV file
             fileout.close();
         }
-        */
+        
+        Coordinate crash_loc = new Coordinate(45.1306773, -93.2979796);
+        long crash_time = 520;
+        
+        Corridor wb610 = corridors.get("WB");
+        Corridor eb610 = corridors.get("EB");
+        
+        int upstream_cells = 5; // number of cells shown is number of upstream_cells +1 (location of crash)
+        int timestep = 60; // this is 60 seconds
+        int num_timesteps = 5; // this becomes 5*timestep seconds. num_timesteps + 1 are shown (last one is time of crash)
+        
+        wb610.printCrashData(new File("crash_output.csv"), crash_time, crash_loc, upstream_cells, timestep, num_timesteps);
+        
+        //DrawOSM.draw(list);
+        
         
         /*
         double dt = 3;

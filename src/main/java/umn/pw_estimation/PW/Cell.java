@@ -102,6 +102,9 @@ public class Cell {
         return outflow_det;
     }
     
+    public CellRecord createCellRecord(long time){
+        return new CellRecord(time, getFlow(), density, speed, getTrafficRegime());
+    }
     
     
     public double getLength(){
