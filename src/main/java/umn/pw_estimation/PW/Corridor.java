@@ -225,6 +225,17 @@ public class Corridor {
         time_idx ++;
     }
     
+    public CellRecord[] getData(long time){
+        CellRecord[] output = new CellRecord[records.length];
+        
+        int time_idx = (int)Math.round( (double)(time - this.startTime)/dt);
+        
+        for(int i = 0; i < output.length; i++){
+            output[i] = records[i][time_idx];
+        }
+        return output;
+    }
+    
     public void printCrashData(File file, long crash_time, Coordinate location, int upstream_cells, int timestep, int num_timesteps) throws IOException{
         
         // what if crash_time isn't aligned with a time step

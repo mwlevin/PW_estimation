@@ -16,8 +16,8 @@ public class CellRecord {
     public CellRecord(long time, double flow, double density, double speed, int regime){
         this.time = time;
         this.flow = flow;
-        this.density = density;
-        this.speed = speed;
+        this.density = density * 1609;
+        this.speed = speed * 2.23694;
         this.regime = regime;
     }
 }

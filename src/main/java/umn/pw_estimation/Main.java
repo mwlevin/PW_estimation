@@ -66,9 +66,14 @@ public class Main {
         int timestep = 60; // this is 60 seconds
         int num_timesteps = 5; // this becomes 5*timestep seconds. num_timesteps + 1 are shown (last one is time of crash)
         
-        wb610.printCrashData(new File("crash_output.csv"), crash_time, crash_loc, upstream_cells, timestep, num_timesteps);
+        Corridor crash_corridor = wb610;
         
-        //DrawOSM.draw(list);
+        crash_corridor.printCrashData(new File("crash_output.csv"), crash_time, crash_loc, upstream_cells, timestep, num_timesteps);
+        
+        DrawOSM test = DrawOSM.draw(crash_corridor);
+        test.setCrashLoc(crash_loc);
+        test.setDrawData(crash_corridor.getData(crash_time));
+        test.saveImage("map");
         
         
         /*

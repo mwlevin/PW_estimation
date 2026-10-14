@@ -32,7 +32,12 @@ import javax.swing.JPanel;
  */
 public class DrawOSM extends JPanel {
     
-    public static void draw(List<Corridor> corridors) throws IOException{ 
+    public static DrawOSM draw(Corridor corridor) throws IOException{
+        List<Corridor> list = new ArrayList<>();
+        list.add(corridor);
+        return draw(list);
+    }
+    public static DrawOSM draw(List<Corridor> corridors) throws IOException{ 
         DrawOSM test = new DrawOSM(corridors);
         
         
@@ -51,19 +56,17 @@ public class DrawOSM extends JPanel {
             }
         });
         
-        BufferedImage image = test.createImage();
         
-        String imageType = "jpg";
-        String output_file = "map";
         
-        File outputfile = new File(output_file+"."+imageType);
-
-        ImageIO.write(image, imageType, outputfile);
+        return test;
     }
     
     public static final Color[] gradient = new Color[]{};
     
     private List<Corridor> corridors;
+    
+    private Coordinate crash_loc;
+    private CellRecord[] draw_data;
     
     public DrawOSM(List<Corridor> corridors){
         this.corridors = corridors;
@@ -105,18 +108,41 @@ public class DrawOSM extends JPanel {
     }
     
     
+    public void saveImage(String output_file) throws IOException{
+        BufferedImage image = createImage();
+        
+        String imageType = "jpg";
+        
+        File outputfile = new File(output_file+"."+imageType);
+
+        ImageIO.write(image, imageType, outputfile);
+    }
+    
     
     double max_value;
     double min_value;
     
-    public void setDisplayRange(double min, double max){
-        this.min_value = min;
+    public void setDisplayRange(double min_value, double max){
+        this.min_value = min_value;
         this.max_value = max;
+    }
+    
+    public void setDrawData(CellRecord[] data){
+        this.draw_data = data;
+        repaint();
+    }
+    public void setCrashLoc(Coordinate crash){
+        crash_loc = crash;
+        repaint();
     }
     
     
     public Color getColor(int idx, Cell cell){
         
+        double density = draw_data[idx].density;
+        int traffic_regime = draw_data[idx].regime;
+        
+        // use density to get color?
         return new Color((int)(255.0 * idx / cell.getLink().cells.length), 0, 0);
     }
     
@@ -148,9 +174,7 @@ public class DrawOSM extends JPanel {
                 int coord_idx = 2;
                 
                 Cell[] cells = link.cells;
-                
-                Coordinate lastDrawn = null;
-                
+
                 for(int cell_idx = 0; cell_idx < cells.length; cell_idx++){
                     
                     Cell cell = cells[cell_idx];
@@ -172,8 +196,6 @@ public class DrawOSM extends JPanel {
                         Coordinate start = c1;
                         Coordinate end = new Coordinate(c1.lat + (c2.lat-c1.lat) * travel_len/coord_dist, c1.lon + (c2.lon-c1.lon) * travel_len/coord_dist);
 
-                        lastDrawn = end;
-                        
                         int x1 = (int) ((start.lon - minLon) / (maxLon - minLon) * width)+5;
                         int y1 = (int) ((maxLat - start.lat) / (maxLat - minLat) * height)+5;
 
@@ -205,7 +227,17 @@ public class DrawOSM extends JPanel {
                 
             }
         }
-
+        
+        g.setStroke(new BasicStroke(1));
+        
+        if(crash_loc != null){
+            int x1 = (int) ((crash_loc.lon - minLon) / (maxLon - minLon) * width)+5;
+            int y1 = (int) ((maxLat - crash_loc.lat) / (maxLat - minLat) * height)+5;
+    
+            g.setColor(Color.green);
+            int oval_width = 6;
+            g.drawOval(x1-(int)Math.round(oval_width/2.0), y1-(int)Math.round(oval_width/2.0), oval_width, oval_width);
+        }
         
         
         int y = getHeight()-10-100;
