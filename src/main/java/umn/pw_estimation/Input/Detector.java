@@ -73,6 +73,11 @@ public abstract class Detector {
     }
     public abstract double getLast30sSpeed(long t);
     
+    // number of lanes this detector measures; counts and densities are totals over these lanes
+    public int getNumLanes(){
+        return 1;
+    }
+    
     public double getLast30sDensity(long t){
         double flow = getLast30sFlow(t);
         double speed = getLast30sSpeed(t);

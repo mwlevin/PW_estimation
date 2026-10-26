@@ -27,7 +27,8 @@ public class Main {
 
     // HOW THIS PROGRAM WORKS
     //  1. readOSM() reads the road geometry and creates one Corridor per direction ("WB" and "EB").
-    //     Each Corridor is a chain of Links (road segments from OpenStreetMap), and each Link is split into Cells.
+    //     Each Corridor is a chain of Links (road segments from OpenStreetMap). The corridor is divided into Cells of
+    //     equal length, which can cover parts of several Links (see Corridor.buildCells()).
     //     Detectors are matched to the cell that contains them.
     //  2. readDetectorData() loads the 30-second loop detector counts and speeds.
     //  3. init() sets the starting state of every cell, and estimate() runs the extended Kalman filter forward in time.
@@ -42,8 +43,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         
         // time step in seconds; must be a whole number because Corridor stores the current time as a long
-        // 6 s gave the lowest error in testing; the cell length grows with dt (see Link.java)
-        double dt = 6;
+        // the cell length is proportional to dt (see Corridor.buildCells()): 3 s gives cells of about 205 m (0.13 mi)
+        // dt must be below about 5.9 s for cells to be at most 1/4 mile; 3 s and 4 s gave similar errors in testing, 5 s larger
+        double dt = 3;
         
         ReadData read = new ReadData();
         Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
@@ -103,12 +105,14 @@ public class Main {
         
         
         /*
-        // old test on a single made-up link. The Link constructor has since changed to
-        // Link(name, length, dt, v, maxspeed, Q, BP, Kc, K, numLanes), so this needs updating before it will compile.
+        // old test on a single made-up link: Link(name, length (mi), v (mph), maxspeed (mph), Q (veh/hr/ln), w (mph), K (veh/mi/ln), lanes)
+        // FakeDetector gives constant detector values
+        // This needs updating before it will work: links no longer have their own cells (use corridor.getCells() instead
+        // of test.cells), and the corridor needs links with coordinates to sort them
         double dt = 3;
         double maxspeed = 80.8;
         
-        Link test = new Link("test", 0.2, dt, 35, maxspeed, 2400, 15, 240, 1);
+        Link test = new Link("test", 0.2, 35, maxspeed, 2400, 15, 240, 1);
         test.cells[0].setDetector(new FakeDetector("test", new Coordinate(0, 0), 12, 35)); 
         //test.cells[3].addInflowDet(new FakeDetector("test", new Coordinate(0, 0), 12, 35)); 
         //test.cells[7].addOutflowDet(new FakeDetector("test", new Coordinate(0, 0), 12, 35));

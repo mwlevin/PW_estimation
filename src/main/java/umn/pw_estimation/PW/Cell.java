@@ -19,7 +19,11 @@ public class Cell {
     public int cell_idx;
     private int inflow_idx, outflow_idx;
     
-    private double length;
+    private double length; // meters
+    
+    // number of lanes: the length-weighted average over the links this cell covers, so it may not be a whole number
+    // (e.g. 150 m of 2 lanes and 50 m of 3 lanes gives 2.25 lanes); see Corridor.buildCells()
+    private double lanes;
     
     
     private Cell prev, next;
@@ -29,13 +33,10 @@ public class Cell {
     // this refers to a detector on an entrance or exit that observes vehicles entering or exiting
     private Detector inflow_det, outflow_det;
     
+    // the per-lane flow-density relationship comes from this link (the link at the middle of the cell)
     private Link link;
     
-    public Cell(double length, Link link, Cell prev){
-        this(length, link, prev, null);
-    }
-    
-    public Cell(double length, Link link, Cell prev, Detector det){
+    public Cell(double length, double lanes, Link link, Cell prev){
         this.prev = prev;
         
         if(prev != null){
@@ -43,6 +44,7 @@ public class Cell {
         }
         
         this.length = length;
+        this.lanes = lanes;
         this.link = link;
         
         this.density = 0;
@@ -117,6 +119,34 @@ public class Cell {
     
     public Link getLink(){
         return link;
+    }
+    
+    public double getNumLanes(){
+        return lanes;
+    }
+    
+    // jam density across all lanes, veh/m
+    public double getK(){
+        return link.getK_perLane() * lanes;
+    }
+    
+    public double getMaxSpeed(){
+        return link.getMaxSpeed();
+    }
+    
+    public double getFFSpeed(){
+        return link.getFFSpeed();
+    }
+    
+    // equilibrium speed for density k across all lanes (detector counts are summed across lanes)
+    public double getEquilibriumSpeed(double k){
+        return link.getEquilibriumSpeed(k / lanes);
+    }
+    
+    // derivative of getEquilibriumSpeed() with respect to the density across all lanes
+    // the chain rule gives the derivative per lane divided by the number of lanes
+    public double getDerivEqSpeed(double k){
+        return link.getDerivEqSpeed(k / lanes) / lanes;
     }
     public Cell getNext(){
         return next;
@@ -251,7 +281,7 @@ public class Cell {
         
         for(int i = 1; i <= array.length - 1; i++){
             // regimes are defined with per-lane flow; flow and speed are scaled by capacity and free flow speed so that they are comparable
-            double sse = array[i].getSSE(getFlow() / link.getNumLanes(), getSpeed(), link.getQ_perLane(), link.getFFSpeed());
+            double sse = array[i].getSSE(getFlow() / lanes, getSpeed(), link.getQ_perLane(), link.getFFSpeed());
             if(sse < best_sse){
             best_sse = sse;
             best = i;

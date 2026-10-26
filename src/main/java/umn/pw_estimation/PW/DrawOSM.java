@@ -137,13 +137,14 @@ public class DrawOSM extends JPanel {
     }
     
     
-    public Color getColor(int idx, Cell cell){
+    // idx is the index of the cell in its corridor, and num_cells the number of cells in the corridor
+    public Color getColor(int idx, int num_cells){
         
         double density = draw_data[idx].density;
         int traffic_regime = draw_data[idx].regime;
         
         // use density to get color?
-        return new Color((int)(255.0 * idx / cell.getLink().cells.length), 0, 0);
+        return new Color((int)(255.0 * idx / num_cells), 0, 0);
     }
     
     protected void paintComponent(Graphics g_){
@@ -165,20 +166,27 @@ public class DrawOSM extends JPanel {
 
         for(Corridor corridor : corridors){
        
+            // cells can cover parts of several links, so walk along the coordinates of all links in driving order
+            Cell[] cells = corridor.getCells();
+            List<Coordinate> coords = new ArrayList<>();
             for(Link link : corridor.getLinks()){
-                // initialize the coordinates
-                List<Coordinate> coords = link.getCoordinates();
-                
+                for(Coordinate coord : link.getCoordinates()){
+                    // consecutive links share an endpoint; skip the repeat, which would be a zero-length piece
+                    if(coords.isEmpty() || !coords.get(coords.size()-1).equals(coord)){
+                        coords.add(coord);
+                    }
+                }
+            }
+            
+            {
                 Coordinate c1 = coords.get(0);
                 Coordinate c2 = coords.get(1);
                 int coord_idx = 2;
-                
-                Cell[] cells = link.cells;
 
                 for(int cell_idx = 0; cell_idx < cells.length; cell_idx++){
                     
                     Cell cell = cells[cell_idx];
-                    g.setColor(getColor(cell_idx, cell));
+                    g.setColor(getColor(cell_idx, cells.length));
                     
                     double len_drawn = 0;
                     

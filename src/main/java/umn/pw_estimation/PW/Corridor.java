@@ -48,11 +48,11 @@ import umn.pw_estimation.Input.HistoricalDetector;
 public class Corridor {
     
     // Payne-Whitham parameters. These are static, so they are shared by both directions.
-    // The values below gave the lowest error at held-out detectors for 4/8/26 9-10 AM, with dt = 6 s in Main.
+    // The values below gave the lowest error at held-out detectors for 4/8/26 9-10 AM, with dt = 3-4 s in Main.
     public static double tau = 60; // speed adaptation term, in seconds
     // traffic pressure parameter c_0, m/s
-    // Link uses this to choose the cell length, so it must be set BEFORE ReadData.readOSM() creates the links
-    // in testing, larger c_0 gave larger errors, and with dt = 3 s, c_0 = 15-20 m/s created false jams on 610 EB
+    // buildCells() uses this to choose the cell length, so it must be set BEFORE ReadData.readOSM() adds the detectors
+    // in testing, larger c_0 gave larger errors, and c_0 = 20 m/s created false jams on 610 EB
     public static double C_0 = 10;
     public static double chi = 0.1 / 1609.3; // avoid 0/0 in traffic pressure when two adjacent cells are empty, veh/m per lane (0.1 veh/mi per lane)
 
@@ -60,11 +60,15 @@ public class Corridor {
     // larger values trust the detectors more and the PW model less
     public static double sigma_k = 10 / 1609.3; // density, veh/m per lane (10 veh/mi per lane)
     public static double sigma_v = 3 / 2.237; // speed, m/s (3 mph)
+
+    // cell length as a multiple of the shortest length allowed by the CFL condition (see buildCells())
+    public static double CELL_LENGTH_FACTOR = 1.5;
     
-    private Cell[] cells;
+    private Cell[] cells; // in driving order; created by buildCells()
     
-    // each link should have a constant number of lanes
+    // OpenStreetMap links, sorted in driving order by buildCells(); each link has a constant number of lanes
     private List<Link> links;
+    private double[] link_start; // distance (m) from the start of the corridor to the start of each link
     
     private double dt;
     private long time; // units of seconds
@@ -105,49 +109,101 @@ public class Corridor {
     
     
     
-    private void constructCells(){
-        
-        // first, join links to connect cells at link boundaries
-        
-        for(int i = 0; i < links.size()-1; i++){
-            links.get(i).addNextLink(links.get(i+1));
+    // divides the corridor into cells of equal length, ignoring the boundaries between OpenStreetMap links
+    // OpenStreetMap splits the road into links at bridges, ramps, etc., and some links are only about 20 m long.
+    // Cells must be at least the CFL minimum length for stability, so each link cannot have its own cells:
+    // a short link would become one cell that is longer than the link, which makes the modeled road too long.
+    // A cell that covers parts of links with different numbers of lanes gets the length-weighted average number of lanes
+    // (e.g. 150 m of 2 lanes and 50 m of 3 lanes gives 2.25 lanes), which keeps the total road space correct.
+    // This runs once, the first time cells are needed (adding a detector, finding a location, or init()).
+    private void buildCells(){
+        if(cells != null){
+            return;
         }
         
-        // now construct a total array of all cells
-        int total_size = 0;
+        sortLinks();
         
-        for(Link l : links){
-            total_size += l.cells.length;
+        link_start = new double[links.size()];
+        double total_length = 0;
+        double max_speed = 0;
+        
+        for(int j = 0; j < links.size(); j++){
+            link_start[j] = total_length;
+            total_length += links.get(j).getLength();
+            max_speed = Math.max(max_speed, links.get(j).getMaxSpeed());
         }
         
+        // CFL condition for the Payne-Whitham model: the fastest wave travels at speed + c_0, so it cannot cross more than one cell per time step
+        // cells are CELL_LENGTH_FACTOR times longer than this minimum, because the PW discretization is only stable in free flow when
+        // (speed + c_0) * dt / dx is below about 0.7 (von Neumann stability analysis); at the minimum length, small errors grow into false jams
+        double min_length = CELL_LENGTH_FACTOR * (max_speed + C_0) * dt;
         
-        cells = new Cell[total_size];
+        // the largest number of equal cells that are all at least min_length long
+        int num_cells = (int)Math.max(1, Math.floor(total_length / min_length));
+        double cell_length = total_length / num_cells;
         
+        cells = new Cell[num_cells];
+        Cell prev = null;
         
-        
-        int var_idx = 0;
-        int cell_idx = 0;
-        
-        for(Link l : links){
-            for(Cell c: l.cells){
-                cells[cell_idx] = c;
-                c.cell_idx = cell_idx;
-                c.set_k_idx(var_idx++);
-                c.set_v_idx(var_idx++);
-                
-                
-                if(c.hasInflowDet()){
-                    c.set_inflow_idx(var_idx++);
+        for(int i = 0; i < num_cells; i++){
+            double start = i * cell_length;
+            double end = start + cell_length;
+            
+            // lane-meters of road in this cell, from every link that overlaps it
+            double lane_meters = 0;
+            for(int j = 0; j < links.size(); j++){
+                double overlap = Math.min(end, link_start[j] + links.get(j).getLength()) - Math.max(start, link_start[j]);
+                if(overlap > 0){
+                    lane_meters += overlap * links.get(j).getNumLanes();
                 }
-                if(c.hasOutflowDet()){
-                    c.set_outflow_idx(var_idx++);
-                }
-                
-                cell_idx++;
+            }
+            
+            // the per-lane flow-density relationship comes from the link at the middle of the cell
+            // (on MN-610 all links have the same per-lane values, so only the number of lanes differs)
+            Link mid_link = links.get(findLinkIdx(start + cell_length / 2));
+            
+            cells[i] = new Cell(cell_length, lane_meters / cell_length, mid_link, prev);
+            cells[i].cell_idx = i;
+            prev = cells[i];
+        }
+    }
+    
+    // index of the link containing a distance (m) from the start of the corridor
+    private int findLinkIdx(double position){
+        for(int j = links.size() - 1; j > 0; j--){
+            if(position >= link_start[j]){
+                return j;
             }
         }
+        return 0;
+    }
+    
+    // the cell containing a distance (m) from the start of the corridor
+    private Cell findCell(double position){
+        int idx = (int)Math.floor(position / cells[0].getLength());
+        return cells[Math.max(0, Math.min(cells.length - 1, idx))];
+    }
+    
+    public Cell[] getCells(){
+        buildCells();
+        return cells;
+    }
+    
+    // gives each cell's variables their positions in the state vector (see the comment at the top of this class)
+    private void assignVariableIndices(){
+        int var_idx = 0;
         
-        
+        for(Cell c : cells){
+            c.set_k_idx(var_idx++);
+            c.set_v_idx(var_idx++);
+            
+            if(c.hasInflowDet()){
+                c.set_inflow_idx(var_idx++);
+            }
+            if(c.hasOutflowDet()){
+                c.set_outflow_idx(var_idx++);
+            }
+        }
     }
     
     private String[] indices; // name of each entry of the state vector, e.g. "12 k" is the density of cell 12; used in printDiagnostics()
@@ -163,11 +219,11 @@ public class Corridor {
     // must be called before estimate() or nextTimestep(), and after all detectors have been added
     public void init(long time){
         
-        sortLinks();
+        buildCells();
         
         this.time = time;
         
-        constructCells();
+        assignVariableIndices();
         
         int size = 0;
 
@@ -202,22 +258,22 @@ public class Corridor {
 
         for(Cell c : cells){
             if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){
-                sum_density_lane += Math.min(c.getDetector().getLast30sDensity(time), c.getLink().getK()) / c.getLink().getNumLanes();
-                sum_speed += Math.min(c.getDetector().getLast30sSpeed(time), c.getLink().getMaxSpeed());
+                sum_density_lane += Math.min(getObservedDensity(c, time), c.getK()) / c.getNumLanes();
+                sum_speed += Math.min(c.getDetector().getLast30sSpeed(time), c.getMaxSpeed());
                 num_observed++;
             }
         }
 
         for(Cell c : cells){
             if(num_observed > 0){
-                c.density = sum_density_lane / num_observed * c.getLink().getNumLanes();
+                c.density = sum_density_lane / num_observed * c.getNumLanes();
                 c.speed = sum_speed / num_observed;
             }
 
             if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously only hasDetector
                 // values of -1 indicates bad data or missing data
-                double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
-                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
+                double k_observed = Math.min(Math.max(getObservedDensity(c, time), 0), c.getK());
+                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getMaxSpeed());
                 
                 if(k_observed >= 0 && v_observed >= 0){  // change to strictly inequality?
                     c.density = k_observed;
@@ -225,9 +281,9 @@ public class Corridor {
                 }
                 else{
                     c.density = 0;
-                    c.speed = c.getLink().getFFSpeed();
+                    c.speed = c.getFFSpeed();
                 }
-                //System.out.println("\t   ff speed= "+c.getLink().getFFSpeed());
+                //System.out.println("\t   ff speed= "+c.getFFSpeed());
             }
 
             x_t_t.setEntry(c.k_idx(), c.density);
@@ -265,7 +321,7 @@ public class Corridor {
 
         for(Cell c : cells){
             if(!(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0)){
-                double sigma_k_cell = init_sigma_k * c.getLink().getNumLanes();
+                double sigma_k_cell = init_sigma_k * c.getNumLanes();
                 P_t_t.setEntry(c.k_idx(), c.k_idx(), sigma_k_cell * sigma_k_cell);
                 P_t_t.setEntry(c.v_idx(), c.v_idx(), init_sigma_v * init_sigma_v);
             }
@@ -345,12 +401,15 @@ public class Corridor {
         fileout.close();
     }
     
+    // the cell containing a latitude/longitude, or null if it is not on this corridor
     public Cell findCell(Coordinate location){
-        for(Link l : links){
-            Cell output = l.findCell(location);
+        buildCells();
+        
+        for(int j = 0; j < links.size(); j++){
+            double position = links.get(j).findPosition(location);
             
-            if(output != null){
-                return output;
+            if(position >= 0){
+                return findCell(link_start[j] + position);
             }
         }
         
@@ -426,10 +485,11 @@ public class Corridor {
             
             if(c.hasDetector()){
                 Detector det = c.getDetector();
+                // detector density and flow are converted to the cell's number of lanes, so they can be compared with the estimate
                 if(det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
-                line += ", "+(det.getLast30sDensity(time) * 1609.34);
+                line += ", "+(getObservedDensity(c, time) * 1609.34);
                 line += ", "+(det.getLast30sSpeed(time) * 2.237);
-                line += ", "+(det.getLast30sFlow(time) * 1609.34 * 2.237);
+                line += ", "+(det.getLast30sFlow(time) * c.getNumLanes() / det.getNumLanes() * 3600);
                 }
                 else{
                 line += ", "+(det.getLast30sDensity(time));
@@ -529,7 +589,7 @@ public class Corridor {
             double k_in_t = (c.getNext() != null? c.getNext().density : c.density); 
             
             // equilibrium speed of cell i uses the density of cell i
-            double eq_speed = c.getLink().getEquilibriumSpeed(k_i_t);
+            double eq_speed = c.getEquilibriumSpeed(k_i_t);
             
             double q_i_t = v_i_t * k_i_t;
             
@@ -537,7 +597,7 @@ public class Corridor {
             double k_i_tn = k_i_t + dt / dx1 * (q_ip_t - q_i_t); // density for cell i at time t+1
             
             /*if (c.getDetector() != null){
-                if (Math.min(c.getDetector().getLast30sDensity(time), c.getLink().getK()) <= 0){
+                if (Math.min(c.getDetector().getLast30sDensity(time), c.getK()) <= 0){
                 k_i_tn = dt / dx1 * (q_ip_t - q_i_t);
             }
             }*/
@@ -569,8 +629,8 @@ public class Corridor {
             }*/
             
             // the traffic pressure term uses density per lane, so that a change in the number of lanes does not create a pressure gradient
-            int lanes_i = c.getLink().getNumLanes();
-            int lanes_in = (c.getNext() != null? c.getNext().getLink().getNumLanes() : lanes_i);
+            double lanes_i = c.getNumLanes();
+            double lanes_in = (c.getNext() != null? c.getNext().getNumLanes() : lanes_i);
             double rho_i = k_i_t / lanes_i;
             double rho_in = k_in_t / lanes_in;
 
@@ -590,7 +650,7 @@ public class Corridor {
             
             
             //System.out.println("\t   cell "+cell_idx);
-            //System.out.println("\t   eq speed="+c.getLink().getEquilibriumSpeed(c.k_idx()));
+            //System.out.println("\t   eq speed="+c.getEquilibriumSpeed(c.k_idx()));
             //System.out.println("\t   ......................");
             
             /*
@@ -608,10 +668,10 @@ public class Corridor {
             
             
             // this prevents excessive values
-            v_i_tn = Math.max(0, Math.min(v_i_tn, c.getLink().getMaxSpeed()));  // Math.min(v_i_tn, c.getLink().getMaxSpeed());
-            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getLink().getK()));  // Math.min(k_i_tn, c.getLink().getK());
+            v_i_tn = Math.max(0, Math.min(v_i_tn, c.getMaxSpeed()));  // Math.min(v_i_tn, c.getMaxSpeed());
+            k_i_tn = Math.max(0, Math.min(k_i_tn, c.getK()));  // Math.min(k_i_tn, c.getK());
             
-            //System.out.println("\t    max speed="+c.getLink().getMaxSpeed());
+            //System.out.println("\t    max speed="+c.getMaxSpeed());
             
             x_t_tp.setEntry(c.k_idx(), k_i_tn);
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
@@ -687,14 +747,14 @@ public class Corridor {
                 /*F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) -
                         dt /dx2  * (k_in_t - k_i_t) * C / ((k_i_t + chi) * (k_i_t + chi))  );
                                 
-                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );*/
+                F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );*/
                 
                 //F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
                 
                 
                 // with g = (rho_in - rho_i)/rho_avg: dg/drho_i = -(rho_in + chi)/rho_avg^2 and dg/drho_in = (rho_i + chi)/rho_avg^2
                 // drho_i/dk_i = 1/lanes_i and drho_in/dk_in = 1/lanes_in
-                F_t.setEntry(c.v_idx(), c.k_idx(), (1 - decay) * c.getLink().getDerivEqSpeed(k_i_t)
+                F_t.setEntry(c.v_idx(), c.k_idx(), (1 - decay) * c.getDerivEqSpeed(k_i_t)
                         + decay * dt/dx2 * C * (rho_in + chi) / (rho_avg * rho_avg) / lanes_i);
 
 
@@ -703,7 +763,7 @@ public class Corridor {
             }
             else{
                 // in the last cell, k_in_t is k_i_t, so the pressure term is 0
-                F_t.setEntry(c.v_idx(), c.k_idx(), (1 - decay) * c.getLink().getDerivEqSpeed(k_i_t));
+                F_t.setEntry(c.v_idx(), c.k_idx(), (1 - decay) * c.getDerivEqSpeed(k_i_t));
             }
             
             cell_idx ++;
@@ -725,8 +785,8 @@ public class Corridor {
             //System.out.println("\t   F_t_6="+(1 - 2 * dt * v_i_t / dx2 - dt /tau + dt * v_ip_t / dx2));
             //System.out.println("\t   F_t_7="+(dt /dx2  * C / (k_i_t + chi) - 
                         //dt /dx2  * (k_in_t - k_i_t)* C / ((k_i_t + chi) * (k_i_t + chi))));
-            //System.out.println("\t   F_t_8="+(dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi))));
-            //System.out.println("\t   deriv eq speed="+(c.getLink().getDerivEqSpeed(k_in_t)));
+            //System.out.println("\t   F_t_8="+(dt/dx2 * (c.getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi))));
+            //System.out.println("\t   deriv eq speed="+(c.getDerivEqSpeed(k_in_t)));
             //System.out.println("\t   eq speed="+(eq_speed));
             /*System.out.println("\t   cell "+cell_idx);
             System.out.println("\t   speed="+v_i_t);
@@ -763,6 +823,20 @@ public class Corridor {
     
  
     
+    // density measured by the cell's mainline detector, converted to the cell's number of lanes (veh/m), or -1 if missing
+    // A detector station can have a different number of lanes than the cell: the cell may have an average number of lanes
+    // (see buildCells()), and some stations have loops in auxiliary lanes that OpenStreetMap does not count.
+    // The detector's density per lane is therefore multiplied by the cell's number of lanes.
+    private double getObservedDensity(Cell c, long time){
+        Detector det = c.getDetector();
+        double k = det.getLast30sDensity(time);
+        
+        if(k < 0){
+            return -1;
+        }
+        return k / det.getNumLanes() * c.getNumLanes();
+    }
+    
     // EKF update (correction) step: combines the prediction with the detector data that are available at this time
     private void update(){
         // obtain detector data
@@ -775,8 +849,8 @@ public class Corridor {
             
             if(c.hasDetector() && det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
                 // this is the measurement residual
-                double k_observed = Math.min(Math.max(det.getLast30sDensity(time), 0), c.getLink().getK());
-                double v_observed = Math.min(Math.max(det.getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
+                double k_observed = Math.min(Math.max(getObservedDensity(c, time), 0), c.getK());
+                double v_observed = Math.min(Math.max(det.getLast30sSpeed(time), 0), c.getMaxSpeed());
                 
                 observed.add(c.k_idx());
                 residuals.add(k_observed - x_t_tp.getEntry(c.k_idx()));
@@ -894,8 +968,8 @@ public class Corridor {
     // copies the estimate from the state vector into the cells, limited to physically possible values
     private void saveValuesInCells(){
         for(Cell c : cells){
-            c.density = Math.min(Math.max(x_t_t.getEntry(c.k_idx()), 0), c.getLink().getK());
-            c.speed = Math.min(Math.max(x_t_t.getEntry(c.v_idx()), 0), c.getLink().getMaxSpeed());
+            c.density = Math.min(Math.max(x_t_t.getEntry(c.k_idx()), 0), c.getK());
+            c.speed = Math.min(Math.max(x_t_t.getEntry(c.v_idx()), 0), c.getMaxSpeed());
             
             // ramp flows cannot be negative
             if(c.hasInflowDet()){
@@ -945,7 +1019,8 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector() && c.getDetector().getLast30sCount(time) > 0 && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously only hasDetector and Last30sCount > 0
                 
-                double q = c.getDetector().getLast30sFlow(time);
+                // flow converted to the cell's number of lanes, like the density in getObservedDensity()
+                double q = c.getDetector().getLast30sFlow(time) * c.getNumLanes() / c.getDetector().getNumLanes();
                 double occ = len_mean / c.getDetector().getLast30sSpeed(time);
                 
                 // inflow/outflow is handled by a different detector, so assume 0 covariance
@@ -1002,7 +1077,7 @@ public class Corridor {
             // this is variance due to FD not fully describing traffic evolution
             // density error scales with the number of lanes because density is summed across lanes
             double scale = 1e-3;
-            double sigma_k_cell = sigma_k * c.getLink().getNumLanes();
+            double sigma_k_cell = sigma_k * c.getNumLanes();
             double var_k = sigma_k_cell * sigma_k_cell;
             double var_v = sigma_v * sigma_v;
             double cov = 0; // this is intentionally set to 0
@@ -1029,14 +1104,35 @@ public class Corridor {
             //System.out.println("\t   ..............");
     }
     
+    // attaches a detector to the cell containing it; returns false if the detector is not on this corridor
+    // a cell holds at most one mainline, one entrance ramp, and one exit ramp detector; a second one replaces the first, with a warning
     public boolean addDetector(Detector det){
-        for(Link l : links){
-            if(l.addDetector(det)){
-                return true;
-            }
+        Cell cell = findCell(det.getLocation());
+        
+        if(cell == null){
+            return false;
         }
         
-        return false;
+        if(det.getType() == Detector.Type.Exit){
+            if(cell.hasOutflowDet()){
+                System.out.println("Warning: cell "+cell.cell_idx+" already has exit detector "+cell.getOutflowDet()+", replaced by "+det);
+            }
+            cell.addOutflowDet(det);
+        }
+        else if(det.getType() == Detector.Type.Merge){
+            if(cell.hasInflowDet()){
+                System.out.println("Warning: cell "+cell.cell_idx+" already has entrance detector "+cell.getInflowDet()+", replaced by "+det);
+            }
+            cell.addInflowDet(det);
+        }
+        else{
+            if(cell.hasDetector()){
+                System.out.println("Warning: cell "+cell.cell_idx+" already has mainline detector "+cell.getDetector()+", replaced by "+det);
+            }
+            cell.setDetector(det);
+        }
+        
+        return true;
     }
     
     

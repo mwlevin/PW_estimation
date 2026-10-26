@@ -54,6 +54,11 @@ public class DetectorGroup extends Detector{
         return type;
     }
     
+    // one loop detector per lane
+    public int getNumLanes(){
+        return detectors.length;
+    }
+    
     public Coordinate getLocation(){
         // locations should be very close - within 60 feet
         return detectors[0].getLocation();
