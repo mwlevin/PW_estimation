@@ -32,7 +32,9 @@ import umn.pw_estimation.Input.HistoricalDetector;
  */
 public class Corridor {
     
-    private double tau = 0.1*3600; // speed adaptation term
+    private double tau = 18; // speed adaptation term, in seconds
+
+    public static final double C_0 = 40.25; // traffic pressure parameter c_0, m/s
     private double chi = 0.12; // avoid divide by 0 in traffic pressure // originally was 0.0001
     
     private Cell[] cells;
@@ -207,8 +209,9 @@ public class Corridor {
         
         
         calcR();
-        P_t_t = R_t;
-        
+        // copy so that later changes to R_t in calcR() do not also change P_t_t
+        P_t_t = R_t.copy();
+
         Q = new Array2DRowRealMatrix(size, size);
         
         
@@ -312,8 +315,10 @@ public class Corridor {
             
             nextTimestep();
         }
-        
-        fileout.close();
+
+        if(fileout != null){
+            fileout.close();
+        }
     }
     
     private void printHeader(PrintStream out){
@@ -455,7 +460,8 @@ public class Corridor {
             
             double k_in_t = (c.getNext() != null? c.getNext().density : c.density); 
             
-            double eq_speed = (c.getNext() != null? c.getNext().getLink().getEquilibriumSpeed(k_in_t) : c.getLink().getEquilibriumSpeed(k_in_t));
+            // equilibrium speed of cell i uses the density of cell i
+            double eq_speed = c.getLink().getEquilibriumSpeed(k_i_t);
             
             double q_i_t = v_i_t * k_i_t;
             
@@ -499,8 +505,9 @@ public class Corridor {
                 k_i_t_pressure = k_in_t;
             }
             
-            double v_i_tn = v_i_t - dt/3600.0 /dx1 * v_i_t * (v_i_t - v_ip_t) + dt/3600.0 * (eq_speed - v_i_t)/tau -
-                    dt/3600.0/dx2 * C / (k_i_t_pressure + chi) * (k_in_t - k_i_t_pressure);
+            // dt is in seconds, dx in meters, speeds in m/s, and tau in seconds, so no conversion factor is needed
+            double v_i_tn = v_i_t - dt /dx1 * v_i_t * (v_i_t - v_ip_t) + dt * (eq_speed - v_i_t)/tau -
+                    dt/dx2 * C / (k_i_t_pressure + chi) * (k_in_t - k_i_t_pressure);
             
             
             //System.out.println("\t   cell "+cell_idx);
@@ -576,8 +583,9 @@ public class Corridor {
                 F_t.setEntry(c.v_idx(), c.v_idx(), 1 - dt * v_i_t / dx2  - 1/tau); */
                
               
-                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * v_i_t / dx2);
-                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 2 * dt * v_i_t / dx2 - dt /tau + dt * v_ip_t / dx2);
+                // the convection term uses the length of cell i (dx1), same as the speed update above
+                F_t.setEntry(c.v_idx(), c.getPrev().v_idx(), dt * v_i_t / dx1);
+                F_t.setEntry(c.v_idx(), c.v_idx(), 1 - 2 * dt * v_i_t / dx1 - dt /tau + dt * v_ip_t / dx1);
                 //System.out.println("\t    dx2="+dx2);
                       
                 
@@ -592,8 +600,11 @@ public class Corridor {
             
             
             
-            if(c.getNext() != null){
-                /*F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) - 
+            // when k_i_t_pressure replaces k_i_t, the pressure term is 0 and does not depend on k_i_t or k_in_t
+            boolean pressure_override = (k_i_t_pressure != k_i_t);
+
+            if(c.getNext() != null && !pressure_override){
+                /*F_t.setEntry(c.v_idx(), c.k_idx(), dt /dx2  * C / (k_i_t + chi) -
                         dt /dx2  * (k_in_t - k_i_t) * C / ((k_i_t + chi) * (k_i_t + chi))  );
                                 
                 F_t.setEntry(c.v_idx(), c.getNext().k_idx(), dt/dx2 * (c.getLink().getDerivEqSpeed(k_in_t)/tau - C / (k_i_t + chi)) );*/
@@ -601,16 +612,20 @@ public class Corridor {
                 //F_t.setEntry(c.v_idx(), c.k_idx(), dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)) );
                 
                 
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t) 
-                        + dt/dx2 * C/(k_i_t+chi) - dt/dx2 * C * k_i_t / (k_i_t+chi) / (k_i_t+chi));
-                
-                
+                // d/dk_i of -C (k_in - k_i)/(k_i + chi) is C (k_in + chi)/(k_i + chi)^2
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t)/tau
+                        + dt/dx2 * C * (k_in_t + chi) / ((k_i_t + chi) * (k_i_t + chi)));
+
+
                 F_t.setEntry(c.v_idx(), c.getNext().k_idx(), - dt/dx2  * C / (k_i_t + chi) );
-  
+
             }
             else{
-                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_in_t)/tau);
-                
+                F_t.setEntry(c.v_idx(), c.k_idx(), dt * c.getLink().getDerivEqSpeed(k_i_t)/tau);
+
+                if(c.getNext() != null){
+                    F_t.setEntry(c.v_idx(), c.getNext().k_idx(), 0);
+                }
             }
             
             cell_idx ++;
@@ -662,7 +677,7 @@ public class Corridor {
     }
     
     private double calcC(Cell cell){
-        return 40.25;  // m/s
+        return C_0;  // m/s
         //return Math.min(20, Math.max(10, cell.getLink().getFFSpeed() / tau)); 
     }
     
@@ -670,152 +685,125 @@ public class Corridor {
     
     private void update(){
         // obtain detector data
+        // only variables with a valid measurement in this interval are included in H; missing or bad data is -1
+        List<Integer> observed = new ArrayList<>();
+        List<Double> residuals = new ArrayList<>();
+        
         for(Cell c : cells){
-            if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously just if c.hasDetector()
+            Detector det = c.getDetector();
+            
+            if(c.hasDetector() && det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
                 // this is the measurement residual
-                double k_observed = Math.min(Math.max(c.getDetector().getLast30sDensity(time), 0), c.getLink().getK());
-                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
+                double k_observed = Math.min(Math.max(det.getLast30sDensity(time), 0), c.getLink().getK());
+                double v_observed = Math.min(Math.max(det.getLast30sSpeed(time), 0), c.getLink().getMaxSpeed());
                 
-                double residual_k = 0;
-                double residual_v = 0;
+                observed.add(c.k_idx());
+                residuals.add(k_observed - x_t_tp.getEntry(c.k_idx()));
                 
-                // data = -1 indicates no values found or bad data
-                if(c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){
-                    residual_k = k_observed - x_t_tp.getEntry(c.k_idx());
-                    residual_v = v_observed - x_t_tp.getEntry(c.v_idx());
-                }
-                
-                y_t.setEntry(c.k_idx(), residual_k);
-                y_t.setEntry(c.v_idx(), residual_v);
-                
-                if(c.hasInflowDet()){
-                    double residual_inflow = c.getInflow(time) - x_t_tp.getEntry(c.inflow_idx());
-                    y_t.setEntry(c.inflow_idx(), residual_inflow);
-                }
-                if(c.hasOutflowDet()){
-                    double residual_outflow = c.getOutflow(time) - x_t_tp.getEntry(c.outflow_idx());
-                    y_t.setEntry(c.outflow_idx(), residual_outflow);
-                }
-                //System.out.println("det density="+c.getDetector().getLast30sDensity(time));
-                //System.out.println("residual "+residual_k+" "+residual_v+" "+c.getDetector().getLast30sDensity());
-                /*System.out.println("\t   k_obs="+k_observed);
-                System.out.println("\t   v_obs="+v_observed);
-                System.out.println("\t   x_t_tp.k="+x_t_tp.getEntry(c.k_idx()));
-                System.out.println("\t   x_t_tp.v="+x_t_tp.getEntry(c.v_idx()));
-                System.out.println("\t   .....................");*/
+                observed.add(c.v_idx());
+                residuals.add(v_observed - x_t_tp.getEntry(c.v_idx()));
+            }
+            
+            // ramp detectors are separate from the mainline detector, so they are used even if the cell has no mainline detector
+            if(c.hasInflowDet() && c.getInflowDet().getLast30sCount(time) >= 0){
+                observed.add(c.inflow_idx());
+                residuals.add(c.getInflow(time) - x_t_tp.getEntry(c.inflow_idx()));
+            }
+            if(c.hasOutflowDet() && c.getOutflowDet().getLast30sCount(time) >= 0){
+                observed.add(c.outflow_idx());
+                residuals.add(c.getOutflow(time) - x_t_tp.getEntry(c.outflow_idx()));
             }
         }
         
-        // H is the identity matrix
-        RealMatrix H_t = I;
-         
-         
+        if(observed.isEmpty()){
+            // nothing measured in this interval, so the prediction is the estimate
+            x_t_t = x_t_tp.copy();
+            P_t_t = P_t_tp.copy();
+            return;
+        }
+        
         calcR();
         
-        RealMatrix S_t = H_t.multiply(P_t_tp).multiply(H_t.transpose()).add(R_t);
+        int num_obs = observed.size();
+        int size = x_t_tp.getDimension();
         
-        //double determinant = new LUDecomposition(S_t).getDeterminant();
+        // H selects the observed variables from the state vector
+        RealMatrix H_t = new Array2DRowRealMatrix(num_obs, size);
+        RealMatrix R_obs = new Array2DRowRealMatrix(num_obs, num_obs);
+        y_t = new ArrayRealVector(num_obs);
         
-        //System.out.println("S_t="+S_t);
-        //System.out.println("det="+determinant);
-        //System.out.println("\t   R_t="+R_t);
+        for(int j = 0; j < num_obs; j++){
+            H_t.setEntry(j, observed.get(j), 1);
+            y_t.setEntry(j, residuals.get(j));
+            
+            for(int l = 0; l < num_obs; l++){
+                R_obs.setEntry(j, l, R_t.getEntry(observed.get(j), observed.get(l)));
+            }
+        }
         
+        RealMatrix S_t = H_t.multiply(P_t_tp).multiply(H_t.transpose()).add(R_obs);
         
-       
         // Kalman gain
         RealMatrix K_t = P_t_tp.multiply(H_t.transpose()).multiply(MatrixUtils.inverse(S_t));
         
-        //System.out.println("\t   P_t_tp="+P_t_tp);
-        //System.out.println("\t   S_t="+S_t);
-        //System.out.println("\t   S_t_inv="+MatrixUtils.inverse(S_t));*/
-        
-        x_t_t = x_t_tp.add(K_t.operate(y_t));  //this was causing the NaN issue; there was an infinity in Q
-        
         RealVector adjustment = K_t.operate(y_t);
         
-        //System.out.println("K_t="+K_t);
+        x_t_t = x_t_tp.add(adjustment);
         
-        for(Cell c : cells){
-            //if(Math.abs(x_t_t.getEntry(c.k_idx())) > 0.001 && Math.abs(adjustment.getEntry(c.k_idx())) > 0.001)
-            if(x_t_t.getEntry(c.k_idx()) < -0.001)
-            {
-                System.out.println("k is "+x_t_t.getEntry(c.k_idx())+"  k_t_tp="+x_t_tp.getEntry(c.k_idx())+" cell_idx="+c.cell_idx);
-                System.out.println("v is "+x_t_t.getEntry(c.v_idx())+"  v_t_tp="+x_t_tp.getEntry(c.v_idx())+" cell_idx="+c.cell_idx);
-                
-                
-                
-                System.out.println("k y_t="+y_t.getEntry(c.k_idx())+" adjustment="+adjustment.getEntry(c.k_idx()));
-                System.out.println("v y_t="+y_t.getEntry(c.v_idx())+" adjustment="+adjustment.getEntry(c.v_idx()));
-                
-                for(int i = 0; i < K_t.getColumnDimension(); i++){
-                    if(Math.abs(y_t.getEntry(i)) > 0.0001 && Math.abs(K_t.getEntry(c.k_idx(), i)) > 0.0001){
-                        System.out.println("K_t entry "+K_t.getEntry(c.k_idx(), i)+" y_t="+y_t.getEntry(i)+" x_t_tp="+x_t_tp.getEntry(i)+" var="+indices[i]);
-                        
-                    }
-                    
-                    if(Math.abs(P_t_tp.getEntry(c.k_idx(), i)) > 0.0001){
-                        System.out.println("\t"+indices[c.k_idx()]+" P_t="+P_t_tp.getEntry(c.k_idx(), i)+" var="+indices[i]);
-                    }
-                    
-                    if(Math.abs(P_t_tp.getEntry(c.v_idx(), i)) > 0.0001){
-                        System.out.println("\t"+indices[c.v_idx()]+" P_t="+P_t_tp.getEntry(c.v_idx(), i)+" var="+indices[i]);
-                    }
-                    
+        // negative densities are restricted to 0 in saveValuesInCells()
+        if(printDiagnostics){
+            for(Cell c : cells){
+                if(x_t_t.getEntry(c.k_idx()) < -0.001){
+                    printDiagnostics(c, observed, K_t, adjustment);
                 }
-                
-                for(Cell j : cells){
-                    if(F_t.getEntry(c.k_idx(), j.k_idx()) != 0){
-                        System.out.println("\tdk/dk "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.k_idx())+" "+j.density);
-                    }
-                    if(F_t.getEntry(c.k_idx(), j.v_idx()) != 0){
-                        System.out.println("\tdk/dv "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.v_idx())+" "+j.speed);
-                    }
-                    
-                    if(F_t.getEntry(c.v_idx(), j.k_idx()) != 0){
-                        System.out.println("\tdv/dk "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.k_idx())+" "+j.density);
-                    }
-                    if(F_t.getEntry(c.v_idx(), j.v_idx()) != 0){
-                        System.out.println("\tdv/dv "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.v_idx())+" "+j.speed);
-                    }
-                    
-                    
-                }
-            }
-            
-            if(x_t_t.getEntry(c.k_idx()) < -0.001){
-                System.exit(0);
             }
         }
         
-        //System.out.println("\t   x_t_t="+x_t_t);
-        //System.out.println("\t   x_t_tp="+x_t_tp);
-        /*System.out.println("\t   K_t="+K_t);
-        System.out.println("\t   y_t="+y_t);
-        System.out.println("\t   K_t.operate(y_t)="+K_t.operate(y_t));*/
-        //System.out.println("\t   .....................");
-        
-        
-        
-        //P_t_t = I.subtract(K_t).multiply(P_t_tp);
-        //changing this to Joseph form of update
-        
-        
+        // Joseph form of update
         RealMatrix KH = K_t.multiply(H_t);
-        P_t_t = I.subtract(KH).multiply(P_t_tp).multiply(I.subtract(KH).transpose()).add(K_t.multiply(R_t).multiply(K_t.transpose()));
+        P_t_t = I.subtract(KH).multiply(P_t_tp).multiply(I.subtract(KH).transpose()).add(K_t.multiply(R_obs).multiply(K_t.transpose()));
         
         P_t_t = P_t_t.add(P_t_t.transpose()).scalarMultiply(0.5);
+    }
+    
+    // prints the Kalman gain, covariance, and Jacobian entries involved in a negative density estimate
+    public boolean printDiagnostics = false;
+    
+    private void printDiagnostics(Cell c, List<Integer> observed, RealMatrix K_t, RealVector adjustment){
+        System.out.println("k is "+x_t_t.getEntry(c.k_idx())+"  k_t_tp="+x_t_tp.getEntry(c.k_idx())+" cell_idx="+c.cell_idx+" adjustment="+adjustment.getEntry(c.k_idx()));
+        System.out.println("v is "+x_t_t.getEntry(c.v_idx())+"  v_t_tp="+x_t_tp.getEntry(c.v_idx())+" cell_idx="+c.cell_idx+" adjustment="+adjustment.getEntry(c.v_idx()));
         
-        /*
-        System.out.println("\t    P_t_t="+P_t_t);
-        //System.out.println("\t    I="+I);
-        System.out.println("\t    K_t="+K_t);
-        System.out.println("\t    P_t_tp="+P_t_tp);
-        //System.out.println("\t    I.sub(K_t)="+I.subtract(K_t));
-        //System.out.println("\t    I.sub(K_t).mult(P_t_tp)="+I.subtract(K_t).multiply(P_t_tp));
-        System.out.println("\t    S_t="+S_t);
-        //System.out.println("\t    Inverse(S_t)="+MatrixUtils.inverse(S_t));
-        System.out.println("\t........................");
-        */
+        for(int j = 0; j < observed.size(); j++){
+            int i = observed.get(j);
+            if(Math.abs(y_t.getEntry(j)) > 0.0001 && Math.abs(K_t.getEntry(c.k_idx(), j)) > 0.0001){
+                System.out.println("K_t entry "+K_t.getEntry(c.k_idx(), j)+" y_t="+y_t.getEntry(j)+" x_t_tp="+x_t_tp.getEntry(i)+" var="+indices[i]);
+            }
+        }
+        
+        for(int i = 0; i < x_t_tp.getDimension(); i++){
+            if(Math.abs(P_t_tp.getEntry(c.k_idx(), i)) > 0.0001){
+                System.out.println("\t"+indices[c.k_idx()]+" P_t="+P_t_tp.getEntry(c.k_idx(), i)+" var="+indices[i]);
+            }
+            
+            if(Math.abs(P_t_tp.getEntry(c.v_idx(), i)) > 0.0001){
+                System.out.println("\t"+indices[c.v_idx()]+" P_t="+P_t_tp.getEntry(c.v_idx(), i)+" var="+indices[i]);
+            }
+        }
+        
+        for(Cell j : cells){
+            if(F_t.getEntry(c.k_idx(), j.k_idx()) != 0){
+                System.out.println("\tdk/dk "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.k_idx())+" "+j.density);
+            }
+            if(F_t.getEntry(c.k_idx(), j.v_idx()) != 0){
+                System.out.println("\tdk/dv "+j.cell_idx+"="+F_t.getEntry(c.k_idx(), j.v_idx())+" "+j.speed);
+            }
+            if(F_t.getEntry(c.v_idx(), j.k_idx()) != 0){
+                System.out.println("\tdv/dk "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.k_idx())+" "+j.density);
+            }
+            if(F_t.getEntry(c.v_idx(), j.v_idx()) != 0){
+                System.out.println("\tdv/dv "+j.cell_idx+"="+F_t.getEntry(c.v_idx(), j.v_idx())+" "+j.speed);
+            }
+        }
     }
     
     private void saveValuesInCells(){
@@ -823,11 +811,12 @@ public class Corridor {
             c.density = Math.min(Math.max(x_t_t.getEntry(c.k_idx()), 0), c.getLink().getK());
             c.speed = Math.min(Math.max(x_t_t.getEntry(c.v_idx()), 0), c.getLink().getMaxSpeed());
             
+            // ramp flows cannot be negative
             if(c.hasInflowDet()){
-                c.inflow = x_t_t.getEntry(c.inflow_idx());
+                c.inflow = Math.max(x_t_t.getEntry(c.inflow_idx()), 0);
             }
             if(c.hasOutflowDet()){
-                c.outflow = x_t_t.getEntry(c.outflow_idx());
+                c.outflow = Math.max(x_t_t.getEntry(c.outflow_idx()), 0);
             }
             /*System.out.println("\t   actual output density="+x_t_t.getEntry(c.k_idx()));
             System.out.println("\t   c.density="+c.density);

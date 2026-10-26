@@ -150,17 +150,18 @@ public class Cell {
         return outflow_idx;
     }
     
+    // a count of -1 means missing or bad data, which is treated as 0 flow
     public double getInflow(long t){
         if(inflow_det != null){
-            return inflow_det.getLast30sCount(t)/30;
+            return Math.max(inflow_det.getLast30sCount(t), 0)/30;
         }
-        
+
         return 0;
     }
-    
+
     public double getOutflow(long t){
         if(outflow_det != null){
-            return outflow_det.getLast30sCount(t)/30;
+            return Math.max(outflow_det.getLast30sCount(t), 0)/30;
         }
         return 0;
     }
@@ -249,7 +250,8 @@ public class Cell {
         
         
         for(int i = 1; i <= array.length - 1; i++){
-            double sse = array[i].getSSE(getFlow(), getSpeed());
+            // regimes are defined with per-lane flow; flow and speed are scaled by capacity and free flow speed so that they are comparable
+            double sse = array[i].getSSE(getFlow() / link.getNumLanes(), getSpeed(), link.getQ_perLane(), link.getFFSpeed());
             if(sse < best_sse){
             best_sse = sse;
             best = i;

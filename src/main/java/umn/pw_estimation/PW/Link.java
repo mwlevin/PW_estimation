@@ -42,7 +42,8 @@ public class Link implements Comparable<Link> {
         this.numLanes = numLanes;
         this.maxspeed = maxspeed / 2.237;
         
-        double dx = maxspeed / 2.237 * dt;  // converts mph to m/s
+        // CFL condition for the Payne-Whitham model: the fastest wave travels at speed + c_0, so it cannot cross more than one cell per time step
+        double dx = (maxspeed / 2.237 + Corridor.C_0) * dt;  // converts mph to m/s
         
         int numcells = (int)Math.max(1, Math.floor(this.length/dx));
         
@@ -147,17 +148,19 @@ public class Link implements Comparable<Link> {
                 cell.setDetector(det);
             }
 
-            return false;
-        }
-        else{
+            // returns true if the detector was added to this link
             return true;
         }
+        else{
+            return false;
+        }
     }
-    
+
     public Cell findCell(double position){
         assert(position > 0 && position < length);
-        
-        int cell_idx = (int)Math.min(cells.length-1, Math.ceil(position / cell_len));
+
+        // cell j covers positions [j*cell_len, (j+1)*cell_len)
+        int cell_idx = (int)Math.min(cells.length-1, Math.floor(position / cell_len));
         
         return cells[cell_idx];
     }
@@ -170,8 +173,6 @@ public class Link implements Comparable<Link> {
                 System.out.println("\t   k="+k);
                 //System.out.println("\t   v*k="+(v*k));
                 System.out.println("\t   w="+w); */
-                System.out.println("\t   K per lane ="+getK_perLane());
-                System.out.println("\t   Q per lane ="+getQ_perLane());
                 /*System.out.println("\t   -w*(k-getK)="+(-w*(k-getK())));
                 System.out.println("\t   min 1="+Math.min(getQ(), -w*(k-getK())));
                 System.out.println("\t   min 2="+(Math.min(v*k, Math.min(getQ(), -w*(k-getK())))));
@@ -180,7 +181,9 @@ public class Link implements Comparable<Link> {
         if(k == 0){
             return v;
         }
-        double q = Math.min(v*k, Math.min(getQ_perLane(), -w*(k-getK_perLane())));  // previously no _perLane on Q or K
+        // k is the density across all lanes (detector counts are summed across lanes), so use the capacity and jam density across all lanes
+        // this matches getDerivEqSpeed() and the density limit getK() used in Corridor
+        double q = Math.min(v*k, Math.min(getQ(), -w*(k-getK())));
         
         if(k > 0.07){
             //System.out.println("\t   q="+q);

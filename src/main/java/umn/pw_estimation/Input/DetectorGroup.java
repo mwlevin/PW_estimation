@@ -89,8 +89,10 @@ public class DetectorGroup extends Detector{
         for(Detector d : detectors){
             double d_speed = d.getLast30sSpeed(t);
             
-            if(d_speed >= 0){
-                double d_count = d.getLast30sCount(t);
+            double d_count = d.getLast30sCount(t);
+
+            // a count of -1 is missing data and must not be used as a weight
+            if(d_speed >= 0 && d_count >= 0){
                 output += d_speed * d_count;
                 weight += d_count;
                 good ++;
