@@ -99,8 +99,7 @@ public class ReadData {
     public Map<String, Corridor> readOSM(String corridor_name, File osm_file, double dt, String[] labels, File detectors_file, String[] detector_labels) throws IOException {
         
         saved_detectors = new HashMap<>();
-        double K = 5280.0/AVG_VEH_LEN;  // veh/mi
-                
+
         Map<String, List<Link>> links = new HashMap<>();
         
         for(String l : labels){
@@ -197,11 +196,13 @@ public class ReadData {
                     }
                 }
                 
-                double v = getFFSpeed(speed_limit);
+                // one free flow speed for the whole road (see FREE_FLOW_SPEED below); speed_limit is not used
+                double v = FREE_FLOW_SPEED;
                 double Q = getCapacity(v);
-                double w = getW(v);
-                
-                Link link = new Link(""+id, coords, dt, v, v, Q, w, K, lanes);
+                double BP = getBreakpoint(v);
+
+                // congested wave speed is not an HCM value; Link computes it as Q / (JAM_DENSITY - CAPACITY_DENSITY), about 16.5 mph
+                Link link = new Link(""+id, coords, dt, v, v + MAX_SPEED_MARGIN, Q, BP, CAPACITY_DENSITY, JAM_DENSITY, lanes);
                 
                 if(label != null){
                     links.get(label).add(link);
@@ -295,18 +296,29 @@ public class ReadData {
         return output; 
     }
     
-    static public final double AVG_VEH_LEN = 27.6;  // ft
-    
+    // flow-density relationship parameters from the HCM (6th edition) for basic freeway segments, per lane
+    // heavy vehicles are not converted to passenger cars
+    static public final double CAPACITY_DENSITY = 45;  // veh/mi; density at capacity
+    static public final double JAM_DENSITY = 190;  // veh/mi; jam density used in HCM oversaturated analysis
+
+    // mi/hr; free flow speed for the whole road, measured from the detector data with the HCM field method: the average
+    // 30-second mainline speed when flow is below 1000 veh/hr/ln. Speeds above 87 mph (upper quartile + 1.5 x interquartile
+    // range, 2.3% of samples) were excluded as unusually fast drivers. Both directions, 4/8/26 9-10 AM.
+    // The HCM capacity and breakpoint equations below are valid for 55-75 mph.
+    static public double FREE_FLOW_SPEED = 69;
+    static public double MAX_SPEED_MARGIN = 10;  // mi/hr; estimated speeds may exceed the free flow speed by this much, since measured speeds do
+
+    // HCM capacity (veh/hr/ln) of a basic freeway segment for the given free flow speed (mph)
     private static double getCapacity(double ffspeed){
 
         //HCM
         return Math.min(2400, 2200 + 10 * (ffspeed - 50));
     }
-    public static double getW(double ffspeed){
-        return 34;
+
+    // HCM breakpoint: flow (veh/hr/ln) below which speed equals the free flow speed
+    // (HCM 6th edition uses this with capacity adjustment factor 1)
+    private static double getBreakpoint(double ffspeed){
+        return Math.max(0, 1000 + 40 * (75 - ffspeed));
     }
 
-    private static double getFFSpeed(double speed_limit){
-        return speed_limit + 5;
-    }
 }

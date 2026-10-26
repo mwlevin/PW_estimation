@@ -14,6 +14,9 @@ import java.util.List;
 public class Link implements Comparable<Link> {
     
     private static Coordinate base = new Coordinate(0, 0);
+
+    // cell length as a multiple of the shortest length allowed by the CFL condition (see the constructor)
+    public static double CELL_LENGTH_FACTOR = 1.5;
     
     public Cell[] cells;
     
@@ -22,28 +25,37 @@ public class Link implements Comparable<Link> {
     private double Q; // capacity per lane veh/s
     private double w; // congested wave speed m/s
     private double K; // jam density per lane veh/m
+    private double BP; // HCM breakpoint per lane veh/s: speed is the free flow speed for flows below BP
+    private double Kc; // density at capacity per lane veh/m
     private int numLanes;
     private double length; // units of meters
     private double cell_len;
     private double maxspeed; // exceeding this violates CFL
-    
+
     private String name;
-    
+
     private List<Coordinate> coords;
-    
-    // dt in sec
-    public Link(String name, double length, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
+
+    // dt in sec; length in miles; v and maxspeed in mph; Q and BP in veh/hr per lane; Kc and K in veh/mi per lane
+    // all values are converted to meters and seconds here
+    // the flow-density relationship follows the HCM speed-flow curve for basic freeway segments up to capacity (density Kc),
+    // then decreases linearly to 0 at jam density K, so w = Q/(K - Kc)
+    public Link(String name, double length, double dt, double v, double maxspeed, double Q, double BP, double Kc, double K, int numLanes){
         this.name = name;
         this.length = length * 1609.3;  // miles to meters
         this.v = v / 2.237;  // converting units here, mph to m/s
         this.Q = Q / 3600.0;  // veh/hr to veh/s
-        this.w = w / 2.237;
+        this.BP = BP / 3600.0;  // veh/hr to veh/s
+        this.Kc = Kc / 1609.3;  // veh/mi to veh/m
         this.K = K / 1609.3;  // veh/mi to veh/m  // K = jam density
+        this.w = this.Q / (this.K - this.Kc);
         this.numLanes = numLanes;
         this.maxspeed = maxspeed / 2.237;
         
         // CFL condition for the Payne-Whitham model: the fastest wave travels at speed + c_0, so it cannot cross more than one cell per time step
-        double dx = (maxspeed / 2.237 + Corridor.C_0) * dt;  // converts mph to m/s
+        // cells are CELL_LENGTH_FACTOR times longer than this minimum, because the PW discretization is only stable in free flow when
+        // (speed + c_0) * dt / dx is below about 0.7 (von Neumann stability analysis); at the minimum length, small errors grow into false jams
+        double dx = CELL_LENGTH_FACTOR * (maxspeed / 2.237 + Corridor.C_0) * dt;  // converts mph to m/s
         
         int numcells = (int)Math.max(1, Math.floor(this.length/dx));
         
@@ -62,14 +74,16 @@ public class Link implements Comparable<Link> {
         
     }
     
-    public Link(String name, List<Coordinate> coords, double dt, double v, double maxspeed, double Q, double w, double K, int numLanes){
-        this(name, calcLength(coords), dt, v, maxspeed, Q, w, K, numLanes);
+    // same as above, but the length is computed from the OpenStreetMap coordinates of the road
+    public Link(String name, List<Coordinate> coords, double dt, double v, double maxspeed, double Q, double BP, double Kc, double K, int numLanes){
+        this(name, calcLength(coords), dt, v, maxspeed, Q, BP, Kc, K, numLanes);
         this.coords = coords;
         
         // I don't care what this is! I just need any reference point
         base = coords.get(0); 
     }
     
+    // compares links by distance from a reference point; not used to sort links (see Corridor.sortLinks())
     public int compareTo(Link rhs){
         double distToBase = Coordinate.dist(coords.get(0), base)*1609.3;
         double rhsDistToBase = Coordinate.dist(rhs.coords.get(0), base)*1609.3;
@@ -105,6 +119,8 @@ public class Link implements Comparable<Link> {
         return length;
     }
     
+    // finds the cell containing a latitude/longitude, or null if it is not on this link
+    // a point is on a straight piece of the road if going through it adds at most 50 ft to the distance between the piece's endpoints
     public Cell findCell(Coordinate location){
         for(int i = 0; i < coords.size()-1; i++){
             // detector should be almost in a straight line on the road
@@ -167,47 +183,90 @@ public class Link implements Comparable<Link> {
              
 
     
-    public double getEquilibriumSpeed(double k){
-                
-                /*System.out.println("\t   v="+v);
-                System.out.println("\t   k="+k);
-                //System.out.println("\t   v*k="+(v*k));
-                System.out.println("\t   w="+w); */
-                /*System.out.println("\t   -w*(k-getK)="+(-w*(k-getK())));
-                System.out.println("\t   min 1="+Math.min(getQ(), -w*(k-getK())));
-                System.out.println("\t   min 2="+(Math.min(v*k, Math.min(getQ(), -w*(k-getK())))));
-                System.out.println("\t ......................");*/
-        
-        if(k == 0){
+    // HCM speed-flow curve for basic freeway segments (HCM 6th edition, equation 12-1), per lane, flow q in veh/s
+    private double getHCMSpeed(double q){
+        if(q <= BP){
             return v;
         }
-        // k is the density across all lanes (detector counts are summed across lanes), so use the capacity and jam density across all lanes
-        // this matches getDerivEqSpeed() and the density limit getK() used in Corridor
-        double q = Math.min(v*k, Math.min(getQ(), -w*(k-getK())));
-        
-        if(k > 0.07){
-            //System.out.println("\t   q="+q);
-            //System.out.println("\t   k="+k);
-        }
-                //System.out.println("\t   q="+q);
-                //System.out.println("\t   k="+k);
-                //System.out.println("\t   q/k="+(q/k));
-                //System.out.println("\t ......................");
-        return q/k;
-        
+        double frac = (q - BP) / (Q - BP);
+        return v - (v - Q/Kc) * frac * frac;
     }
-    
-    public double getDerivEqSpeed(double k){
-        
-        if(v * k < getQ()){
+
+    // derivative of getHCMSpeed() with respect to q
+    private double getDerivHCMSpeed(double q){
+        if(q <= BP){
             return 0;
         }
-        else if(getQ() <= -w * (k - getK())){
-            return -getQ()/(k*k);
+        return -(v - Q/Kc) * 2 * (q - BP) / ((Q - BP) * (Q - BP));
+    }
+
+    // equilibrium flow per lane (veh/s) for density per lane k (veh/m)
+    public double getEqFlowPerLane(double k){
+        if(k <= BP / v){
+            return v * k;
+        }
+        else if(k <= Kc){
+            // invert k = q / S(q) for BP <= q <= Q; q / S(q) increases with q, so use bisection
+            double lo = BP;
+            double hi = Q;
+            for(int iter = 0; iter < 50; iter++){
+                double mid = (lo + hi) / 2;
+                if(mid / getHCMSpeed(mid) < k){
+                    lo = mid;
+                }
+                else{
+                    hi = mid;
+                }
+            }
+            return (lo + hi) / 2;
         }
         else{
-            return -w * getK() / (k*k);
+            return Math.max(0, w * (K - k));
         }
+    }
+
+    // derivative of getEqFlowPerLane() with respect to k
+    private double getDerivEqFlowPerLane(double k){
+        if(k <= BP / v){
+            return v;
+        }
+        else if(k <= Kc){
+            // k = q/S(q), so dk/dq = (S - q S')/S^2 and dq/dk = 1/(dk/dq)
+            double q = getEqFlowPerLane(k);
+            double S = getHCMSpeed(q);
+            return S * S / (S - q * getDerivHCMSpeed(q));
+        }
+        else if(k < K){
+            return -w;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    // k is the density across all lanes (detector counts are summed across lanes)
+    public double getEquilibriumSpeed(double k){
+        double k_lane = k / numLanes;
+
+        if(k_lane <= BP / v){
+            return v;
+        }
+        return getEqFlowPerLane(k_lane) / k_lane;
+    }
+
+    // derivative of getEquilibriumSpeed() with respect to the density across all lanes
+    public double getDerivEqSpeed(double k){
+        double k_lane = k / numLanes;
+
+        if(k_lane <= BP / v){
+            return 0;
+        }
+        double q = getEqFlowPerLane(k_lane);
+        return (getDerivEqFlowPerLane(k_lane) * k_lane - q) / (k_lane * k_lane) / numLanes;
+    }
+
+    public double getCapacityDensity_perLane(){
+        return Kc;
     }
     
     public double getW(){
@@ -267,6 +326,8 @@ public class Link implements Comparable<Link> {
         return ""+name;
     }
     
+    // reference (density, flow) points for traffic regimes 1-8, used by Cell.getTrafficRegime() to label each cell's state
+    // index 0 is not used
     TrafficRegime[] array = new TrafficRegime[9];
     
     public void regimeArray(){
