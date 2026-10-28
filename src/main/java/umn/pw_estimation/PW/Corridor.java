@@ -377,7 +377,7 @@ public class Corridor {
         
 
         for(int i = 0; i < upstream_cells+1; i++){
-            header1 += ",cell "+i+",,";
+            header1 += ",cell "+(start_cell + i)+",,";
             header2 += ",density,speed,regime";
         }
         
@@ -436,7 +436,9 @@ public class Corridor {
             
             recordCellData(time);
             
+            
             nextTimestep();
+
         }
 
         if(fileout != null){
@@ -480,7 +482,7 @@ public class Corridor {
         line += time;
         
         for(Cell c : cells){
-            line += ", "+(c.density * 1609.34)+", "+(c.speed * 2.237)+", "+((c.density * 1609.34) * (c.speed * 2.237))+", "+c.getTrafficRegime();
+            line += ", "+(c.density * 1609.34)+", "+(c.speed * 2.23694)+", "+((c.density * 1609.34) * (c.speed * 2.23694))+", "+c.getTrafficRegime();
             
             
             if(c.hasDetector()){
@@ -488,7 +490,7 @@ public class Corridor {
                 // detector density and flow are converted to the cell's number of lanes, so they can be compared with the estimate
                 if(det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
                 line += ", "+(getObservedDensity(c, time) * 1609.34);
-                line += ", "+(det.getLast30sSpeed(time) * 2.237);
+                line += ", "+(det.getLast30sSpeed(time) * 2.23694);
                 line += ", "+(det.getLast30sFlow(time) * c.getNumLanes() / det.getNumLanes() * 3600);
                 }
                 else{

@@ -1,4 +1,5 @@
 
+package umn.pw_estimation.PW;
 import java.awt.Color;
 
 /**
@@ -57,6 +58,7 @@ public class Gradient
      *Produces a gradient from red (low) to green (high)
      */
     public final static Color[] GRADIENT_RED_TO_GREEN = createGradient(Color.RED, Color.GREEN, 500);
+    public final static Color[] GRADIENT_GREEN_TO_RED = createGradient(Color.GREEN, Color.RED, 500);
 
     /**
      *Produces a gradient through green, yellow, orange, red

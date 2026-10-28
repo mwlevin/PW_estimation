@@ -130,6 +130,14 @@ public class Cell {
         return link.getK_perLane() * lanes;
     }
     
+    public double getK_perLane(){
+        return link.getK_perLane();
+    }
+    
+    public double getQ_perLane(){
+        return link.getQ_perLane();
+    }
+    
     public double getMaxSpeed(){
         return link.getMaxSpeed();
     }

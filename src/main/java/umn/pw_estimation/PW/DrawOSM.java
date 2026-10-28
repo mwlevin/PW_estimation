@@ -32,17 +32,25 @@ import javax.swing.JPanel;
  */
 public class DrawOSM extends JPanel {
     
+    
+    public enum DISPLAY_MODE {
+        DENSITY,
+        FLOW,
+        SPEED,
+        TRAFFIC_REGIME
+    };
+    
+    private DISPLAY_MODE mode;
+    
     public static DrawOSM draw(Corridor corridor) throws IOException{
         List<Corridor> list = new ArrayList<>();
         list.add(corridor);
         return draw(list);
     }
     public static DrawOSM draw(List<Corridor> corridors) throws IOException{ 
-        DrawOSM test = new DrawOSM(corridors);
+        DrawOSM test = new DrawOSM(corridors, DISPLAY_MODE.TRAFFIC_REGIME);
         
         
-        
-        test.setDisplayRange(0, 60);
         
         
         JFrame frame = new JFrame();
@@ -61,15 +69,18 @@ public class DrawOSM extends JPanel {
         return test;
     }
     
-    public static final Color[] gradient = new Color[]{};
-    
     private List<Corridor> corridors;
     
     private Coordinate crash_loc;
     private CellRecord[] draw_data;
     
-    public DrawOSM(List<Corridor> corridors){
+    private DISPLAY_MODE display;
+    
+    public DrawOSM(List<Corridor> corridors, DISPLAY_MODE display){
         this.corridors = corridors;
+        this.display = display;
+        
+        
         
         int width = 1200;
         int height = 400;
@@ -101,12 +112,63 @@ public class DrawOSM extends JPanel {
                 }
             }
         }
+        
+        
+        switch(display){
+            case DENSITY:
+                setDisplayRange(0, getMaxDensity());
+                break;
+            case SPEED:
+                setDisplayRange(0, getMaxSpeed());
+                break;
+            case FLOW:
+                setDisplayRange(0, getMaxCapacity());
+                break;
+            case TRAFFIC_REGIME:
+                setDisplayRange(1, 8);
+                break;
+        }
     }
     
-    public DrawOSM(Map<String, Corridor> corridors){
-        this(new ArrayList<>(corridors.values()));
+    public DrawOSM(Map<String, Corridor> corridors, DISPLAY_MODE display){
+        this(new ArrayList<>(corridors.values()), display);
     }
     
+    private double getMaxSpeed(){
+        double max = 0;
+        
+        for(Corridor corridor : corridors){
+            for(Cell c : corridor.getCells()){
+                max = Math.max(max, c.getFFSpeed() * 2.23694);
+            }
+        }
+        
+        return max;
+    }
+    
+    private double getMaxDensity(){
+        double max = 0;
+        
+        for(Corridor corridor : corridors){
+            for(Cell c : corridor.getCells()){
+                max = Math.max(max, c.getK_perLane() * 1609.34);
+            }
+        }
+        
+        return max;
+    }
+    
+    private double getMaxCapacity(){
+        double max = 0;
+        
+        for(Corridor corridor : corridors){
+            for(Cell c : corridor.getCells()){
+                max = Math.max(max, c.getQ_perLane() * 3600);
+            }
+        }
+        
+        return max;
+    }
     
     public void saveImage(String output_file) throws IOException{
         BufferedImage image = createImage();
@@ -137,14 +199,35 @@ public class DrawOSM extends JPanel {
     }
     
     
+    public static final Color[] gradient = Gradient.GRADIENT_GREEN_TO_RED;
+    public static final Color[] regime_colors = new Color[]{Color.red, Color.green, Color.yellow, Color.orange, Color.blue, Color.magenta, Color.pink, Color.cyan};
+    
+    
     // idx is the index of the cell in its corridor, and num_cells the number of cells in the corridor
-    public Color getColor(int idx, int num_cells){
+    public Color getColor(Cell cell, CellRecord data){
         
-        double density = draw_data[idx].density;
-        int traffic_regime = draw_data[idx].regime;
+        switch(display){
+            case DENSITY:
+                double density = data.density / cell.getNumLanes();
+                System.out.println(density);
+                return getGradientColor(density);
+            case FLOW:
+                double flow = data.flow / cell.getNumLanes();
+                return getGradientColor(flow);
+            case SPEED:
+                double speed = data.speed;
+                return getGradientColor(speed);
+            case TRAFFIC_REGIME:
+                int traffic_regime = data.regime;
+                return regime_colors[traffic_regime];
+        }
+        return Color.white;
+    }
+    
+    private Color getGradientColor(double value){
+        double p = (value - min_value) / (max_value - min_value);
         
-        // use density to get color?
-        return new Color((int)(255.0 * idx / num_cells), 0, 0);
+        return gradient[Math.min(gradient.length-1, (int)Math.round(p * gradient.length))];
     }
     
     protected void paintComponent(Graphics g_){
@@ -186,7 +269,7 @@ public class DrawOSM extends JPanel {
                 for(int cell_idx = 0; cell_idx < cells.length; cell_idx++){
                     
                     Cell cell = cells[cell_idx];
-                    g.setColor(getColor(cell_idx, cells.length));
+                    g.setColor(getColor(cell, draw_data[cell_idx]));
                     
                     double len_drawn = 0;
                     
@@ -257,28 +340,47 @@ public class DrawOSM extends JPanel {
         
         int x = x_offset;
         
-        for(int i = 0; i < gradient.length; i++){
-            g.setColor(gradient[i]);
+        if(display == DISPLAY_MODE.TRAFFIC_REGIME){
             
-            int nextX = x_offset + (int)Math.round((double)(i+1)/gradient.length * width);
             
-            g.fillRect(x, y, nextX-x, colorheight);
-            x = nextX;
-            
-            if(i == 0 || i == gradient.length-1 || 
-                i % (gradient.length/10) == 0    
-                    ){
-                double label_val = 0;
+            for(int i = 0; i < regime_colors.length; i++){
+                g.setColor(regime_colors[i]);
                 
-                if(i == gradient.length-1 ){
-                    label_val = max_value;
-                }
-                else{
-                    label_val = ((double)i / gradient.length) * (max_value - min_value) + min_value;
-                }
+                int nextX = x_offset + (int)Math.round((double)(i+1)/regime_colors.length * width);
+                
+                g.fillRect(x, y, nextX-x, colorheight);
+                
                 
                 g.setColor(Color.black);
-                drawRotatedString(String.format("%.1f", label_val), g, x, y+colorheight+5, Math.PI/2);
+                g.drawString(""+(i+1), (x+nextX)/2, y+colorheight+10);
+                        
+                x = nextX;
+            }
+        }
+        else{
+            for(int i = 0; i < gradient.length; i++){
+                g.setColor(gradient[i]);
+
+                int nextX = x_offset + (int)Math.round((double)(i+1)/gradient.length * width);
+
+                g.fillRect(x, y, nextX-x, colorheight);
+                x = nextX;
+
+                if(i == 0 || i == gradient.length-1 || 
+                    i % (gradient.length/10) == 0    
+                        ){
+                    double label_val = 0;
+
+                    if(i == gradient.length-1 ){
+                        label_val = max_value;
+                    }
+                    else{
+                        label_val = ((double)i / gradient.length) * (max_value - min_value) + min_value;
+                    }
+
+                    g.setColor(Color.black);
+                    drawRotatedString(String.format("%.1f", label_val), g, x, y+colorheight+5, Math.PI/2);
+                }
             }
         }
         
