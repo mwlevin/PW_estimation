@@ -48,7 +48,7 @@ public class DrawOSM extends JPanel {
         return draw(list);
     }
     public static DrawOSM draw(List<Corridor> corridors) throws IOException{ 
-        DrawOSM test = new DrawOSM(corridors, DISPLAY_MODE.TRAFFIC_REGIME);
+        DrawOSM test = new DrawOSM(corridors, DISPLAY_MODE.DENSITY);
         
         
         
@@ -209,7 +209,6 @@ public class DrawOSM extends JPanel {
         switch(display){
             case DENSITY:
                 double density = data.density / cell.getNumLanes();
-                System.out.println(density);
                 return getGradientColor(density);
             case FLOW:
                 double flow = data.flow / cell.getNumLanes();

@@ -346,7 +346,7 @@ public class Corridor {
     
     public CellRecord[] getData(long time){
         CellRecord[] output = new CellRecord[records.length];
-        
+
         int time_idx = (int)Math.round( (double)(time - this.startTime)/dt);
         
         for(int i = 0; i < output.length; i++){
