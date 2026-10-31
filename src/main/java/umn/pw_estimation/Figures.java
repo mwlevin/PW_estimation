@@ -37,8 +37,8 @@ public class Figures {
         Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"},
                 new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"}, new File("data/MN610/ramps.csv"));
         read.readDetectorData(data);
-        // historical average flows of the ramps without detectors, made by UnmeteredPrior
-        read.readUnmeteredPrior(new File("data/MN610/unmetered_prior.csv"));
+        // historical average ramp flows, made by RampPrior
+        read.readRampPrior(new File("data/MN610/ramp_prior.csv"));
 
         int end = 0;
         for(int i = 3; i < args.length; i++){

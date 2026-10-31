@@ -58,6 +58,19 @@ public abstract class Detector {
         return name;
     }
     
+    // ratio of this station's measured free flow speed to the road's (see ReadData.readFreeFlowSpeeds()). Loop detectors
+    // compute speed from occupancy with an assumed vehicle length, so an error in that length scales the measured speed by
+    // this factor and the measured density by its inverse; the flow is not affected.
+    private double speed_factor = 1;
+    
+    public double getSpeedFactor(){
+        return speed_factor;
+    }
+    
+    public void setSpeedFactor(double speed_factor){
+        this.speed_factor = speed_factor;
+    }
+    
     // every count is an int. But extrapolation for missing detectors may be a double.
     public abstract double getLast30sCount(long t);
     

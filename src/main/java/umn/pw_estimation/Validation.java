@@ -24,15 +24,27 @@ import umn.pw_estimation.PW.Corridor;
  *
  * Usage: Validation <detector data CSV> <duration (s)> <EB|WB> <station number, or "list", or "none"> [dt (s)] [output CSV]
  * Stations are numbered from 0 in driving order; "list" prints them, and "none" withholds nothing (the errors are then at
- * stations the filter uses). The output CSV has one row per 30-second measurement at the withheld station.
+ * stations the filter uses). The output CSV has one row per 30-second measurement at the withheld station, with speed
+ * (mi/hr), density (veh/mi/lane) and flow (veh/hr/lane). The flow is the most reliable comparison: loop detectors
+ * compute speed and density with an assumed vehicle length, but count the flow (see Corridor.MeasuredValues).
  * Model parameters can be changed with system properties, e.g. -Dtau=60 -Dc0=10 -Dsigma_k=10 -Dsigma_v=3 -Dffs=69
  * -Dmax_sigma_k=50 -Dmax_sigma_v=25 (units: s, m/s, veh/mi/lane, mi/hr, mi/hr, veh/mi/lane, mi/hr), and the flow-density
  * relationship with -Dcapacity=2200 -Ddischarge=2200 -Dw=11.9 -Djam=172 (veh/hr/lane, veh/hr/lane, mi/hr, veh/mi/lane);
  * -Dtriangle=true sets w so the relationship is triangular. -Dramps=none places ramp detectors without the ramps file,
  * -Dunmetered=false ignores unmetered ramps, and
  * -Dsigma_r=18 sets their random walk standard deviation per time step (veh/hr). -Dprior=<file|none> sets the historical
- * averages of unmetered ramps (default data/MN610/unmetered_prior.csv), and -Dreversion=600 the time (s) to relax toward
- * them. -Dinventory=<file> uses another detector inventory.
+ * average ramp flows (default data/MN610/ramp_prior.csv), and -Dreversion=600 the time (s) to relax toward
+ * them. -Dinventory=<file> uses another detector inventory. -Dmeasurement=every_step|end_of_interval|average sets how the
+ * 30-second detector averages are used (see Corridor.MeasurementMode), -Dcount_noise=true adds the random variation of the
+ * 30-second counts to the measurement error, and -Dr_scale multiplies the measurement error variances.
+ * -Dmeasured=speed_density|flow_density sets which detector values are used (see Corridor.MeasuredValues), with
+ * -Dlength_cv=0.4 and -Dlength_bias=0.05 for the vehicle length errors.
+ * -Dffs_file=<file> reads the free flow speeds of the detector stations (e.g. data/MN610/free_flow_speed.csv); with
+ * -Dffs_mode=cells, each cell gets the free flow speed interpolated between them, and with -Dffs_mode=detectors, the
+ * differences from -Dffs are treated as detector errors (see Detector.getSpeedFactor()). With speed factors, the
+ * estimate is compared with the measurements of the withheld station after converting it to what that station would
+ * measure (speed times its factor, density divided by it), and interpolation uses the corrected measurements of the
+ * neighboring stations, converted in the same way.
  * The script validate.sh runs every station in parallel and summarizes the results.
  *
  * @author mlevin
@@ -64,6 +76,15 @@ public class Validation {
         Corridor.max_sigma_unmetered = Double.parseDouble(System.getProperty("max_sigma_r", ""+Corridor.max_sigma_unmetered * 3600)) / 3600;
         Corridor.MERGE_SUPPLY = Boolean.parseBoolean(System.getProperty("merge_supply", ""+Corridor.MERGE_SUPPLY));
         Corridor.unmetered_reversion = Double.parseDouble(System.getProperty("reversion", ""+Corridor.unmetered_reversion));
+        Corridor.MEASUREMENT_MODE = Corridor.MeasurementMode.valueOf(System.getProperty("measurement", ""+Corridor.MEASUREMENT_MODE).toUpperCase());
+        Corridor.MEASURED = Corridor.MeasuredValues.valueOf(System.getProperty("measured", ""+Corridor.MEASURED).toUpperCase());
+        Corridor.vehicle_length_cv = Double.parseDouble(System.getProperty("length_cv", ""+Corridor.vehicle_length_cv));
+        Corridor.vehicle_length_bias = Double.parseDouble(System.getProperty("length_bias", ""+Corridor.vehicle_length_bias));
+        Corridor.COUNT_NOISE = Boolean.parseBoolean(System.getProperty("count_noise", ""+Corridor.COUNT_NOISE));
+        Corridor.SHARED_COUNT_ERROR = Boolean.parseBoolean(System.getProperty("shared_count", ""+Corridor.SHARED_COUNT_ERROR));
+        Corridor.count_error = Double.parseDouble(System.getProperty("count_error", ""+Corridor.count_error));
+        Corridor.LENGTH_SPEED_ERROR = Boolean.parseBoolean(System.getProperty("length_speed_error", ""+Corridor.LENGTH_SPEED_ERROR));
+        Corridor.measurement_noise_scale = Double.parseDouble(System.getProperty("r_scale", ""+Corridor.measurement_noise_scale));
         ReadData.JAM_DENSITY = Double.parseDouble(System.getProperty("jam", ""+ReadData.JAM_DENSITY));
         ReadData.WAVE_SPEED = Double.parseDouble(System.getProperty("w", ""+ReadData.WAVE_SPEED));
         ReadData.CAPACITY = Double.parseDouble(System.getProperty("capacity", ""+ReadData.CAPACITY));
@@ -81,9 +102,13 @@ public class Validation {
                 new File(System.getProperty("inventory", "data/MN610/MN610_Edited.csv")), new String[]{"T.H.610 WB", "T.H.610 EB"},
                 System.getProperty("ramps", "data/MN610/ramps.csv").equals("none")? null : new File(System.getProperty("ramps", "data/MN610/ramps.csv")));
         read.readDetectorData(data);
-        String prior = System.getProperty("prior", "data/MN610/unmetered_prior.csv");
+        String prior = System.getProperty("prior", "data/MN610/ramp_prior.csv");
         if(!prior.equals("none")){
-            read.readUnmeteredPrior(new File(prior));
+            read.readRampPrior(new File(prior));
+        }
+        String ffs_file = System.getProperty("ffs_file", "none");
+        if(!ffs_file.equals("none")){
+            read.readFreeFlowSpeeds(new File(ffs_file), System.getProperty("ffs_mode", "cells").equals("cells"));
         }
 
         Corridor corridor = corridors.get(direction);
@@ -100,7 +125,8 @@ public class Validation {
         if(station.equals("list")){
             for(int s = 0; s < stations.size(); s++){
                 Cell c = stations.get(s);
-                System.out.println(s+" cell "+c.cell_idx+" "+c.getDetector().getName()+" ("+c.getDetector().getNumLanes()+" loops, "+c.getNumLanes()+" lanes)");
+                System.out.println(s+" cell "+c.cell_idx+" "+c.getDetector().getName()+" ("+c.getDetector().getNumLanes()+" loops, "+c.getNumLanes()+" lanes) "
+                        +String.format("%.3f", corridor.findPosition(c.getDetector().getLocation(), Corridor.MAX_RAMP_DISTANCE) / 1609.34)+" mi");
             }
             return;
         }
@@ -122,8 +148,34 @@ public class Validation {
         corridor.estimate(duration, null);
         System.err.println(corridor.getName()+" station "+station+": estimated "+duration+" s in "+(System.currentTimeMillis() - start)/1000.0+" s");
 
-        out.println("direction,station,detector,cell,time,measured u,measured k,EKF u,EKF k,interpolated u,interpolated k");
+        out.println("direction,station,detector,cell,time,measured u,measured k,EKF u,EKF k,interpolated u,interpolated k,measured q,EKF q,interpolated q");
         int steps_per_interval = (int)Math.round(30 / dt);
+
+        // -Dcells_out=<file>: the estimate in every cell, averaged over each 30 seconds, to see where the filter puts queues
+        String cells_out = System.getProperty("cells_out", "none");
+        if(!cells_out.equals("none")){
+            PrintStream cells_file = new PrintStream(new File(cells_out));
+            cells_file.println("cell,position (mi),time,EKF u,EKF k");
+            for(Cell c : cells){
+                double position = 0;
+                for(Cell other : cells){
+                    if(other.cell_idx < c.cell_idx){
+                        position += other.getLength();
+                    }
+                }
+                for(int t = 0; t + 30 <= duration; t += 30){
+                    double u_est = 0, k_est = 0;
+                    int first = (int)Math.ceil(t / dt);
+                    for(int j = first; j < first + steps_per_interval; j++){
+                        CellRecord r = corridor.records[c.cell_idx][j];
+                        u_est += r.speed / steps_per_interval;
+                        k_est += r.density / c.getNumLanes() / steps_per_interval;
+                    }
+                    cells_file.println(c.cell_idx+","+String.format("%.3f", (position + c.getLength() / 2) / 1609.34)+","+t+","+u_est+","+k_est);
+                }
+            }
+            cells_file.close();
+        }
 
         for(Cell c : targets){
             Detector det = withheld != null ? withheld : c.getDetector();
@@ -149,18 +201,29 @@ public class Validation {
                 k_obs = k_obs / det.getNumLanes() * 1609.34;
 
                 // average of the estimate over the 30 seconds of the measurement
-                double u_est = 0, k_est = 0;
+                double u_est = 0, k_est = 0, q_est = 0;
                 int first = (int)Math.ceil(t / dt);
                 for(int j = first; j < first + steps_per_interval; j++){
                     CellRecord r = corridor.records[c.cell_idx][j];
                     u_est += r.speed / steps_per_interval;
                     k_est += r.density / c.getNumLanes() / steps_per_interval;
+                    q_est += r.flow / c.getNumLanes() / steps_per_interval;
                 }
 
+                // estimate and interpolation as the withheld station would measure them (see Detector.getSpeedFactor())
+                u_est *= det.getSpeedFactor();
+                k_est /= det.getSpeedFactor();
                 double[] interp = interpolate(up, down, c, t);
+                if(interp != null){
+                    interp[0] *= det.getSpeedFactor();
+                    interp[1] /= det.getSpeedFactor();
+                }
+
+                double q_obs = det.getLast30sFlow(t) * 3600 / det.getNumLanes();
+                double[] interp_q = interpolateFlow(up, down, c, t);
 
                 out.println(direction+","+stations.indexOf(c)+","+det.getName()+","+c.cell_idx+","+t+","+u_obs+","+k_obs+","+u_est+","+k_est+","
-                        +(interp == null? "," : interp[0]+","+interp[1]));
+                        +(interp == null? "," : interp[0]+","+interp[1])+","+q_obs+","+q_est+","+(interp_q == null? "" : ""+interp_q[0]));
             }
         }
 
@@ -188,6 +251,32 @@ public class Validation {
         return new double[]{a[0] + w * (b[0] - a[0]), a[1] + w * (b[1] - a[1])};
     }
 
+    // flow (veh/hr/lane) linearly interpolated between the stations up and down, like interpolate(), as a 1-element array;
+    // null if neither has data
+    static double[] interpolateFlow(Cell up, Cell down, Cell c, long t){
+        double a = flow(up, t);
+        double b = flow(down, t);
+        if(a < 0 && b < 0){
+            return null;
+        }
+        if(a < 0){
+            return new double[]{b};
+        }
+        if(b < 0){
+            return new double[]{a};
+        }
+        double w = (double)(c.cell_idx - up.cell_idx) / (down.cell_idx - up.cell_idx);
+        return new double[]{a + w * (b - a)};
+    }
+
+    // measured flow per lane (veh/hr/lane) at a station, or -1 if missing
+    static double flow(Cell c, long t){
+        if(c == null || !c.hasDetector() || c.getDetector().getLast30sFlow(t) < 0){
+            return -1;
+        }
+        return c.getDetector().getLast30sFlow(t) * 3600 / c.getDetector().getNumLanes();
+    }
+
     // measured speed (mi/hr) and density (veh/mi/lane) at a station, or null if missing
     static double[] measure(Cell c, long t){
         if(c == null || !c.hasDetector()){
@@ -199,6 +288,7 @@ public class Validation {
         if(u < 0 || k < 0){
             return null;
         }
-        return new double[]{u * 2.23694, k / det.getNumLanes() * 1609.34};
+        // corrected for the station's speed factor
+        return new double[]{u * 2.23694 / det.getSpeedFactor(), k / det.getNumLanes() * 1609.34 * det.getSpeedFactor()};
     }
 }

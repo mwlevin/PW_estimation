@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -191,8 +192,9 @@ public class Corridor {
         return cells;
     }
     
-    // gives each cell's variables their positions in the state vector (see the comment at the top of this class)
-    private void assignVariableIndices(){
+    // gives each cell's variables their positions in the state vector (see the comment at the top of this class);
+    // returns the number of variables
+    private int assignVariableIndices(){
         int var_idx = 0;
         
         for(Cell c : cells){
@@ -209,6 +211,18 @@ public class Corridor {
                 c.set_unmetered_idx(var_idx++);
             }
         }
+
+        // averages over the detector interval (or current values), after all cell variables
+        for(Cell c : cells){
+            if(usesAverages() && c.hasDetector()){
+                c.set_avg_idx(var_idx, var_idx + 1, var_idx + 2);
+                var_idx += 3;
+            }
+            else{
+                c.set_avg_idx(-1, -1, -1);
+            }
+        }
+        return var_idx;
     }
     
     // Unmetered ramps. Comparing the flows at consecutive mainline stations with the ramp detectors between them shows that
@@ -248,13 +262,25 @@ public class Corridor {
     
     // historical average flow (veh/s; positive entering) by time of day of the unmetered ramp at this merge or diverge point,
     // in bins of Cell.PRIOR_BIN seconds starting at midnight, NaN where unknown; returns false if there is no unmetered ramp
-    // there. Made by UnmeteredPrior from the flow balance between mainline stations on other days.
+    // there. Made by RampPrior from the flow balance between mainline stations on other days.
     public boolean addUnmeteredPrior(Coordinate point, double[] profile){
         Cell cell = findRampCell(point);
         if(cell == null || !cell.hasUnmeteredRamp()){
             return false;
         }
         cell.addUnmeteredPrior(profile);
+        return true;
+    }
+
+    // historical average flow (veh/s) by time of day of the metered entrance (or exit) ramp at this merge (or diverge)
+    // point, in bins of Cell.PRIOR_BIN seconds starting at midnight, NaN where unknown; used when its detector has no data.
+    // Returns false if there is no metered ramp of that type there.
+    public boolean addMeteredPrior(Coordinate point, boolean entrance, double[] profile){
+        Cell cell = findRampCell(point);
+        if(cell == null || (entrance? !cell.hasInflowDet() : !cell.hasOutflowDet())){
+            return false;
+        }
+        cell.addPrior(entrance? Cell.INFLOW : Cell.OUTFLOW, profile);
         return true;
     }
     
@@ -297,13 +323,8 @@ public class Corridor {
         
         this.time = time;
         
-        assignVariableIndices();
-        
-        int size = 0;
-
-        for(Cell c : cells){
-            size += c.getNumVariables();
-        }
+        int size = assignVariableIndices();
+        interval = Long.MIN_VALUE;
         
         indices = new String[size];
         
@@ -322,6 +343,12 @@ public class Corridor {
             if(c.hasUnmeteredRamp()){
                 indices[c.unmetered_idx()] = c.cell_idx+" unmetered";
             }
+
+            if(c.avg_k_idx() >= 0){
+                indices[c.avg_k_idx()] = c.cell_idx+" average k";
+                indices[c.avg_v_idx()] = c.cell_idx+" average v";
+                indices[c.avg_q_idx()] = c.cell_idx+" average q";
+            }
         }
 
         x_t_tp = new ArrayRealVector(size);
@@ -337,7 +364,7 @@ public class Corridor {
         for(Cell c : cells){
             if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){
                 sum_density_lane += Math.min(getObservedDensity(c, time), c.getK()) / c.getNumLanes();
-                sum_speed += Math.min(c.getDetector().getLast30sSpeed(time), c.getMaxSpeed());
+                sum_speed += Math.min(getObservedSpeed(c, time), c.getMaxSpeed());
                 num_observed++;
             }
         }
@@ -351,7 +378,7 @@ public class Corridor {
             if(c.hasDetector() && c.getDetector().getLast30sDensity(time) >= 0 && c.getDetector().getLast30sSpeed(time) >= 0){  // previously only hasDetector
                 // values of -1 indicates bad data or missing data
                 double k_observed = Math.min(Math.max(getObservedDensity(c, time), 0), c.getK());
-                double v_observed = Math.min(Math.max(c.getDetector().getLast30sSpeed(time), 0), c.getMaxSpeed());
+                double v_observed = Math.min(Math.max(getObservedSpeed(c, time), 0), c.getMaxSpeed());
                 
                 if(k_observed >= 0 && v_observed >= 0){  // change to strictly inequality?
                     c.density = k_observed;
@@ -367,14 +394,30 @@ public class Corridor {
             x_t_t.setEntry(c.k_idx(), c.density);
             x_t_t.setEntry(c.v_idx(), c.speed);
             
+            // the averages restart at the first time step (see predict()), so their starting values and variances do not matter
+            if(c.avg_k_idx() >= 0){
+                x_t_t.setEntry(c.avg_k_idx(), c.density);
+                x_t_t.setEntry(c.avg_v_idx(), c.speed);
+                x_t_t.setEntry(c.avg_q_idx(), c.density * c.speed);
+            }
+
+            // ramps without data start at their historical average, if known
             if(c.hasInflowDet()){
                 double inflow = c.getInflow(time);
+                double prior = c.getPrior(Cell.INFLOW, clock_start + time);
+                if(c.getInflowDet().getLast30sCount(time) < 0 && !Double.isNaN(prior)){
+                    inflow = prior;
+                }
                 x_t_t.setEntry(c.inflow_idx(), inflow);
                 c.inflow = inflow;
             }
             
             if(c.hasOutflowDet()){
                 double outflow = c.getOutflow(time);
+                double prior = c.getPrior(Cell.OUTFLOW, clock_start + time);
+                if(c.getOutflowDet().getLast30sCount(time) < 0 && !Double.isNaN(prior)){
+                    outflow = prior;
+                }
                 x_t_t.setEntry(c.outflow_idx(), outflow);
                 c.outflow = outflow;
             }
@@ -398,6 +441,14 @@ public class Corridor {
         calcR();
         // copy so that later changes to R_t in calcR() do not also change P_t_t
         P_t_t = R_t.copy();
+        for(Cell c : cells){
+            if(c.avg_k_idx() >= 0){
+                for(int idx : new int[]{c.avg_k_idx(), c.avg_v_idx(), c.avg_q_idx()}){
+                    P_t_t.setRow(idx, new double[size]);
+                    P_t_t.setColumn(idx, new double[size]);
+                }
+            }
+        }
 
         // P_t_t is the uncertainty of the starting estimate: small for cells with a detector (the measurement error), large otherwise
         // initial values in cells without a working detector are uncertain
@@ -513,6 +564,41 @@ public class Corridor {
             }
         }
         return best;
+    }
+
+    // free flow speeds (mph) measured at detector stations: each cell gets the speed linearly interpolated (by distance
+    // along the corridor) between the nearest stations on each side, or the speed of the nearest station beyond the
+    // first or last station. Stations more than max_dist ft from the corridor are ignored. Returns the number of stations used.
+    public int setFreeFlowSpeeds(List<Coordinate> locations, List<Double> speeds, double max_dist){
+        buildCells();
+        TreeMap<Double, Double> by_position = new TreeMap<>();
+        for(int i = 0; i < locations.size(); i++){
+            double position = findPosition(locations.get(i), max_dist);
+            if(!Double.isNaN(position)){
+                by_position.put(position, speeds.get(i));
+            }
+        }
+        if(by_position.isEmpty()){
+            return 0;
+        }
+        for(Cell c : cells){
+            double position = (c.cell_idx + 0.5) * c.getLength();
+            Map.Entry<Double, Double> up = by_position.floorEntry(position);
+            Map.Entry<Double, Double> down = by_position.ceilingEntry(position);
+            double v;
+            if(up == null){
+                v = down.getValue();
+            }
+            else if(down == null || down.getKey().equals(up.getKey())){
+                v = up.getValue();
+            }
+            else{
+                double frac = (position - up.getKey()) / (down.getKey() - up.getKey());
+                v = up.getValue() + frac * (down.getValue() - up.getValue());
+            }
+            c.setFFSpeed(v);
+        }
+        return by_position.size();
     }
     
     // the cell containing a latitude/longitude, or null if it is not on this corridor
@@ -821,13 +907,13 @@ public class Corridor {
             x_t_tp.setEntry(c.v_idx(), v_i_tn);
             
             if(c.hasInflowDet()){
-                x_t_tp.setEntry(c.inflow_idx(), inflow);
+                x_t_tp.setEntry(c.inflow_idx(), predictRamp(c, Cell.INFLOW, inflow));
             }
             if(c.hasOutflowDet()){
-                x_t_tp.setEntry(c.outflow_idx(), outflow);
+                x_t_tp.setEntry(c.outflow_idx(), predictRamp(c, Cell.OUTFLOW, outflow));
             }
             if(c.hasUnmeteredRamp()){
-                x_t_tp.setEntry(c.unmetered_idx(), predictUnmetered(c));
+                x_t_tp.setEntry(c.unmetered_idx(), predictRamp(c, Cell.UNMETERED, c.unmetered));
             }
             
             /* System.out.println("\t   cell "+cell_idx);
@@ -847,17 +933,17 @@ public class Corridor {
             // will silently give wrong results. A quick check is to compare them with finite differences.
             
             if(c.hasInflowDet()){
-                F_t.setEntry(c.inflow_idx(), c.inflow_idx(), 1);
+                F_t.setEntry(c.inflow_idx(), c.inflow_idx(), rampDecay(c, Cell.INFLOW));
                 F_t.setEntry(c.k_idx(), c.inflow_idx(), dt / dx1);
             }
             
             if(c.hasOutflowDet()){
-                F_t.setEntry(c.outflow_idx(), c.outflow_idx(), 1);
+                F_t.setEntry(c.outflow_idx(), c.outflow_idx(), rampDecay(c, Cell.OUTFLOW));
                 F_t.setEntry(c.k_idx(), c.outflow_idx(), -dt / dx1);
             }
             
             if(c.hasUnmeteredRamp()){
-                F_t.setEntry(c.unmetered_idx(), c.unmetered_idx(), unmeteredDecay(c));
+                F_t.setEntry(c.unmetered_idx(), c.unmetered_idx(), rampDecay(c, Cell.UNMETERED));
                 F_t.setEntry(c.k_idx(), c.unmetered_idx(), dt / dx1);
             }
             
@@ -953,6 +1039,7 @@ public class Corridor {
             System.out.println("\t   ................."); */
         }
         
+        predictAverages();
         
         calcQ();
         // moving on to next time step, so t -> tp
@@ -981,6 +1068,8 @@ public class Corridor {
         double value;
         Cell sender, receiver;
         double d_k_sender, d_v_sender, d_k_receiver;
+        // derivatives with respect to the receiver's entrance ramp flows (see calcFlux())
+        double d_inflow_receiver, d_unmetered_receiver;
 
         // adds coeff * (derivatives of this flow) to row of F_t
         void addDerivatives(int row, double coeff){
@@ -992,6 +1081,12 @@ public class Corridor {
             }
             if(d_k_receiver != 0){
                 F_t.addToEntry(row, receiver.k_idx(), coeff * d_k_receiver);
+            }
+            if(d_inflow_receiver != 0){
+                F_t.addToEntry(row, receiver.inflow_idx(), coeff * d_inflow_receiver);
+            }
+            if(d_unmetered_receiver != 0){
+                F_t.addToEntry(row, receiver.unmetered_idx(), coeff * d_unmetered_receiver);
             }
         }
     }
@@ -1011,12 +1106,18 @@ public class Corridor {
         
         // entrance ramp flows into the receiver use part of its supply, so the mainline gets the rest (a merge); without
         // this, the ramp flow entered even when the cell was full, and the C.S.A.H. 81 entrance (610 WB) filled its cell to
-        // jam density. The derivatives with respect to the ramp flows are left out. On 9/2/26 3-6 PM, this lowered the
+        // jam density. When the supply limits the flow, each veh/s more from the ramps is one veh/s less from the mainline,
+        // which F_t must include: without it, the filter treated a higher ramp flow as only adding vehicles to the
+        // receiver, and a metered ramp without data drifted to 1800 veh/hr, holding back a false queue upstream (610 WB,
+        // T.H.252, with Noble Pkwy withheld). On 9/2/26 3-6 PM, this lowered the
         // density error at withheld stations from 13.0 to 12.6 veh/mi/ln (from 28 to 12 at 610 EB/Regent Ave).
         // Also letting a congested cell accept as much as its outflow, when that is more than its congested flow, fixed the
         // false queue at 610 WB/Elm Creek Blvd but created queues at jam density elsewhere and raised the error to 14.4.
+        boolean merge = false;
         if(MERGE_SUPPLY && receiver != null){
             double entering = receiver.inflow + (receiver.hasUnmeteredRamp()? Math.max(receiver.unmetered, 0) : 0);
+            // if the ramps take all of the supply, the mainline flow stays 0 for small changes
+            merge = supply - entering > 0;
             supply = Math.max(supply - entering, 0);
         }
 
@@ -1028,32 +1129,41 @@ public class Corridor {
         else if(capacity <= supply){
             f.value = capacity;
         }
-        else{
+        else if(merge || !MERGE_SUPPLY){
             f.value = supply;
             f.d_k_receiver = receiver.getDerivSupply(receiver.density);
+            if(MERGE_SUPPLY){
+                f.d_inflow_receiver = (receiver.hasInflowDet()? -1 : 0);
+                f.d_unmetered_receiver = (receiver.hasUnmeteredRamp() && receiver.unmetered > 0? -1 : 0);
+            }
+        }
+        else{
+            f.value = supply;
         }
 
         return f;
     }
 
-    // fraction of the difference from the historical average that remains after one time step; 1 (random walk) if the
-    // historical average is unknown
-    private double unmeteredDecay(Cell c){
-        if(Double.isNaN(c.getUnmeteredPrior(clock_start + time)) || Double.isNaN(c.getUnmeteredPrior(clock_start + time + dt))){
+    // fraction of the difference from the historical average of a ramp flow (Cell.UNMETERED, INFLOW or OUTFLOW) that
+    // remains after one time step; 1 (random walk) if the historical average is unknown
+    private double rampDecay(Cell c, int which){
+        if(Double.isNaN(c.getPrior(which, clock_start + time)) || Double.isNaN(c.getPrior(which, clock_start + time + dt))){
             return 1;
         }
         return Math.exp(-dt / unmetered_reversion);
     }
     
-    // predicted unmetered flow: m(t+dt) + decay * (flow - m(t)), with m the historical average
-    private double predictUnmetered(Cell c){
-        double decay = unmeteredDecay(c);
+    // predicted ramp flow: m(t+dt) + decay * (flow - m(t)), with m the historical average
+    // metered ramps with data are then set to their detector counts by update(); this matters only when a detector has
+    // no data
+    private double predictRamp(Cell c, int which, double flow){
+        double decay = rampDecay(c, which);
         if(decay == 1){
-            return c.unmetered;
+            return flow;
         }
-        double m_t = c.getUnmeteredPrior(clock_start + time);
-        double m_tn = c.getUnmeteredPrior(clock_start + time + dt);
-        return m_tn + decay * (c.unmetered - m_t);
+        double m_t = c.getPrior(which, clock_start + time);
+        double m_tn = c.getPrior(which, clock_start + time + dt);
+        return m_tn + decay * (flow - m_t);
     }
     
     // sets every entry of one row of F_t to 0
@@ -1137,15 +1247,19 @@ public class Corridor {
 
         for(Cell c : cells){
             double max_k = max_sigma_k * c.getNumLanes();
-            double var_k = P.getEntry(c.k_idx(), c.k_idx());
-            if(var_k > max_k * max_k){
-                scale[c.k_idx()] = max_k / Math.sqrt(var_k);
-                any = true;
+            for(int idx : new int[]{c.k_idx(), c.avg_k_idx()}){
+                double var_k = (idx >= 0? P.getEntry(idx, idx) : 0);
+                if(var_k > max_k * max_k){
+                    scale[idx] = max_k / Math.sqrt(var_k);
+                    any = true;
+                }
             }
-            double var_v = P.getEntry(c.v_idx(), c.v_idx());
-            if(var_v > max_sigma_v * max_sigma_v){
-                scale[c.v_idx()] = max_sigma_v / Math.sqrt(var_v);
-                any = true;
+            for(int idx : new int[]{c.v_idx(), c.avg_v_idx()}){
+                double var_v = (idx >= 0? P.getEntry(idx, idx) : 0);
+                if(var_v > max_sigma_v * max_sigma_v){
+                    scale[idx] = max_sigma_v / Math.sqrt(var_v);
+                    any = true;
+                }
             }
             // ramp flows, metered or not
             for(int idx : new int[]{c.unmetered_idx(), c.inflow_idx(), c.outflow_idx()}){
@@ -1190,7 +1304,143 @@ public class Corridor {
         if(k < 0){
             return -1;
         }
-        return k / det.getNumLanes() * c.getNumLanes();
+        return k / det.getNumLanes() * c.getNumLanes() * det.getSpeedFactor();
+    }
+
+    // flow measured by the cell's mainline detector, converted to the cell's number of lanes like the density (veh/s), or
+    // -1 if missing; vehicle length errors do not affect it, so the speed factor is not used
+    private double getObservedFlow(Cell c, long time){
+        Detector det = c.getDetector();
+        double q = det.getLast30sFlow(time);
+
+        if(q < 0){
+            return -1;
+        }
+        return q / det.getNumLanes() * c.getNumLanes();
+    }
+
+    // speed measured by the cell's mainline detector (m/s), corrected by its speed factor (see Detector.getSpeedFactor()),
+    // or -1 if missing
+    private double getObservedSpeed(Cell c, long time){
+        Detector det = c.getDetector();
+        double v = det.getLast30sSpeed(time);
+
+        if(v < 0){
+            return -1;
+        }
+        return v / det.getSpeedFactor();
+    }
+
+    // How the 30-second detector averages are compared with the state, which is at one instant of a shorter time step:
+    //   EVERY_STEP: at every time step of the interval, as if the average were a new measurement of the state each time.
+    //     The same measurement is then used 30/dt times (10 with dt = 3 s) as if its errors were independent, and the cell is
+    //     held near the interval average for the whole interval.
+    //   END_OF_INTERVAL: once, at the last time step of the interval.
+    //   AVERAGE: once, at the last time step of the interval, compared with the average of the cell's density and speed
+    //     over the interval. The averages are extra state variables (see predictAverages()), so the filter knows how the
+    //     measurement depends on the state at every time step of the interval.
+    // Ramp detectors are used at every time step in all modes: their 30-second count is the ramp flow for the interval.
+    public enum MeasurementMode {EVERY_STEP, END_OF_INTERVAL, AVERAGE}
+    // AVERAGE (with FLOW_DENSITY) had the lowest flow error inside queues on 9/2/26 3-6 PM, but higher density errors at
+    // withheld stations on 9/17/26 (12.7 veh/mi/ln, against 10.7 with EVERY_STEP); END_OF_INTERVAL was worse on 9/2.
+    public static MeasurementMode MEASUREMENT_MODE = MeasurementMode.EVERY_STEP;
+
+    // Which values of the mainline detectors are used. Loop detectors count vehicles and measure the fraction of time a
+    // vehicle is over the loop (occupancy); speed is then the count times an assumed vehicle length divided by the time
+    // occupied, and density is the occupancy divided by that length. Actual vehicle lengths vary (cars about 15 ft,
+    // trucks 40-70 ft), so the speed and density have errors of the same size in opposite directions, while the flow
+    // (the count) has none from vehicle length.
+    //   SPEED_DENSITY: speed and density, with independent errors (see calcR()).
+    //   FLOW_DENSITY: flow and density. The flow is compared with k * v of the cell, so the filter knows that it is
+    //     reliable while the split into speed and density is not. Its error is the random variation of the count; the
+    //     density error comes from the vehicle length, whose relative error is vehicle_length_cv / sqrt(count) for the
+    //     average of the vehicles counted, plus vehicle_length_bias for the assumed length itself.
+    public enum MeasuredValues {SPEED_DENSITY, FLOW_DENSITY}
+    // Leave-one-out errors at withheld stations (speed mi/hr, density veh/mi/ln, flow veh/hr/ln), SPEED_DENSITY -> FLOW_DENSITY:
+    // 9/2/26 3-6 PM 12.1/12.3/368 -> 12.0/12.2/363; 9/17/26 3-6 PM 10.4/11.0/353 -> 10.4/10.7/344.
+    public static MeasuredValues MEASURED = MeasuredValues.FLOW_DENSITY;
+    public static double vehicle_length_cv = 0.4; // standard deviation / mean of the length of vehicles plus loop
+    public static double vehicle_length_bias = 0.05; // relative error of the assumed average vehicle length
+
+    // true if cells with detectors have the extra state variables for the averages over the detector interval
+    // (see predictAverages())
+    private static boolean usesAverages(){
+        return MEASUREMENT_MODE == MeasurementMode.AVERAGE || MEASURED == MeasuredValues.FLOW_DENSITY;
+    }
+
+    // if true, the measurement error of density includes the random variation of the 30-second count (see calcR())
+    public static boolean COUNT_NOISE = false;
+
+    // FLOW_DENSITY only: if true, the density error includes the error of the count it is computed from, correlated with the
+    // flow error (see calcR())
+    public static boolean SHARED_COUNT_ERROR = false;
+
+    // relative error of the 30-second count from vehicles counted wrongly: a tractor-trailer can be counted as two vehicles
+    // when the loop sees the gap between tractor and trailer, and two close vehicles as one. It affects the flow and speed
+    // but not the occupancy, so not the density.
+    public static double count_error = 0;
+
+    // SPEED_DENSITY only: if true, the speed and density errors come from the count and vehicle length errors like in
+    // FLOW_DENSITY, with the negative covariance from the shared length error; otherwise from a 1.5 ft standard deviation
+    // of vehicle length, independent of the count (see calcR())
+    public static boolean LENGTH_SPEED_ERROR = false;
+
+    // multiplies the measurement error variances
+    public static double measurement_noise_scale = 1;
+
+    public static final int DETECTOR_INTERVAL = 30; // seconds
+
+    // detector interval of the current time step, number of time steps of it so far, and the weight of the newest value in
+    // the averages
+    private long interval;
+    private int steps_in_interval;
+    private double avg_weight;
+
+    // true if the next time step is in a new detector interval
+    private boolean isEndOfInterval(){
+        return Math.floorDiv((long)(time + dt), DETECTOR_INTERVAL) != Math.floorDiv(time, DETECTOR_INTERVAL);
+    }
+
+    // the variables that the mainline detector of a cell measures
+    private int measuredK(Cell c){
+        return c.avg_k_idx() >= 0? c.avg_k_idx() : c.k_idx();
+    }
+
+    private int measuredV(Cell c){
+        return c.avg_v_idx() >= 0? c.avg_v_idx() : c.v_idx();
+    }
+
+    // predicted averages of density, speed and flow (k * v) over the detector interval, and their rows of F_t
+    // running mean: avg_m = (1 - 1/m) avg_(m-1) + (1/m) x_m at the m-th time step of the interval, which restarts the
+    // average at the first time step (m = 1). Except in AVERAGE mode, the weight is always 1, so the "averages" are the
+    // current values; they are then used only to compare the measured flow with k * v (FLOW_DENSITY).
+    private void predictAverages(){
+        long current = Math.floorDiv(time, DETECTOR_INTERVAL);
+        if(current != interval){
+            interval = current;
+            steps_in_interval = 0;
+        }
+        steps_in_interval++;
+        avg_weight = (MEASUREMENT_MODE == MeasurementMode.AVERAGE? 1.0 / steps_in_interval : 1);
+
+        int n = F_t.getColumnDimension();
+        for(Cell c : cells){
+            if(c.avg_k_idx() < 0){
+                continue;
+            }
+            double k = x_t_tp.getEntry(c.k_idx());
+            double v = x_t_tp.getEntry(c.v_idx());
+            // new value of each average, and its derivatives as a combination of the rows of k and v: a dk/dx + b dv/dx
+            double[][] terms = {{c.avg_k_idx(), k, 1, 0}, {c.avg_v_idx(), v, 0, 1}, {c.avg_q_idx(), k * v, v, k}};
+            for(double[] term : terms){
+                int avg = (int)term[0];
+                x_t_tp.setEntry(avg, (1 - avg_weight) * x_t_t.getEntry(avg) + avg_weight * term[1]);
+                for(int j = 0; j < n; j++){
+                    F_t.setEntry(avg, j, avg_weight * (term[2] * F_t.getEntry(c.k_idx(), j) + term[3] * F_t.getEntry(c.v_idx(), j)));
+                }
+                F_t.addToEntry(avg, avg, 1 - avg_weight);
+            }
+        }
     }
     
     // EKF update (correction) step: combines the prediction with the detector data that are available at this time
@@ -1200,19 +1450,30 @@ public class Corridor {
         List<Integer> observed = new ArrayList<>();
         List<Double> residuals = new ArrayList<>();
         
+        // except in EVERY_STEP mode, the mainline detectors are used once, at the last time step of their 30-second interval
+        boolean use_mainline = MEASUREMENT_MODE == MeasurementMode.EVERY_STEP || isEndOfInterval();
+
         for(Cell c : cells){
             Detector det = c.getDetector();
             
-            if(c.hasDetector() && det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
+            if(use_mainline && c.hasDetector() && det.getLast30sDensity(time) >= 0 && det.getLast30sSpeed(time) >= 0){
                 // this is the measurement residual
                 double k_observed = Math.min(Math.max(getObservedDensity(c, time), 0), c.getK());
-                double v_observed = Math.min(Math.max(det.getLast30sSpeed(time), 0), c.getMaxSpeed());
+                double v_observed = Math.min(Math.max(getObservedSpeed(c, time), 0), c.getMaxSpeed());
+                int k_idx = measuredK(c);
                 
-                observed.add(c.k_idx());
-                residuals.add(k_observed - x_t_tp.getEntry(c.k_idx()));
+                observed.add(k_idx);
+                residuals.add(k_observed - x_t_tp.getEntry(k_idx));
                 
-                observed.add(c.v_idx());
-                residuals.add(v_observed - x_t_tp.getEntry(c.v_idx()));
+                if(MEASURED == MeasuredValues.FLOW_DENSITY){
+                    observed.add(c.avg_q_idx());
+                    residuals.add(getObservedFlow(c, time) - x_t_tp.getEntry(c.avg_q_idx()));
+                }
+                else{
+                    int v_idx = measuredV(c);
+                    observed.add(v_idx);
+                    residuals.add(v_observed - x_t_tp.getEntry(v_idx));
+                }
             }
             
             // ramp detectors are separate from the mainline detector, so they are used even if the cell has no mainline detector
@@ -1380,7 +1641,7 @@ public class Corridor {
         // E[1/v] is approximately 1/mu + sigma^2/mu^3
         // variance(1/v) is approximately sigma^2/mu^4
         
-        double scale = 1;
+        double scale = measurement_noise_scale;
         
         double len_mean = 4.48;  // units of meters; 14.7 ft
         
@@ -1405,15 +1666,62 @@ public class Corridor {
                     R_t.setEntry(c.outflow_idx(), c.outflow_idx(), 0);
                 }
                 
-                R_t.setEntry(c.v_idx(), c.v_idx(), scale * len_var / (occ * occ)); // formula from Gemini
+                double var_v = scale * len_var / (occ * occ); // formula from Gemini
+                double var_k = scale * len_var * q * q * occ * occ / (len_mean * len_mean * len_mean * len_mean); // formula from Gemini
                 
+                // random variation of the 30-second count: a count of n vehicles has variance n (Poisson), so the
+                // density computed from it has relative variance 1/n
+                if(COUNT_NOISE){
+                    double k = q * occ / len_mean;
+                    var_k += k * k / c.getDetector().getLast30sCount(time);
+                }
                 
                 double cov = 0; // this is intentionally set to 0
                 
-                R_t.setEntry(c.v_idx(), c.k_idx(), cov);
-                R_t.setEntry(c.k_idx(), c.v_idx(), cov);
+                // errors of the count n and the vehicle length, as relative variances (see MeasuredValues):
+                //   rel_k: the vehicle length, which affects density and speed in opposite directions
+                //   rel_miscount: vehicles counted wrongly (see count_error), which affects flow and speed
+                double n = c.getDetector().getLast30sCount(time);
+                double k = q * occ / len_mean;
+                double rel_k = vehicle_length_cv * vehicle_length_cv / n + vehicle_length_bias * vehicle_length_bias;
+                double rel_miscount = count_error * count_error;
                 
-                R_t.setEntry(c.k_idx(), c.k_idx(), scale * len_var * q * q * occ * occ / (len_mean * len_mean * len_mean * len_mean)); // formula from Gemini
+                if(MEASURED == MeasuredValues.SPEED_DENSITY && LENGTH_SPEED_ERROR){
+                    // the density, occupancy / assumed length, has the random variation of the count (relative variance
+                    // 1/n) and the length error; the speed, count * assumed length / occupancy, has the length error in
+                    // the opposite direction and the miscount error
+                    double v = len_mean / occ;
+                    var_v = scale * v * v * (rel_miscount + rel_k);
+                    var_k = scale * k * k * (1 / n + rel_k);
+                    cov = -scale * v * k * rel_k;
+                }
+                
+                if(MEASURED == MeasuredValues.FLOW_DENSITY){
+                    // the count n has variance n (Poisson), so the flow has relative variance 1/n, plus the miscount error;
+                    // the density has the relative error of the vehicle length (see MeasuredValues)
+                    R_t.setEntry(c.avg_q_idx(), c.avg_q_idx(), scale * q * q * (1 / n + rel_miscount));
+                    // the density is the flow divided by the speed, so it shares the count's error: k = (q / v) * L / L_assumed
+                    // has relative variance 1/n + rel_k, and its covariance with the flow is q * k / n. The speed, q / k, then
+                    // has only the vehicle length and miscount errors.
+                    double count_k = (SHARED_COUNT_ERROR? 1 / n : 0);
+                    R_t.setEntry(c.avg_k_idx(), c.avg_k_idx(), scale * k * k * (count_k + rel_k));
+                    R_t.setEntry(c.avg_q_idx(), c.avg_k_idx(), scale * q * k * count_k);
+                    R_t.setEntry(c.avg_k_idx(), c.avg_q_idx(), scale * q * k * count_k);
+                    // the starting uncertainty of the cell (see init())
+                    R_t.setEntry(c.k_idx(), c.k_idx(), scale * k * k * rel_k);
+                    R_t.setEntry(c.v_idx(), c.v_idx(), var_v);
+                    continue;
+                }
+                
+                // the variances are set for both the cell's variables and its averages (whichever are measured; see measuredK())
+                for(int[] idx : new int[][]{{c.k_idx(), c.v_idx()}, {c.avg_k_idx(), c.avg_v_idx()}}){
+                    if(idx[0] >= 0){
+                        R_t.setEntry(idx[1], idx[1], var_v);
+                        R_t.setEntry(idx[1], idx[0], cov);
+                        R_t.setEntry(idx[0], idx[1], cov);
+                        R_t.setEntry(idx[0], idx[0], var_k);
+                    }
+                }
                 
             }
             else 
@@ -1476,6 +1784,24 @@ public class Corridor {
             
             if(c.hasUnmeteredRamp()){
                 Q.setEntry(c.unmetered_idx(), c.unmetered_idx(), sigma_unmetered * sigma_unmetered);
+            }
+
+            // the average gets avg_weight times the new value, so also avg_weight times its error; the error of k * v is
+            // v times the error of k plus k times the error of v
+            if(c.avg_k_idx() >= 0){
+                double k = x_t_tp.getEntry(c.k_idx());
+                double v = x_t_tp.getEntry(c.v_idx());
+                int[] avg = {c.avg_k_idx(), c.avg_v_idx(), c.avg_q_idx()};
+                double[][] g = {{1, 0}, {0, 1}, {v, k}}; // derivatives of each average's new value with respect to (k, v)
+                for(int i = 0; i < 3; i++){
+                    Q.setEntry(avg[i], c.k_idx(), avg_weight * g[i][0] * var_k);
+                    Q.setEntry(c.k_idx(), avg[i], avg_weight * g[i][0] * var_k);
+                    Q.setEntry(avg[i], c.v_idx(), avg_weight * g[i][1] * var_v);
+                    Q.setEntry(c.v_idx(), avg[i], avg_weight * g[i][1] * var_v);
+                    for(int j = 0; j < 3; j++){
+                        Q.setEntry(avg[i], avg[j], avg_weight * avg_weight * (g[i][0] * g[j][0] * var_k + g[i][1] * g[j][1] * var_v));
+                    }
+                }
             }
             
             //System.out.println("Q="+var_k+" "+var_v+" "+cov);

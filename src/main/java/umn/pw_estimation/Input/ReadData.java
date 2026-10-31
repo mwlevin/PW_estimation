@@ -29,8 +29,9 @@ public class ReadData {
     
     private Map<String, HistoricalDetector> saved_detectors;
     
-    // corridors made by the last readOSM()
+    // corridors made by the last readOSM(), and the corridor label of each detector label (e.g. "T.H.610 WB" -> "WB")
     private Map<String, Corridor> corridors = new HashMap<>();
+    private Map<String, String> corridor_labels = new HashMap<>();
     
     // time of day (seconds after midnight) at the start of the detector data read by readDetectorData()
     private long start_of_day;
@@ -112,6 +113,13 @@ public class ReadData {
             for(String id : columns.keySet()){
                 int count = (int)Double.parseDouble(split1[columns.get(id)[1]].trim());
                 double speed = Double.parseDouble(split1[columns.get(id)[0]].trim());
+                
+                // a loop that counts more than MAX_COUNT vehicles in 30 seconds is malfunctioning (see MAX_COUNT), so the
+                // interval is missing data
+                if(count > MAX_COUNT){
+                    count = -1;
+                    speed = -1;
+                }
                 
                 // it is possible to give data for a detector that is not being used (e.g. passage instead of merge). Ignore it.
                 if(saved_detectors.containsKey(id)){
@@ -381,6 +389,10 @@ public class ReadData {
         
         
         corridors = output;
+        corridor_labels = new HashMap<>();
+        for(int i = 0; i < labels.length; i++){
+            corridor_labels.put(detector_labels[i], labels[i]);
+        }
         return output; 
     }
     
@@ -394,10 +406,11 @@ public class ReadData {
         return hour * 3600 + Long.parseLong(parts[1]) * 60 + Long.parseLong(parts[2]);
     }
     
-    // reads the historical average flows of unmetered ramps made by UnmeteredPrior; columns: direction, type, lat, lon,
-    // osm_way, time (HH:MM, start of a bin of Cell.PRIOR_BIN seconds), flow (veh/hr, positive entering, empty if unknown)
+    // reads the historical average ramp flows made by RampPrior; columns: direction, type, lat, lon, osm_way, time (HH:MM,
+    // start of a bin of Cell.PRIOR_BIN seconds), flow (veh/hr, empty if unknown; for unmetered ramps the net flow, positive
+    // entering), days, metered (true or false; false if missing)
     // must be called after readOSM() with the ramps file
-    public void readUnmeteredPrior(File file) throws IOException {
+    public void readRampPrior(File file) throws IOException {
         Map<String, double[]> profiles = new HashMap<>();
         Map<String, String[]> ramps = new HashMap<>();
         Scanner filein = new Scanner(file);
@@ -407,7 +420,7 @@ public class ReadData {
             if(columns.length < 7){
                 continue;
             }
-            String key = columns[0]+" "+columns[4];
+            String key = columns[0]+" "+columns[1]+" "+columns[2]+" "+columns[3];
             if(!profiles.containsKey(key)){
                 double[] profile = new double[86400 / Cell.PRIOR_BIN];
                 Arrays.fill(profile, Double.NaN);
@@ -421,15 +434,64 @@ public class ReadData {
         }
         filein.close();
         
-        int count = 0;
+        int unmetered = 0, metered = 0;
         for(String key : profiles.keySet()){
             String[] columns = ramps.get(key);
             Corridor corridor = corridors.get(columns[0]);
-            if(corridor != null && corridor.addUnmeteredPrior(new Coordinate(Double.parseDouble(columns[2]), Double.parseDouble(columns[3])), profiles.get(key))){
-                count++;
+            if(corridor == null){
+                continue;
+            }
+            Coordinate point = new Coordinate(Double.parseDouble(columns[2]), Double.parseDouble(columns[3]));
+            if(columns.length > 8 && columns[8].equals("true")){
+                if(corridor.addMeteredPrior(point, columns[1].equals("Merge"), profiles.get(key))){
+                    metered++;
+                }
+            }
+            else if(corridor.addUnmeteredPrior(point, profiles.get(key))){
+                unmetered++;
             }
         }
-        System.out.println("historical averages for "+count+" unmetered ramps");
+        System.out.println("historical averages for "+unmetered+" unmetered and "+metered+" metered ramps");
+    }
+    
+    // free flow speed of each detector station from historical data (tools/calibration/free_flow_speed.py); columns: road
+    // (detector label, e.g. "T.H.610 WB"), station, loops, lat, lon, free_flow_speed (mph), samples
+    // If per_cell, replaces FREE_FLOW_SPEED in each cell with the speed interpolated between stations (see
+    // Corridor.setFreeFlowSpeeds()). Otherwise, the differences are treated as detector errors: each station's speed factor
+    // is its free flow speed divided by FREE_FLOW_SPEED (see Detector.getSpeedFactor()).
+    public void readFreeFlowSpeeds(File file, boolean per_cell) throws IOException {
+        Map<String, List<Coordinate>> locations = new HashMap<>();
+        Map<String, List<Double>> speeds = new HashMap<>();
+        Scanner filein = new Scanner(file);
+        filein.nextLine();
+        while(filein.hasNextLine()){
+            String[] columns = filein.nextLine().split(",", -1);
+            String label = corridor_labels.get(columns[0]);
+            if(columns.length < 6 || label == null){
+                continue;
+            }
+            locations.computeIfAbsent(label, l -> new ArrayList<>()).add(new Coordinate(Double.parseDouble(columns[3]), Double.parseDouble(columns[4])));
+            speeds.computeIfAbsent(label, l -> new ArrayList<>()).add(Double.parseDouble(columns[5]));
+        }
+        filein.close();
+        
+        for(String label : locations.keySet()){
+            Corridor corridor = corridors.get(label);
+            if(per_cell){
+                int count = corridor.setFreeFlowSpeeds(locations.get(label), speeds.get(label), 100);
+                System.out.println(label+": free flow speeds of "+count+" stations");
+                continue;
+            }
+            int count = 0;
+            for(int i = 0; i < locations.get(label).size(); i++){
+                Cell c = corridor.findCell(locations.get(label).get(i));
+                if(c != null && c.hasDetector() && c.getDetector().getType() == Detector.Type.Mainline){
+                    c.getDetector().setSpeedFactor(speeds.get(label).get(i) / FREE_FLOW_SPEED);
+                    count++;
+                }
+            }
+            System.out.println(label+": speed factors of "+count+" stations");
+        }
     }
     
     // reads the ramps file (see readOSM()); columns: direction, type (Merge or Exit), lat, lon, osm_way, location,
@@ -479,6 +541,11 @@ public class ReadData {
     // At 610 WB/West River Rd (station S2051), the two auxiliary lanes carry about 1,770 veh/hr at 55-60 mi/hr while the
     // mainline lanes are congested, and they end before T.H. 252; about 1,600 veh/hr leave between this station and the
     // next one, where there is no exit ramp detector (9/2/26 3-6 PM).
+    // largest believable count of one loop in 30 seconds (3600 veh/hr). Some loops occasionally report hundreds of vehicles
+    // per 30 seconds (up to 254); on 27 weekdays in September and October 2026, loops 8278, 8280 and 8281 (610 WB ramps
+    // at W Broadway Ave) did so in 6,000-18,000 intervals each, and no other loop in more than 4.
+    static public final int MAX_COUNT = 30;
+    
     static public final Set<String> AUXILIARY_EXITS = Set.of("8249", "8250");
 
     // triangular flow-density relationship, per lane; heavy vehicles are not converted to passenger cars
@@ -487,9 +554,17 @@ public class ReadData {
     // overestimate flows in congestion on MN-610: at 60-70 veh/mi/ln, the HCM triangle gives about 1900 veh/hr/ln, while
     // the measured median is 1320 veh/hr/ln. With the HCM values, the estimated density inside queues was much too high.
     // Least-squares line through the 30-second mainline measurements with density 45-150 veh/mi/ln (13,701 measurements) on
-    // 10 weekdays (Tuesday-Thursday, 9/1-9/24/26, 5 AM-8 PM, both directions), not including the validation days 9/2 and 9/17.
-    static public double JAM_DENSITY = 172;  // veh/mi per lane
-    static public double WAVE_SPEED = 11.9;  // mi/hr; congested (backward) wave speed
+    // 10 weekdays (Tuesday-Thursday, 9/1-9/24/26, 5 AM-8 PM, both directions), not including the validation days 9/2 and 9/17,
+    // gives w = 11.9 mi/hr and K = 172 veh/mi/ln. The scatter of low flows flattens that line, though: with it, queues in the
+    // estimate reached the withheld stations upstream too early (propagation speed 8.0 mi/hr against 3.6 measured, 9/17/26;
+    // see tools/validation/propagation.py), and stop-and-go waves on WB 610 moved upstream at 14-15 mi/hr. The wave speed is
+    // therefore 17 mi/hr, chosen by leave-one-out validation, with the line turned about the center of the measurements
+    // (65 veh/mi/ln, 1290 veh/hr/ln), which sets K = 65 + 1290 / w. Leave-one-out errors (speed mi/hr, density veh/mi/ln, flow
+    // veh/hr/ln), w = 11.9 -> 17: 9/2/26 3-6 PM 12.0/12.2/363 -> 12.0/11.4/343; 9/17/26 10.4/10.7/344 -> 10.3/10.7/331;
+    // queue propagation speed on 9/17 4.2 mi/hr against 3.3 measured on the same arrivals. w = 14-17 with the queue discharge
+    // rate kept at 1670 veh/hr/ln (K = 130-151) was similar; w = 20 and w < 11.9 were worse.
+    static public double JAM_DENSITY = 140.9;  // veh/mi per lane
+    static public double WAVE_SPEED = 17;  // mi/hr; congested (backward) wave speed
 
     // mi/hr; free flow speed for the whole road, measured from the detector data with the HCM field method: the average
     // 30-second mainline speed when flow is below 1000 veh/hr/ln. Speeds above 87 mph (upper quartile + 1.5 x interquartile

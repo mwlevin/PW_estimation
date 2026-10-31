@@ -11,12 +11,16 @@ CONGESTED = 45  # mi/hr
 # number of consecutive 30-second intervals averaged before comparing (environment variable AGG; 2 = 1 minute)
 AGG = int(os.environ.get('AGG', 1))
 VALUES = ('measured u', 'measured k', 'EKF u', 'EKF k', 'interpolated u', 'interpolated k')
+# flow (veh/hr/lane), in files written after flow was added to Validation; unlike speed and density, it does not depend on
+# the vehicle length that loop detectors assume
+FLOW_VALUES = ('measured q', 'EKF q', 'interpolated q')
 
 
 # stations left out of all comparisons: S2045 (EB W Broadway Ave) and S2051 (WB West River Rd) have auxiliary-lane loops
 # with fast, exiting traffic next to a queue in the mainline lanes, so their average over all loops does not represent the
-# mainline lanes the model estimates
-EXCLUDED = ('8208', '8249')
+# mainline lanes the model estimates. S2051's auxiliary-lane loops (8249, 8250) are modeled as an exit
+# (ReadData.AUXILIARY_EXITS), so its station is its mainline loops 8251 and 8252; 8209 covers S2045 if 8208 is too.
+EXCLUDED = ('8208', '8209', '8249', '8251')
 
 
 def load(folder):
@@ -26,7 +30,7 @@ def load(folder):
         for r in csv.DictReader(open(path)):
             if r['interpolated u'] == '' or any(d in r['detector'] for d in EXCLUDED):
                 continue
-            station.append({k: (v if k in ('direction', 'detector') else float(v)) for k, v in r.items()})
+            station.append({k: (v if k in ('direction', 'detector') else float(v) if v != '' else None) for k, v in r.items()})
         # average blocks of AGG intervals that start at multiples of AGG * 30 s and have all their intervals
         blocks = {}
         for r in station:
@@ -36,6 +40,8 @@ def load(folder):
                 avg = dict(block[0])
                 for k in VALUES:
                     avg[k] = sum(r[k] for r in block) / AGG
+                for k in FLOW_VALUES:
+                    avg[k] = sum(r[k] for r in block) / AGG if all(r.get(k) is not None for r in block) else None
                 rows.append(avg)
     return rows
 
@@ -60,6 +66,13 @@ def table(rows, label):
         false = sum(1 for r in rows if r['measured u'] >= CONGESTED and r[u] < CONGESTED)
         print(f"  {name} detects {100 * hit / max(len(cong), 1):.0f}% of congested measurements, "
               f"false alarms {100 * false / max(len(rows) - len(cong), 1):.1f}% of uncongested")
+    flow = [r for r in rows if all(r.get(k) is not None for k in FLOW_VALUES)]
+    if flow:
+        flow_cong = [r for r in flow if r['measured u'] < CONGESTED]
+        print(f"  Flow (veh/hr/ln):  EKF {rmse([r['EKF q'] - r['measured q'] for r in flow]):.0f}, "
+              f"interpolation {rmse([r['interpolated q'] - r['measured q'] for r in flow]):.0f} | congested: "
+              f"EKF {rmse([r['EKF q'] - r['measured q'] for r in flow_cong]):.0f}, "
+              f"interpolation {rmse([r['interpolated q'] - r['measured q'] for r in flow_cong]):.0f}")
 
 
 if __name__ == '__main__':

@@ -50,6 +50,12 @@ public class Link implements Comparable<Link> {
         
     }
     
+    // copy of a link with another free flow speed (mph), for a cell whose free flow speed is measured (see Cell.setFFSpeed())
+    public Link(Link other, double v){
+        this(other.name, other.length / 1609.3, v, other.maxspeed * 2.237, other.Q * 3600, other.Qd * 3600, other.w * 2.237, other.K * 1609.3, other.numLanes);
+        this.coords = other.coords;
+    }
+    
     // without a separate queue discharge rate (Qd = Q)
     public Link(String name, double length, double v, double maxspeed, double Q, double w, double K, int numLanes){
         this(name, length, v, maxspeed, Q, Q, w, K, numLanes);

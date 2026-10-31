@@ -33,8 +33,9 @@ public class Cell {
     // this refers to a detector on an entrance or exit that observes vehicles entering or exiting
     private Detector inflow_det, outflow_det;
     
-    // the per-lane flow-density relationship comes from this link (the link at the middle of the cell)
-    private Link link;
+    // the link at the middle of the cell, and the per-lane flow-density relationship: the link's, or a copy with the
+    // cell's own free flow speed (see setFFSpeed())
+    private Link link, fd;
     
     public Cell(double length, double lanes, Link link, Cell prev){
         this.prev = prev;
@@ -46,6 +47,7 @@ public class Cell {
         this.length = length;
         this.lanes = lanes;
         this.link = link;
+        this.fd = link;
         
         this.density = 0;
         this.speed = link.getFFSpeed();
@@ -86,41 +88,76 @@ public class Cell {
     public void set_unmetered_idx(int idx){
         unmetered_idx = idx;
     }
+
+    // average density, speed and flow of the cell since the start of the current 30-second detector interval (or their
+    // current values); state variables only for cells with a mainline detector, and only when Corridor.usesAverages(),
+    // otherwise -1
+    private int avg_k_idx = -1, avg_v_idx = -1, avg_q_idx = -1;
+    
+    public int avg_k_idx(){
+        return avg_k_idx;
+    }
+    
+    public int avg_v_idx(){
+        return avg_v_idx;
+    }
+    
+    public int avg_q_idx(){
+        return avg_q_idx;
+    }
+    
+    public void set_avg_idx(int k_idx, int v_idx, int q_idx){
+        avg_k_idx = k_idx;
+        avg_v_idx = v_idx;
+        avg_q_idx = q_idx;
+    }
     
     // estimated unmetered net inflow, veh/s
     public double getUnmetered(){
         return unmetered;
     }
 
-    // historical average of the unmetered net inflow (veh/s) by time of day, in bins of PRIOR_BIN seconds starting at
-    // midnight; NaN where unknown. null if there is no historical average. See Corridor.addUnmeteredPrior().
+    // historical average flows (veh/s) by time of day, in bins of PRIOR_BIN seconds starting at midnight; NaN where unknown,
+    // null if there is no historical average: priors[UNMETERED] is the unmetered net inflow (see
+    // Corridor.addUnmeteredPrior()), and priors[INFLOW] and priors[OUTFLOW] the flows of the metered entrance and exit
+    // ramps, used when their detectors have no data (see Corridor.addMeteredPrior())
     public static final int PRIOR_BIN = 900;
-    private double[] unmetered_prior;
+    public static final int UNMETERED = 0, INFLOW = 1, OUTFLOW = 2;
+    private double[][] priors = new double[3][];
 
-    public void addUnmeteredPrior(double[] profile){
-        if(unmetered_prior == null){
-            unmetered_prior = profile.clone();
+    public void addPrior(int which, double[] profile){
+        if(priors[which] == null){
+            priors[which] = profile.clone();
         }
         else{
-            // two unmetered ramps in the same cell: their flows add
+            // two ramps in the same cell: their flows add
             for(int b = 0; b < profile.length; b++){
-                unmetered_prior[b] += profile[b];
+                priors[which][b] += profile[b];
             }
         }
+    }
+    
+    public void addUnmeteredPrior(double[] profile){
+        addPrior(UNMETERED, profile);
     }
 
     // historical average at a time of day (seconds after midnight), linearly interpolated between the middles of the
     // bins; NaN if there is no historical average for that time
-    public double getUnmeteredPrior(double time_of_day){
-        if(unmetered_prior == null){
+    public double getPrior(int which, double time_of_day){
+        double[] prior = priors[which];
+        if(prior == null){
             return Double.NaN;
         }
         double pos = time_of_day / PRIOR_BIN - 0.5;
         int b = (int)Math.floor(pos);
         double frac = pos - b;
-        b = Math.max(0, Math.min(b, unmetered_prior.length - 1));
-        int b2 = Math.min(b + 1, unmetered_prior.length - 1);
-        return unmetered_prior[b] * (1 - frac) + unmetered_prior[b2] * frac;
+        b = Math.max(0, Math.min(b, prior.length - 1));
+        int b2 = Math.min(b + 1, prior.length - 1);
+        return prior[b] * (1 - frac) + prior[b2] * frac;
+    }
+    
+    public double getUnmeteredPrior(double time_of_day){
+        return getPrior(UNMETERED, time_of_day);
     }
     
     public int getNumVariables(){
@@ -198,51 +235,58 @@ public class Cell {
     
     // jam density across all lanes, veh/m
     public double getK(){
-        return link.getK_perLane() * lanes;
+        return fd.getK_perLane() * lanes;
     }
     
     public double getK_perLane(){
-        return link.getK_perLane();
+        return fd.getK_perLane();
     }
     
     public double getQ_perLane(){
-        return link.getQ_perLane();
+        return fd.getQ_perLane();
     }
     
     public double getMaxSpeed(){
-        return link.getMaxSpeed();
+        return fd.getMaxSpeed();
     }
     
     public double getFFSpeed(){
-        return link.getFFSpeed();
+        return fd.getFFSpeed();
+    }
+    
+    // gives the cell its own free flow speed (mph), e.g. measured at nearby detector stations; the other per-lane values of
+    // the flow-density relationship and the maximum speed stay those of its link
+    public void setFFSpeed(double v){
+        fd = new Link(link, Math.min(v, link.getMaxSpeed() * 2.237));
+        speed = fd.getFFSpeed();
     }
     
     // equilibrium speed for density k across all lanes (detector counts are summed across lanes)
     public double getEquilibriumSpeed(double k){
-        return link.getEquilibriumSpeed(k / lanes);
+        return fd.getEquilibriumSpeed(k / lanes);
     }
     
     // largest flow that can leave the cell at density k (veh/m, all lanes), veh/s: the capacity in free flow, and the
     // queue discharge rate in congestion (see Link.getDemandCapPerLane())
     public double getDemandCap(double k){
-        return link.getDemandCapPerLane(k / lanes) * lanes;
+        return fd.getDemandCapPerLane(k / lanes) * lanes;
     }
     
     // supply across all lanes (veh/s): the largest flow that can enter the cell at density k (veh/m, all lanes)
     // it is the capacity until the critical density, then the congested flow, which decreases to 0 at jam density
     public double getSupply(double k){
-        return link.getSupplyPerLane(k / lanes) * lanes;
+        return fd.getSupplyPerLane(k / lanes) * lanes;
     }
     
     // derivative of getSupply() with respect to k; by the chain rule, the lanes cancel
     public double getDerivSupply(double k){
-        return link.getDerivSupplyPerLane(k / lanes);
+        return fd.getDerivSupplyPerLane(k / lanes);
     }
     
     // derivative of getEquilibriumSpeed() with respect to the density across all lanes
     // the chain rule gives the derivative per lane divided by the number of lanes
     public double getDerivEqSpeed(double k){
-        return link.getDerivEqSpeed(k / lanes) / lanes;
+        return fd.getDerivEqSpeed(k / lanes) / lanes;
     }
     public Cell getNext(){
         return next;
@@ -372,12 +416,12 @@ public class Cell {
         double best_sse = Double.MAX_VALUE;
         int best = -1;
         
-        TrafficRegime[] array = link.array();
+        TrafficRegime[] array = fd.array();
         
         
         for(int i = 1; i <= array.length - 1; i++){
             // regimes are defined with per-lane flow; flow and speed are scaled by capacity and free flow speed so that they are comparable
-            double sse = array[i].getSSE(getFlow() / lanes, getSpeed(), link.getQ_perLane(), link.getFFSpeed());
+            double sse = array[i].getSSE(getFlow() / lanes, getSpeed(), fd.getQ_perLane(), fd.getFFSpeed());
             if(sse < best_sse){
             best_sse = sse;
             best = i;
