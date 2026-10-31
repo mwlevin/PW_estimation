@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
+import umn.pw_estimation.PW.Cell;
 import umn.pw_estimation.PW.Coordinate;
 import umn.pw_estimation.PW.Corridor;
 import umn.pw_estimation.PW.Link;
@@ -25,6 +28,21 @@ import umn.pw_estimation.PW.Link;
 public class ReadData {
     
     private Map<String, HistoricalDetector> saved_detectors;
+    
+    // corridors made by the last readOSM()
+    private Map<String, Corridor> corridors = new HashMap<>();
+    
+    // time of day (seconds after midnight) at the start of the detector data read by readDetectorData()
+    private long start_of_day;
+    
+    public long getStartOfDay(){
+        return start_of_day;
+    }
+    
+    // the detector (loop) with this name, or null if it is not in the detector inventory
+    public Detector getDetector(String name){
+        return saved_detectors.get(name);
+    }
     
     public ReadData(){
         
@@ -77,9 +95,19 @@ public class ReadData {
         }
         
         filein.nextLine();
+        boolean first = true;
         while(filein.hasNextLine()){
             line1 = filein.nextLine();
             split1 = line1.split(",");
+            
+            // the time column of the first row is the end of the first 30 seconds, e.g. 3:00:30 PM for data starting at 3 PM
+            if(first){
+                start_of_day = parseClock(split1[1].trim()) - 30;
+                for(Corridor c : corridors.values()){
+                    c.setClockStart(start_of_day);
+                }
+                first = false;
+            }
             
             for(String id : columns.keySet()){
                 int count = (int)Double.parseDouble(split1[columns.get(id)[1]].trim());
@@ -97,6 +125,15 @@ public class ReadData {
     }
     
     public Map<String, Corridor> readOSM(String corridor_name, File osm_file, double dt, String[] labels, File detectors_file, String[] detector_labels) throws IOException {
+        return readOSM(corridor_name, osm_file, dt, labels, detectors_file, detector_labels, null);
+    }
+    
+    // ramps_file (optional) lists the entrance and exit ramps from OpenStreetMap, with the ramp detector loops assigned to each
+    // (made by tools/ramps/make_ramps.py). With it, each ramp's flow enters or leaves the corridor at the ramp's merge or
+    // diverge point, and a ramp without detectors is an unmetered ramp, whose flow the Kalman filter estimates. Without it,
+    // ramp detectors are grouped by location name and placed at the nearest point of the corridor.
+    public Map<String, Corridor> readOSM(String corridor_name, File osm_file, double dt, String[] labels, File detectors_file, String[] detector_labels,
+            File ramps_file) throws IOException {
         
         saved_detectors = new HashMap<>();
 
@@ -159,6 +196,10 @@ public class ReadData {
                 
                 int lanes = tags.containsKey("lanes")? Integer.parseInt(tags.get("lanes")) : 3;
                 
+                if(LANE_CORRECTIONS.containsKey(id)){
+                    lanes = LANE_CORRECTIONS.get(id);
+                }
+                
                 int speed_limit = 65;
                 
                 if(tags.containsKey("maxspeed")){
@@ -198,13 +239,11 @@ public class ReadData {
                 
                 // one free flow speed for the whole road (see FREE_FLOW_SPEED below); speed_limit is not used
                 double v = FREE_FLOW_SPEED;
-                double Q = getCapacity(v);
-                
-                // the HCM does not give a congested wave speed; for a triangular flow-density relationship, the congested
-                // branch goes from capacity (at density Q/v) to jam density, so w = Q / (K - Q/v), about 15.4 mph
-                double w = Q / (JAM_DENSITY - Q / v);
+                double w = WAVE_SPEED;
+                double Q = CAPACITY;
+                double Qd = DISCHARGE_RATE;
 
-                Link link = new Link(""+id, coords, v, v + MAX_SPEED_MARGIN, Q, w, JAM_DENSITY, lanes);
+                Link link = new Link(""+id, coords, v, v + MAX_SPEED_MARGIN, Q, Qd, w, JAM_DENSITY, lanes);
                 
                 if(label != null){
                     links.get(label).add(link);
@@ -227,10 +266,24 @@ public class ReadData {
         
         filein.nextLine();
         
+        List<String> lines = new ArrayList<>();
+        while(filein.hasNextLine()){
+            lines.add(filein.nextLine());
+        }
+        filein.close();
+        
+        // locations with a merge detector; elsewhere, entrance ramps are counted by their passage and bypass detectors
+        Set<String> has_merge = new HashSet<>();
+        for(String line : lines){
+            String[] columns = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            if(columns.length > 11 && columns[11].equals("Merge")){
+                has_merge.add(columns[9]);
+            }
+        }
+        
         Map<String, List<Detector>> detectors = new HashMap<>();
         
-        while(filein.hasNext()){
-            String line = filein.nextLine();
+        for(String line : lines){
             
             String[] columns = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
@@ -244,12 +297,31 @@ public class ReadData {
             
             String typename = columns[11];
             
-            if(typename.equals("Auxiliary")){
+            String location = columns[9];
+            
+            if(AUXILIARY_EXITS.contains(name)){
+                typename = "Exit";
+            }
+            else if(typename.equals("Auxiliary")){
                 typename = "Mainline";
             }
-          
-            String location = columns[9];
+            
+            // most metered entrance ramps have no merge detector; passage detectors count the vehicles passing the ramp
+            // meter, and bypass detectors those in the (HOV) bypass lane, so together they count the ramp flow
+            // queue detectors are not used: they count vehicles arriving at the back of the meter queue, not entering the freeway
+            if((typename.equals("Passage") || typename.equals("Bypass")) && !has_merge.contains(location)){
+                typename = "Merge";
+            }
+
             String loc_name = location+"-"+typename;
+            
+            // mainline loops are grouped by MnDOT station ID, because some location names cover two stations about
+            // 0.5 mi apart (e.g. "T.H.610 WB/T.H.252" is stations S1790 and S2052), and the loops of a group must be at the same place
+            // ramp detectors are still grouped by location name, so all loops of an interchange ramp are added together
+            String station = columns[3].trim();
+            if(typename.equals("Mainline") && station.length() > 0){
+                loc_name = location+"-"+station+"-"+typename;
+            }
             
             
             int lane = Integer.parseInt(columns[10]);
@@ -259,7 +331,11 @@ public class ReadData {
             
             HistoricalDetector.Type type = HistoricalDetector.getType(typename);
             
-            if(type != null){
+            // some loops are listed twice in the inventory (e.g. 8271); a repeated loop would be counted twice in its station
+            if(type != null && saved_detectors.containsKey(name)){
+                System.out.println("Skipping repeated detector "+name);
+            }
+            else if(type != null){
                 HistoricalDetector loop = new HistoricalDetector(name, new Coordinate(lat, lon), type);
                 
                 // I am assuming that the string location in the CSV file is different for each location (mainline, on-ramp, off-ramp)
@@ -274,6 +350,11 @@ public class ReadData {
         }
         
         for(String name : detectors.keySet()){
+            // with a ramps file, ramp detectors are added below
+            if(ramps_file != null && !name.endsWith("-Mainline")){
+                continue;
+            }
+            
             DetectorGroup group = new DetectorGroup(name, detectors.get(name));
             
             for(int i = 0; i < detector_labels.length; i++){
@@ -294,28 +375,134 @@ public class ReadData {
         
         System.out.println("Found detectors: "+saved_detectors.keySet());
         
+        if(ramps_file != null){
+            readRamps(ramps_file, output);
+        }
         
+        
+        corridors = output;
         return output; 
     }
     
-    // triangular flow-density relationship with parameters from the HCM (6th edition) for basic freeway segments, per lane
-    // heavy vehicles are not converted to passenger cars
-    // the HCM's density at capacity (45 veh/mi) is not used: a triangle with this free flow speed and capacity reaches capacity at 34.6 veh/mi
-    static public final double JAM_DENSITY = 190;  // veh/mi; jam density used in HCM oversaturated analysis
+    // seconds after midnight of a time such as 3:00:30 PM, or 15:00:30 without AM/PM
+    static long parseClock(String clock){
+        String[] parts = clock.split("[: ]");
+        long hour = Long.parseLong(parts[0]);
+        if(parts.length > 3){
+            hour = hour % 12 + (parts[3].equalsIgnoreCase("PM")? 12 : 0);
+        }
+        return hour * 3600 + Long.parseLong(parts[1]) * 60 + Long.parseLong(parts[2]);
+    }
+    
+    // reads the historical average flows of unmetered ramps made by UnmeteredPrior; columns: direction, type, lat, lon,
+    // osm_way, time (HH:MM, start of a bin of Cell.PRIOR_BIN seconds), flow (veh/hr, positive entering, empty if unknown)
+    // must be called after readOSM() with the ramps file
+    public void readUnmeteredPrior(File file) throws IOException {
+        Map<String, double[]> profiles = new HashMap<>();
+        Map<String, String[]> ramps = new HashMap<>();
+        Scanner filein = new Scanner(file);
+        filein.nextLine();
+        while(filein.hasNextLine()){
+            String[] columns = filein.nextLine().split(",", -1);
+            if(columns.length < 7){
+                continue;
+            }
+            String key = columns[0]+" "+columns[4];
+            if(!profiles.containsKey(key)){
+                double[] profile = new double[86400 / Cell.PRIOR_BIN];
+                Arrays.fill(profile, Double.NaN);
+                profiles.put(key, profile);
+                ramps.put(key, columns);
+            }
+            int bin = (int)(parseClock(columns[5]+":00") / Cell.PRIOR_BIN);
+            if(!columns[6].isEmpty()){
+                profiles.get(key)[bin] = Double.parseDouble(columns[6]) / 3600;
+            }
+        }
+        filein.close();
+        
+        int count = 0;
+        for(String key : profiles.keySet()){
+            String[] columns = ramps.get(key);
+            Corridor corridor = corridors.get(columns[0]);
+            if(corridor != null && corridor.addUnmeteredPrior(new Coordinate(Double.parseDouble(columns[2]), Double.parseDouble(columns[3])), profiles.get(key))){
+                count++;
+            }
+        }
+        System.out.println("historical averages for "+count+" unmetered ramps");
+    }
+    
+    // reads the ramps file (see readOSM()); columns: direction, type (Merge or Exit), lat, lon, osm_way, location,
+    // detector_distance_ft, loops (separated by spaces; empty for an unmetered ramp)
+    private void readRamps(File ramps_file, Map<String, Corridor> corridors) throws IOException {
+        Scanner filein = new Scanner(ramps_file);
+        filein.nextLine();
+        int metered = 0, unmetered = 0;
+        
+        while(filein.hasNextLine()){
+            String[] columns = filein.nextLine().split(",", -1);
+            if(columns.length < 8 || !corridors.containsKey(columns[0])){
+                continue;
+            }
+            Corridor corridor = corridors.get(columns[0]);
+            boolean entrance = columns[1].equals("Merge");
+            Coordinate point = new Coordinate(Double.parseDouble(columns[2]), Double.parseDouble(columns[3]));
+            
+            List<Detector> loops = new ArrayList<>();
+            for(String loop : columns[7].trim().split(" ")){
+                if(saved_detectors.containsKey(loop)){
+                    loops.add(saved_detectors.get(loop));
+                }
+            }
+            
+            Detector group = loops.isEmpty()? null : new DetectorGroup(columns[0]+" ramp "+columns[4], loops);
+            if(!corridor.addRamp(point, entrance, group)){
+                System.out.println("failed to add ramp "+columns[4]+" ("+columns[1]+") to "+corridor);
+            }
+            else if(group == null){
+                unmetered++;
+            }
+            else{
+                metered++;
+            }
+        }
+        filein.close();
+        System.out.println("added "+metered+" ramps with detectors and "+unmetered+" unmetered ramps");
+    }
+
+    // corrections to the number of lanes in OpenStreetMap, by way ID
+    // way 759272326 (610 WB from Maple Grove Pkwy to I-94) is tagged with 1 lane, but both detector stations on it have
+    // loops in lanes 1 and 2. With 1 lane, its capacity was too low and created a false queue upstream.
+    static public final Map<Integer, Integer> LANE_CORRECTIONS = Map.of(759272326, 2);
+    
+    // auxiliary-lane loops that count exiting traffic, used as exit ramp detectors
+    // At 610 WB/West River Rd (station S2051), the two auxiliary lanes carry about 1,770 veh/hr at 55-60 mi/hr while the
+    // mainline lanes are congested, and they end before T.H. 252; about 1,600 veh/hr leave between this station and the
+    // next one, where there is no exit ramp detector (9/2/26 3-6 PM).
+    static public final Set<String> AUXILIARY_EXITS = Set.of("8249", "8250");
+
+    // triangular flow-density relationship, per lane; heavy vehicles are not converted to passenger cars
+    // The free flow speed is measured with the Highway Capacity Manual (HCM) field method. The congested branch (wave speed and
+    // jam density) is fitted to the detector data, because the HCM values (capacity 2390 veh/hr/ln and jam density 190 veh/mi/ln)
+    // overestimate flows in congestion on MN-610: at 60-70 veh/mi/ln, the HCM triangle gives about 1900 veh/hr/ln, while
+    // the measured median is 1320 veh/hr/ln. With the HCM values, the estimated density inside queues was much too high.
+    // Least-squares line through the 30-second mainline measurements with density 45-150 veh/mi/ln (13,701 measurements) on
+    // 10 weekdays (Tuesday-Thursday, 9/1-9/24/26, 5 AM-8 PM, both directions), not including the validation days 9/2 and 9/17.
+    static public double JAM_DENSITY = 172;  // veh/mi per lane
+    static public double WAVE_SPEED = 11.9;  // mi/hr; congested (backward) wave speed
 
     // mi/hr; free flow speed for the whole road, measured from the detector data with the HCM field method: the average
     // 30-second mainline speed when flow is below 1000 veh/hr/ln. Speeds above 87 mph (upper quartile + 1.5 x interquartile
     // range, 2.3% of samples) were excluded as unusually fast drivers. Both directions, 4/8/26 9-10 AM.
-    // The HCM capacity equation below is valid for 55-75 mph.
     static public double FREE_FLOW_SPEED = 69;
     static public double MAX_SPEED_MARGIN = 10;  // mi/hr; estimated speeds may exceed the free flow speed by this much, since measured speeds do
 
-    // HCM capacity (veh/hr/ln) of a basic freeway segment for the given free flow speed (mph)
-    private static double getCapacity(double ffspeed){
-
-        //HCM
-        return Math.min(2400, 2200 + 10 * (ffspeed - 50));
-    }
+    // capacity (veh/hr/ln) before traffic breaks down; the flow per lane is FREE_FLOW_SPEED * k up to the critical density
+    // CAPACITY / FREE_FLOW_SPEED
+    static public double CAPACITY = 2200;
+    
+    // queue discharge rate (veh/hr/ln): the largest flow in congestion, which is min(DISCHARGE_RATE, WAVE_SPEED * (JAM_DENSITY - k))
+    static public double DISCHARGE_RATE = 2200;
 
 
 }

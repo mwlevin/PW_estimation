@@ -81,7 +81,13 @@ public class DetectorGroup extends Detector{
         if(good == 0){
             return -1;
         }
+        else if(getType() != Type.Mainline){
+            // the loops of a ramp group are different ramps or lanes with very different flows (e.g. a passage loop and a
+            // bypass loop), so a missing loop is not replaced by the average of the others
+            return output;
+        }
         else{
+            // the lanes of a mainline station carry similar flows, so a missing lane is replaced by the average of the others
             return output * (double) detectors.length/good;
         }
     }

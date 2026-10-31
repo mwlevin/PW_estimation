@@ -66,6 +66,19 @@ public class Gradient
     public final static Color[] GRADIENT_GREEN_YELLOW_ORANGE_RED = createMultiGradient(new Color[]{Color.red, Color.orange, Color.yellow, Color.green}, 500);
 
     /**
+     * Traffic colors from dark red (low) through yellow to green (high), for speed: slow traffic is red
+     * (ColorBrewer red-yellow-green scale)
+     */
+    public final static Color[] GRADIENT_TRAFFIC_SPEED = createMultiGradient(new Color[]{new Color(165, 0, 38), new Color(215, 48, 39),
+        new Color(244, 109, 67), new Color(253, 174, 97), new Color(254, 224, 139), new Color(166, 217, 106), new Color(26, 152, 80)}, 500);
+
+    /**
+     * The same traffic colors in reverse, green (low) to dark red (high), for density and flow: dense traffic is red
+     */
+    public final static Color[] GRADIENT_TRAFFIC_DENSITY = createMultiGradient(new Color[]{new Color(26, 152, 80), new Color(166, 217, 106),
+        new Color(254, 224, 139), new Color(253, 174, 97), new Color(244, 109, 67), new Color(215, 48, 39), new Color(165, 0, 38)}, 500);
+
+    /**
      *Produces a gradient through the rainbow: violet, blue, green, yellow, orange, red
      */
     public final static Color[] GRADIENT_RAINBOW = createMultiGradient(new Color[]{new Color(181, 32, 255), Color.blue, Color.green, Color.yellow, Color.orange, Color.red}, 500);

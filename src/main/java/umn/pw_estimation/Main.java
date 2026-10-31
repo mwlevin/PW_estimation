@@ -48,8 +48,10 @@ public class Main {
         double dt = 3;
         
         ReadData read = new ReadData();
-        Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"});
+        Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"}, new File("data/MN610/ramps.csv"));
         read.readDetectorData(new File("data/MN610/detector_data.csv"));
+        // historical average flows of the ramps without detectors, made by UnmeteredPrior
+        read.readUnmeteredPrior(new File("data/MN610/unmetered_prior.csv"));
         
         // init(0) builds the state vector and sets the starting values from the detector data at time 0
         // it must be called before estimate(), and calling it again restarts the estimate

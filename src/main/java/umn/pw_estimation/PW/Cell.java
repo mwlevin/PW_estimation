@@ -56,8 +56,79 @@ public class Cell {
         outflow_idx = -1;
     }
     
+    // unmetered ramp: an entrance or exit ramp without detectors in this cell. Its net flow (veh/s, positive entering and
+    // negative exiting) is a variable of the state vector, estimated by the Kalman filter from the difference between the
+    // model and the mainline detectors (see Corridor.addRamp()).
+    // unmetered_type is 1 for an entrance (flow >= 0), -1 for an exit (flow <= 0), 0 for both in the same cell, and
+    // UNMETERED_NONE if there is no unmetered ramp
+    public static final int UNMETERED_NONE = -2;
+    private int unmetered_type = UNMETERED_NONE;
+    private int unmetered_idx = -1;
+    protected double unmetered;
+    
+    public boolean hasUnmeteredRamp(){
+        return unmetered_type != UNMETERED_NONE;
+    }
+    
+    public int getUnmeteredType(){
+        return unmetered_type;
+    }
+    
+    // adds an unmetered entrance (type 1) or exit (type -1)
+    public void addUnmeteredRamp(int type){
+        unmetered_type = (unmetered_type == UNMETERED_NONE || unmetered_type == type)? type : 0;
+    }
+    
+    public int unmetered_idx(){
+        return unmetered_idx;
+    }
+    
+    public void set_unmetered_idx(int idx){
+        unmetered_idx = idx;
+    }
+    
+    // estimated unmetered net inflow, veh/s
+    public double getUnmetered(){
+        return unmetered;
+    }
+
+    // historical average of the unmetered net inflow (veh/s) by time of day, in bins of PRIOR_BIN seconds starting at
+    // midnight; NaN where unknown. null if there is no historical average. See Corridor.addUnmeteredPrior().
+    public static final int PRIOR_BIN = 900;
+    private double[] unmetered_prior;
+
+    public void addUnmeteredPrior(double[] profile){
+        if(unmetered_prior == null){
+            unmetered_prior = profile.clone();
+        }
+        else{
+            // two unmetered ramps in the same cell: their flows add
+            for(int b = 0; b < profile.length; b++){
+                unmetered_prior[b] += profile[b];
+            }
+        }
+    }
+
+    // historical average at a time of day (seconds after midnight), linearly interpolated between the middles of the
+    // bins; NaN if there is no historical average for that time
+    public double getUnmeteredPrior(double time_of_day){
+        if(unmetered_prior == null){
+            return Double.NaN;
+        }
+        double pos = time_of_day / PRIOR_BIN - 0.5;
+        int b = (int)Math.floor(pos);
+        double frac = pos - b;
+        b = Math.max(0, Math.min(b, unmetered_prior.length - 1));
+        int b2 = Math.min(b + 1, unmetered_prior.length - 1);
+        return unmetered_prior[b] * (1 - frac) + unmetered_prior[b2] * frac;
+    }
+    
     public int getNumVariables(){
         int count = 2;
+        
+        if(hasUnmeteredRamp()){
+            count++;
+        }
         
         if(inflow_det != null){
             count++;
@@ -149,6 +220,23 @@ public class Cell {
     // equilibrium speed for density k across all lanes (detector counts are summed across lanes)
     public double getEquilibriumSpeed(double k){
         return link.getEquilibriumSpeed(k / lanes);
+    }
+    
+    // largest flow that can leave the cell at density k (veh/m, all lanes), veh/s: the capacity in free flow, and the
+    // queue discharge rate in congestion (see Link.getDemandCapPerLane())
+    public double getDemandCap(double k){
+        return link.getDemandCapPerLane(k / lanes) * lanes;
+    }
+    
+    // supply across all lanes (veh/s): the largest flow that can enter the cell at density k (veh/m, all lanes)
+    // it is the capacity until the critical density, then the congested flow, which decreases to 0 at jam density
+    public double getSupply(double k){
+        return link.getSupplyPerLane(k / lanes) * lanes;
+    }
+    
+    // derivative of getSupply() with respect to k; by the chain rule, the lanes cancel
+    public double getDerivSupply(double k){
+        return link.getDerivSupplyPerLane(k / lanes);
     }
     
     // derivative of getEquilibriumSpeed() with respect to the density across all lanes
