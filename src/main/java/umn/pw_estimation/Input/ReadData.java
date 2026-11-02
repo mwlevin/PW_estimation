@@ -252,6 +252,9 @@ public class ReadData {
                 double Qd = DISCHARGE_RATE;
 
                 Link link = new Link(""+id, coords, v, v + MAX_SPEED_MARGIN, Q, Qd, w, JAM_DENSITY, lanes);
+                if(!Double.isNaN(WAVE_SPEED_2)){
+                    link.setSecondBranch(WAVE_SPEED_2, JAM_DENSITY_2);
+                }
                 
                 if(label != null){
                     links.get(label).add(link);
@@ -310,7 +313,8 @@ public class ReadData {
             if(AUXILIARY_EXITS.contains(name)){
                 typename = "Exit";
             }
-            else if(typename.equals("Auxiliary")){
+            // auxiliary lanes and HOT/HOV lanes (e.g. on I-35W and I-394) are among the lanes of the road in OpenStreetMap
+            else if(typename.equals("Auxiliary") || typename.equals("HOT") || typename.equals("HOV")){
                 typename = "Mainline";
             }
             
@@ -518,7 +522,9 @@ public class ReadData {
             }
             
             Detector group = loops.isEmpty()? null : new DetectorGroup(columns[0]+" ramp "+columns[4], loops);
-            if(!corridor.addRamp(point, entrance, group)){
+            // number of lanes (from OpenStreetMap; tools/corridors/build_corridor.py), 1 if not given
+            int lanes = columns.length > 8 && columns[8].trim().matches("\\d+")? Integer.parseInt(columns[8].trim()) : 1;
+            if(!corridor.addRamp(point, entrance, group, lanes)){
                 System.out.println("failed to add ramp "+columns[4]+" ("+columns[1]+") to "+corridor);
             }
             else if(group == null){
@@ -563,8 +569,18 @@ public class ReadData {
     // veh/hr/ln), w = 11.9 -> 17: 9/2/26 3-6 PM 12.0/12.2/363 -> 12.0/11.4/343; 9/17/26 10.4/10.7/344 -> 10.3/10.7/331;
     // queue propagation speed on 9/17 4.2 mi/hr against 3.3 measured on the same arrivals. w = 14-17 with the queue discharge
     // rate kept at 1670 veh/hr/ln (K = 130-151) was similar; w = 20 and w < 11.9 were worse.
-    static public double JAM_DENSITY = 140.9;  // veh/mi per lane
+    static public double JAM_DENSITY = 140.9;  // veh/mi per lane, where the first congested line reaches zero flow
     static public double WAVE_SPEED = 17;  // mi/hr; congested (backward) wave speed
+    // second congested line WAVE_SPEED_2 * (JAM_DENSITY_2 - k), to the jam density 190 veh/mi/ln that the Highway Capacity
+    // Manual uses for oversaturated freeway segments. The congested flow is the larger of the two lines (see
+    // Link.setSecondBranch()), so the line above applies to the densities that the detectors measure, up to 85.6 veh/mi/ln
+    // (941 veh/hr/ln), and this line from there to the jam density; 0.07% of the 30-second densities at MN-610 stations on
+    // 9/2 and 9/17/26 exceed 100 veh/mi/ln. Leave-one-out errors, both days (speed mi/hr, density veh/mi/ln, flow veh/hr/ln):
+    // one line to 140.9 11.19/11.04/337; second line w2 = 5, 7, 9, 10 mi/hr 11.19/11.07/337, 11.18/11.07/338,
+    // 11.18/10.97/338, 11.19/11.20/340. A single line to 190 was worse for every wave speed from 8 to 17 mi/hr (best: 10.7
+    // mi/hr, 11.17/11.78/357). Not used if NaN.
+    static public double WAVE_SPEED_2 = 9;  // mi/hr
+    static public double JAM_DENSITY_2 = 190;  // veh/mi per lane
 
     // mi/hr; free flow speed for the whole road, measured from the detector data with the HCM field method: the average
     // 30-second mainline speed when flow is below 1000 veh/hr/ln. Speeds above 87 mph (upper quartile + 1.5 x interquartile
@@ -577,6 +593,7 @@ public class ReadData {
     static public double CAPACITY = 2200;
     
     // queue discharge rate (veh/hr/ln): the largest flow in congestion, which is min(DISCHARGE_RATE, WAVE_SPEED * (JAM_DENSITY - k))
+    // at the critical density
     static public double DISCHARGE_RATE = 2200;
 
 

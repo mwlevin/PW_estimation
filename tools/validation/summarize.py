@@ -25,7 +25,7 @@ EXCLUDED = ('8208', '8209', '8249', '8251')
 
 def load(folder):
     rows = []
-    for path in sorted(glob.glob(os.path.join(folder, '[EW]B_*.csv'))):
+    for path in sorted(glob.glob(os.path.join(folder, '[NSEW]B_*.csv'))):
         station = []
         for r in csv.DictReader(open(path)):
             if r['interpolated u'] == '' or any(d in r['detector'] for d in EXCLUDED):
@@ -77,12 +77,6 @@ def table(rows, label):
 
 if __name__ == '__main__':
     rows = load(sys.argv[1])
-    ends = {}
-    for r in rows:
-        ends.setdefault(r['direction'], set()).add(int(r['station']))
-    first_last = {(d, min(s)) for d, s in ends.items()} | {(d, max(s)) for d, s in ends.items()}
-    interior = [r for r in rows if (r['direction'], int(r['station'])) not in first_last]
-    table(interior, 'Interior stations, both directions')
-    for d in ('EB', 'WB'):
-        table([r for r in interior if r['direction'] == d], f'Interior stations, {d}')
-    table([r for r in rows if (r['direction'], int(r['station'])) in first_last], 'First and last stations')
+    table(rows, 'Withheld stations, both directions')
+    for d in sorted({r['direction'] for r in rows}):
+        table([r for r in rows if r['direction'] == d], f'Withheld stations, {d}')

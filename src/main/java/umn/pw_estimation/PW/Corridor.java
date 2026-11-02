@@ -38,7 +38,8 @@ import umn.pw_estimation.Input.HistoricalDetector;
  * entry for each on-ramp (inflow) or off-ramp (outflow) detector:
  *     x = [k_0, v_0, (inflow_0), (outflow_0), k_1, v_1, ...]
  * c.k_idx(), c.v_idx(), c.inflow_idx() and c.outflow_idx() give the position of each cell's variables in x. Cells with an
- * unmetered ramp (see addRamp()) have one more variable, c.unmetered_idx().
+ * unmetered ramp (see addRamp()) have one more variable, c.unmetered_idx(). After the cells comes the flow into the first
+ * cell (see BOUNDARY_STATE).
  *
  * NAMING: x_t_t and P_t_t are the estimate and its covariance after using the measurements at time t.
  * x_t_tp and P_t_tp are the prediction for the next time step, before its measurements are used.
@@ -58,6 +59,12 @@ public class Corridor {
     // in testing, larger c_0 gave larger errors, and c_0 = 20 m/s created false jams on 610 EB
     public static double C_0 = 10;
     public static double chi = 0.1 / 1609.3; // avoid 0/0 in traffic pressure when two adjacent cells are empty, veh/m per lane (0.1 veh/mi per lane)
+    // below this density (veh/m per lane), a cell's speed is its equilibrium speed (the free-flow speed): in a nearly empty
+    // cell next to a denser one, the traffic pressure term slowed the speed by about 1.5 m/s per time step, more than the
+    // relaxation toward the equilibrium speed restored, until the speed reached 0. With both density and speed at 0, the
+    // flow out of the cell (k u) has zero derivatives, so the filter could no longer correct the cell, and it stayed empty
+    // (I-694 WB, 9/17/26 4-6 PM, with the first station withheld).
+    public static double k_free = 1 / 1609.3;
 
     // Kalman filter process noise: standard deviation of model error per time step
     // larger values trust the detectors more and the PW model less
@@ -211,6 +218,7 @@ public class Corridor {
                 c.set_unmetered_idx(var_idx++);
             }
         }
+        boundary_idx = (BOUNDARY_STATE? var_idx++ : -1);
 
         // averages over the detector interval (or current values), after all cell variables
         for(Cell c : cells){
@@ -225,6 +233,18 @@ public class Corridor {
         return var_idx;
     }
     
+    // Upstream boundary. The flow into the first cell is a variable of the state vector (veh/s), a random walk like an
+    // unmetered ramp, which the filter corrects through its covariance with the measured cells. Without it, the flow into
+    // the first cell was the first cell's own demand: when the first station had no data, its cell could reach zero density,
+    // where its demand, and so the flow into it, stayed zero for the rest of the run (I-694 WB, 9/17/26 4-6 PM, with that
+    // station withheld), or fill to jam density.
+    public static boolean BOUNDARY_STATE = true;
+    public static double sigma_boundary = 50 / 3600.0; // veh/s per lane per time step (50 veh/hr/lane); random walk
+    public static double init_sigma_boundary = 500 / 3600.0; // veh/s per lane (500 veh/hr/lane)
+    public static double max_sigma_boundary = 500 / 3600.0; // veh/s per lane; largest standard deviation, see boundCovariance()
+    private int boundary_idx = -1;
+    private double boundary_inflow; // veh/s
+
     // Unmetered ramps. Comparing the flows at consecutive mainline stations with the ramp detectors between them shows that
     // several interchanges have ramps without detectors (e.g. the T.H. 252 ramps). Each such ramp is a variable of the state
     // vector: its flow is not measured, so the Kalman filter estimates it from the difference between the model and the
@@ -233,7 +253,8 @@ public class Corridor {
     // relaxes toward that average with time constant unmetered_reversion, unless the detectors show otherwise.
     public static double sigma_unmetered = 0.005; // veh/s per time step (18 veh/hr); random walk process noise
     public static double init_sigma_unmetered = 0.3; // veh/s (1080 veh/hr); uncertainty of the initial value of 0
-    public static double max_unmetered = 2400 / 3600.0; // veh/s (2400 veh/hr); largest flow of any ramp, metered or not
+    public static double max_unmetered = 2400 / 3600.0; // veh/s (2400 veh/hr); largest flow of a one-lane ramp, metered or not
+    public static double ramp_lane_capacity = 2000 / 3600.0; // veh/s per lane, for ramps with more lanes (see addRamp())
     public static double max_sigma_unmetered = 500 / 3600.0; // veh/s (500 veh/hr); largest standard deviation, see boundCovariance()
     // with a larger limit (1800 veh/hr), unmetered ramps in a long stretch without working detectors grew to absorb errors
     // caused by queues from downstream (e.g. 610 WB from University Ave to East River Rd with T.H. 47 withheld)
@@ -287,21 +308,31 @@ public class Corridor {
     // adds an entrance or exit ramp whose merge or diverge point is at a latitude/longitude (on this corridor), with the
     // detector that counts its flow, or null for an unmetered ramp; returns false if the point is not on this corridor
     public boolean addRamp(Coordinate point, boolean entrance, Detector det){
+        return addRamp(point, entrance, det, 1);
+    }
+
+    // lanes: the ramp's number of lanes, which sets the largest flow it can carry (ramp_lane_capacity per lane, but at
+    // least max_unmetered). Ramps between freeways can have 2-3 lanes and carry several thousand veh/hr.
+    public boolean addRamp(Coordinate point, boolean entrance, Detector det, int lanes){
         Cell cell = findRampCell(point);
         if(cell == null){
             return false;
         }
+        double capacity = Math.max(max_unmetered, lanes * ramp_lane_capacity);
         
         if(det == null){
             if(UNMETERED_RAMPS){
                 cell.addUnmeteredRamp(entrance? 1 : -1);
+                cell.addRampCapacity(Cell.UNMETERED, capacity);
             }
         }
         else if(entrance){
             cell.addInflowDet(cell.hasInflowDet()? new DetectorGroup(new Detector[]{cell.getInflowDet(), det}) : det);
+            cell.addRampCapacity(Cell.INFLOW, capacity);
         }
         else{
             cell.addOutflowDet(cell.hasOutflowDet()? new DetectorGroup(new Detector[]{cell.getOutflowDet(), det}) : det);
+            cell.addRampCapacity(Cell.OUTFLOW, capacity);
         }
         return true;
     }
@@ -342,6 +373,9 @@ public class Corridor {
             
             if(c.hasUnmeteredRamp()){
                 indices[c.unmetered_idx()] = c.cell_idx+" unmetered";
+            }
+            if(c == cells[0] && boundary_idx >= 0){
+                indices[boundary_idx] = "flow into cell 0";
             }
 
             if(c.avg_k_idx() >= 0){
@@ -430,6 +464,12 @@ public class Corridor {
             }
         }
         
+        // the flow into the first cell starts at the first cell's flow
+        if(boundary_idx >= 0){
+            boundary_inflow = Math.min(cells[0].density * cells[0].speed, boundaryCapacity());
+            x_t_t.setEntry(boundary_idx, boundary_inflow);
+        }
+
         F_t = new Array2DRowRealMatrix(size, size);
         P_t_t = new Array2DRowRealMatrix(size, size);
         R_t = new Array2DRowRealMatrix(size, size);
@@ -464,6 +504,10 @@ public class Corridor {
             if(c.hasUnmeteredRamp()){
                 P_t_t.setEntry(c.unmetered_idx(), c.unmetered_idx(), init_sigma_unmetered * init_sigma_unmetered);
             }
+        }
+        if(boundary_idx >= 0){
+            double sigma = init_sigma_boundary * cells[0].getNumLanes();
+            P_t_t.setEntry(boundary_idx, boundary_idx, sigma * sigma);
         }
 
         Q = new Array2DRowRealMatrix(size, size);
@@ -763,6 +807,12 @@ public class Corridor {
             flux[i] = calcFlux(sender, receiver);
         }
 
+        // the flow into the first cell is a random walk
+        if(boundary_idx >= 0){
+            x_t_tp.setEntry(boundary_idx, boundary_inflow);
+            F_t.setEntry(boundary_idx, boundary_idx, 1);
+        }
+
         int cell_idx = 0;
 
         for(Cell c : cells){
@@ -894,9 +944,15 @@ public class Corridor {
             */
             
             
+            // a nearly empty cell moves at its equilibrium speed, which does not depend on the state at low density
+            boolean v_free = k_i_tn < k_free * lanes_i;
+            if(v_free){
+                v_i_tn = c.getEquilibriumSpeed(k_i_tn);
+            }
+
             // this prevents excessive values
             // if a value is limited, its derivatives are 0 (see the end of this loop)
-            boolean v_limited = v_i_tn < 0 || v_i_tn > c.getMaxSpeed();
+            boolean v_limited = v_free || v_i_tn < 0 || v_i_tn > c.getMaxSpeed();
             boolean k_limited = k_i_tn < 0 || k_i_tn > c.getK();
             v_i_tn = Math.max(0, Math.min(v_i_tn, c.getMaxSpeed()));  // Math.min(v_i_tn, c.getMaxSpeed());
             k_i_tn = Math.max(0, Math.min(k_i_tn, c.getK()));  // Math.min(k_i_tn, c.getK());
@@ -1068,8 +1124,8 @@ public class Corridor {
         double value;
         Cell sender, receiver;
         double d_k_sender, d_v_sender, d_k_receiver;
-        // derivatives with respect to the receiver's entrance ramp flows (see calcFlux())
-        double d_inflow_receiver, d_unmetered_receiver;
+        // derivatives with respect to the receiver's entrance ramp flows (see calcFlux()), and to the flow into the first cell
+        double d_inflow_receiver, d_unmetered_receiver, d_boundary;
 
         // adds coeff * (derivatives of this flow) to row of F_t
         void addDerivatives(int row, double coeff){
@@ -1088,6 +1144,9 @@ public class Corridor {
             if(d_unmetered_receiver != 0){
                 F_t.addToEntry(row, receiver.unmetered_idx(), coeff * d_unmetered_receiver);
             }
+            if(d_boundary != 0){
+                F_t.addToEntry(row, boundary_idx, coeff * d_boundary);
+            }
         }
     }
     
@@ -1095,13 +1154,16 @@ public class Corridor {
     public static boolean MERGE_SUPPLY = true;
 
     // receiver is null for the flow out of the last cell, which is limited only by the demand of the last cell
+    // for the flow into the first cell, sender and receiver are both the first cell, and the demand is the boundary state
+    // (if BOUNDARY_STATE) or the first cell's own demand
     private Flux calcFlux(Cell sender, Cell receiver){
         Flux f = new Flux();
         f.sender = sender;
         f.receiver = receiver;
+        boolean boundary = boundary_idx >= 0 && receiver == cells[0];
 
-        double pw_flow = sender.density * sender.speed;
-        double capacity = sender.getDemandCap(sender.density);
+        double pw_flow = (boundary? boundary_inflow : sender.density * sender.speed);
+        double capacity = (boundary? Double.MAX_VALUE : sender.getDemandCap(sender.density));
         double supply = (receiver != null? receiver.getSupply(receiver.density) : Double.MAX_VALUE);
         
         // entrance ramp flows into the receiver use part of its supply, so the mainline gets the rest (a merge); without
@@ -1123,8 +1185,13 @@ public class Corridor {
 
         if(pw_flow <= capacity && pw_flow <= supply){
             f.value = pw_flow;
-            f.d_k_sender = sender.speed;
-            f.d_v_sender = sender.density;
+            if(boundary){
+                f.d_boundary = 1;
+            }
+            else{
+                f.d_k_sender = sender.speed;
+                f.d_v_sender = sender.density;
+            }
         }
         else if(capacity <= supply){
             f.value = capacity;
@@ -1272,6 +1339,14 @@ public class Corridor {
                 }
             }
         }
+        if(boundary_idx >= 0){
+            double max = max_sigma_boundary * cells[0].getNumLanes();
+            double var = P.getEntry(boundary_idx, boundary_idx);
+            if(var > max * max){
+                scale[boundary_idx] = max / Math.sqrt(var);
+                any = true;
+            }
+        }
 
         if(!any){
             return;
@@ -1387,6 +1462,10 @@ public class Corridor {
 
     // multiplies the measurement error variances
     public static double measurement_noise_scale = 1;
+    // FLOW_DENSITY only: multiply the variances of the flow and density measurements separately (on top of
+    // measurement_noise_scale)
+    public static double flow_noise_scale = 1;
+    public static double density_noise_scale = 1;
 
     public static final int DETECTOR_INTERVAL = 30; // seconds
 
@@ -1487,6 +1566,13 @@ public class Corridor {
             }
         }
         
+        // the flow into the first cell, from the most upstream station with data (see boundaryMeasurement())
+        double[] boundary = (use_mainline && boundary_idx >= 0? boundaryMeasurement() : null);
+        if(boundary != null){
+            observed.add(boundary_idx);
+            residuals.add(boundary[0] - x_t_tp.getEntry(boundary_idx));
+        }
+
         if(observed.isEmpty()){
             // nothing measured in this interval, so the prediction is the estimate
             x_t_t = x_t_tp.copy();
@@ -1495,6 +1581,9 @@ public class Corridor {
         }
         
         calcR();
+        if(boundary != null){
+            R_t.setEntry(boundary_idx, boundary_idx, boundary[1]);
+        }
         
         int num_obs = observed.size();
         int size = x_t_tp.getDimension();
@@ -1514,23 +1603,50 @@ public class Corridor {
         
         // multiplying by H or H^T selects rows or columns, which is much faster than multiplying by H
         int[] obs = new int[num_obs];
-        int[] all = new int[size];
         for(int j = 0; j < num_obs; j++){
             obs[j] = observed.get(j);
         }
-        for(int j = 0; j < size; j++){
-            all[j] = j;
+        double[][] p = ((Array2DRowRealMatrix)P_t_tp).getDataRef();
+        double[][] PHt = new double[size][num_obs]; // P_t_tp H^T; its transpose is H P_t_tp, since P_t_tp is symmetric
+        for(int i = 0; i < size; i++){
+            for(int j = 0; j < num_obs; j++){
+                PHt[i][j] = p[i][obs[j]];
+            }
         }
-        RealMatrix PHt = P_t_tp.getSubMatrix(all, obs); // P_t_tp H^T
 
         RealMatrix S_t = P_t_tp.getSubMatrix(obs, obs).add(R_obs); // H P_t_tp H^T + R
 
         // Kalman gain: how much to move each variable toward the measurements
         // it is large when the prediction is uncertain (P_t_tp large) relative to the measurement error (R_obs)
         // cells without a detector are also corrected, through the covariance between them and the measured cells
-        RealMatrix K_t = PHt.multiply(MatrixUtils.inverse(S_t));
+        // multiplied as arrays: the inverse is a BlockRealMatrix, which commons-math multiplies one entry at a time
+        double[][] S_inv = MatrixUtils.inverse(S_t).getData();
+        double[][] K = new double[size][num_obs];
+        for(int i = 0; i < size; i++){
+            double[] h_i = PHt[i];
+            double[] k_i = K[i];
+            for(int l = 0; l < num_obs; l++){
+                double h = h_i[l];
+                if(h != 0){
+                    double[] s_l = S_inv[l];
+                    for(int j = 0; j < num_obs; j++){
+                        k_i[j] += h * s_l[j];
+                    }
+                }
+            }
+        }
+        RealMatrix K_t = new Array2DRowRealMatrix(K, false);
         
-        RealVector adjustment = K_t.operate(y_t);
+        double[] y = y_t.toArray();
+        double[] a = new double[size];
+        for(int i = 0; i < size; i++){
+            double sum = 0;
+            for(int j = 0; j < num_obs; j++){
+                sum += K[i][j] * y[j];
+            }
+            a[i] = sum;
+        }
+        RealVector adjustment = new ArrayRealVector(a, false);
         
         x_t_t = x_t_tp.add(adjustment);
         
@@ -1543,14 +1659,34 @@ public class Corridor {
             }
         }
         
-        // Joseph form of update
-        // mathematically equal to (I - KH) P_t_tp, but this form stays symmetric and positive definite despite rounding error
-        // computed as X = (I - KH) P_t_tp = P_t_tp - K (H P_t_tp), then X (I - KH)^T = X - (X H^T) K^T
-        RealMatrix X = P_t_tp.subtract(K_t.multiply(P_t_tp.getSubMatrix(obs, all)));
-        P_t_t = X.subtract(X.getSubMatrix(all, obs).multiply(K_t.transpose())).add(K_t.multiply(R_obs).multiply(K_t.transpose()));
-        
-        // average with the transpose to remove any small asymmetry from rounding
-        P_t_t = P_t_t.add(P_t_t.transpose()).scalarMultiply(0.5);
+        // P_t_t = P_t_tp - K S K^T = P_t_tp - K (H P_t_tp), which equals the Joseph form (I - KH) P (I - KH)^T + K R K^T
+        // for the optimal gain K = P H^T S^-1 at a third of its cost. Only the upper triangle is computed and then copied
+        // to the lower one, so P_t_t is exactly symmetric; on long corridors, this update takes most of the run time.
+        double[][] out = new double[size][size];
+        for(int i = 0; i < size; i++){
+            double[] k_i = K[i];
+            for(int j = i; j < size; j++){
+                double[] h_j = PHt[j];
+                // four partial sums, which the processor can add at the same time
+                double s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+                int l = 0;
+                for(; l + 3 < num_obs; l += 4){
+                    s0 += k_i[l] * h_j[l];
+                    s1 += k_i[l + 1] * h_j[l + 1];
+                    s2 += k_i[l + 2] * h_j[l + 2];
+                    s3 += k_i[l + 3] * h_j[l + 3];
+                }
+                for(; l < num_obs; l++){
+                    s0 += k_i[l] * h_j[l];
+                }
+                out[i][j] = p[i][j] - (s0 + s1 + s2 + s3);
+            }
+            // the lower triangle, copied from the upper one
+            for(int j = 0; j < i; j++){
+                out[i][j] = out[j][i];
+            }
+        }
+        P_t_t = new Array2DRowRealMatrix(out, false);
     }
     
     // prints the Kalman gain, covariance, and Jacobian entries involved in a negative density estimate
@@ -1595,21 +1731,25 @@ public class Corridor {
     
     // copies the estimate from the state vector into the cells, limited to physically possible values
     private void saveValuesInCells(){
+        if(boundary_idx >= 0){
+            boundary_inflow = Math.min(Math.max(x_t_t.getEntry(boundary_idx), 0), boundaryCapacity());
+        }
         for(Cell c : cells){
             c.density = Math.min(Math.max(x_t_t.getEntry(c.k_idx()), 0), c.getK());
             c.speed = Math.min(Math.max(x_t_t.getEntry(c.v_idx()), 0), c.getMaxSpeed());
             
             // ramp flows cannot be negative or more than a ramp can carry
             if(c.hasInflowDet()){
-                c.inflow = Math.min(Math.max(x_t_t.getEntry(c.inflow_idx()), 0), max_unmetered);
+                c.inflow = Math.min(Math.max(x_t_t.getEntry(c.inflow_idx()), 0), c.getRampCapacity(Cell.INFLOW));
             }
             if(c.hasOutflowDet()){
-                c.outflow = Math.min(Math.max(x_t_t.getEntry(c.outflow_idx()), 0), max_unmetered);
+                c.outflow = Math.min(Math.max(x_t_t.getEntry(c.outflow_idx()), 0), c.getRampCapacity(Cell.OUTFLOW));
             }
             // an unmetered entrance cannot have a negative flow, and an exit cannot have a positive one
             if(c.hasUnmeteredRamp()){
-                double lo = c.getUnmeteredType() == 1? 0 : -max_unmetered;
-                double hi = c.getUnmeteredType() == -1? 0 : max_unmetered;
+                double max = c.getRampCapacity(Cell.UNMETERED);
+                double lo = c.getUnmeteredType() == 1? 0 : -max;
+                double hi = c.getUnmeteredType() == -1? 0 : max;
                 c.unmetered = Math.max(lo, Math.min(hi, x_t_t.getEntry(c.unmetered_idx())));
             }
             /*System.out.println("\t   actual output density="+x_t_t.getEntry(c.k_idx()));
@@ -1619,6 +1759,48 @@ public class Corridor {
         }
     }
     
+    // measurement of the flow into the first cell (veh/s) and its variance, or null if no station has data: the flow at the
+    // most upstream station with data, plus the exits and minus the entrances between the start of the corridor and that
+    // station (their counts, or the filter's estimates of ramps without data). This is usually the first station. Without
+    // a measurement, the flow into the first cell was corrected only through the cells between it and the stations; when
+    // a measured exit took more vehicles than a cell had, the cell was limited to 0 density, whose derivatives are 0, so the
+    // stations no longer affected the flow into the corridor, which fell to 0 and stayed there (I-694 WB, 9/17/26 4-6 PM,
+    // with the first station withheld). The variance is the random variation of the 30-second count (a Poisson count of N
+    // vehicles has variance N) and of the ramps' counts, plus boundary_sigma per lane for the time vehicles take to reach
+    // the station.
+    public static double boundary_sigma = 100 / 3600.0; // veh/s per lane (100 veh/hr/lane)
+
+    private double[] boundaryMeasurement(){
+        double ramps = 0;
+        double var = 0;
+        for(Cell c : cells){
+            if(c.hasDetector() && c.getDetector().getLast30sSpeed(time) >= 0 && getObservedFlow(c, time) >= 0){
+                double q = getObservedFlow(c, time);
+                double sigma = boundary_sigma * cells[0].getNumLanes();
+                var += q / DETECTOR_INTERVAL + sigma * sigma;
+                return new double[]{Math.max(q + ramps, 0), var};
+            }
+            if(c.hasInflowDet()){
+                ramps -= x_t_tp.getEntry(c.inflow_idx());
+                var += Math.max(x_t_tp.getEntry(c.inflow_idx()), 0) / DETECTOR_INTERVAL;
+            }
+            if(c.hasOutflowDet()){
+                ramps += x_t_tp.getEntry(c.outflow_idx());
+                var += Math.max(x_t_tp.getEntry(c.outflow_idx()), 0) / DETECTOR_INTERVAL;
+            }
+            if(c.hasUnmeteredRamp()){
+                ramps -= x_t_tp.getEntry(c.unmetered_idx());
+                var += P_t_tp.getEntry(c.unmetered_idx(), c.unmetered_idx());
+            }
+        }
+        return null;
+    }
+
+    // largest flow into the first cell (veh/s): the capacity of the first cell
+    private double boundaryCapacity(){
+        return cells[0].getQ_perLane() * cells[0].getNumLanes();
+    }
+
     public void printCells(){
         System.out.println("t="+String.format("%.2f", time*1.0)+" --");
         for(Cell c : cells){
@@ -1699,14 +1881,16 @@ public class Corridor {
                 if(MEASURED == MeasuredValues.FLOW_DENSITY){
                     // the count n has variance n (Poisson), so the flow has relative variance 1/n, plus the miscount error;
                     // the density has the relative error of the vehicle length (see MeasuredValues)
-                    R_t.setEntry(c.avg_q_idx(), c.avg_q_idx(), scale * q * q * (1 / n + rel_miscount));
+                    R_t.setEntry(c.avg_q_idx(), c.avg_q_idx(), scale * flow_noise_scale * q * q * (1 / n + rel_miscount));
                     // the density is the flow divided by the speed, so it shares the count's error: k = (q / v) * L / L_assumed
                     // has relative variance 1/n + rel_k, and its covariance with the flow is q * k / n. The speed, q / k, then
                     // has only the vehicle length and miscount errors.
                     double count_k = (SHARED_COUNT_ERROR? 1 / n : 0);
-                    R_t.setEntry(c.avg_k_idx(), c.avg_k_idx(), scale * k * k * (count_k + rel_k));
-                    R_t.setEntry(c.avg_q_idx(), c.avg_k_idx(), scale * q * k * count_k);
-                    R_t.setEntry(c.avg_k_idx(), c.avg_q_idx(), scale * q * k * count_k);
+                    // the covariance is scaled by the geometric mean of the scales, which keeps the correlation
+                    double cov_scale = Math.sqrt(flow_noise_scale * density_noise_scale);
+                    R_t.setEntry(c.avg_k_idx(), c.avg_k_idx(), scale * density_noise_scale * k * k * (count_k + rel_k));
+                    R_t.setEntry(c.avg_q_idx(), c.avg_k_idx(), scale * cov_scale * q * k * count_k);
+                    R_t.setEntry(c.avg_k_idx(), c.avg_q_idx(), scale * cov_scale * q * k * count_k);
                     // the starting uncertainty of the cell (see init())
                     R_t.setEntry(c.k_idx(), c.k_idx(), scale * k * k * rel_k);
                     R_t.setEntry(c.v_idx(), c.v_idx(), var_v);
@@ -1751,7 +1935,11 @@ public class Corridor {
     
     // process noise covariance Q: how much the PW model's prediction is expected to be wrong in one time step
     public void calcQ(){
-        
+        if(boundary_idx >= 0){
+            double sigma = sigma_boundary * cells[0].getNumLanes();
+            Q.setEntry(boundary_idx, boundary_idx, sigma * sigma);
+        }
+
         for(Cell c : cells){
             
             // covariance is likely negative: in congestion, larger k => smaller v

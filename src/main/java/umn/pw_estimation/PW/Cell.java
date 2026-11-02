@@ -84,6 +84,18 @@ public class Cell {
     public int unmetered_idx(){
         return unmetered_idx;
     }
+
+    // largest flows (veh/s) of the cell's ramps: the sum over its ramps of their capacities (see Corridor.addRamp()), for
+    // UNMETERED, INFLOW and OUTFLOW; 0 if the cell has none
+    private final double[] ramp_capacity = new double[3];
+
+    public void addRampCapacity(int which, double capacity){
+        ramp_capacity[which] += capacity;
+    }
+
+    public double getRampCapacity(int which){
+        return ramp_capacity[which];
+    }
     
     public void set_unmetered_idx(int idx){
         unmetered_idx = idx;

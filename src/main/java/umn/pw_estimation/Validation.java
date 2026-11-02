@@ -7,11 +7,14 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import umn.pw_estimation.Input.CorridorConfig;
 import umn.pw_estimation.Input.Detector;
 import umn.pw_estimation.Input.ReadData;
 import umn.pw_estimation.PW.Cell;
 import umn.pw_estimation.PW.CellRecord;
+import umn.pw_estimation.PW.Coordinate;
 import umn.pw_estimation.PW.Corridor;
+import umn.pw_estimation.PW.Link;
 
 /**
  * Leave-one-out validation (Section 4 of the report).
@@ -30,7 +33,8 @@ import umn.pw_estimation.PW.Corridor;
  * Model parameters can be changed with system properties, e.g. -Dtau=60 -Dc0=10 -Dsigma_k=10 -Dsigma_v=3 -Dffs=69
  * -Dmax_sigma_k=50 -Dmax_sigma_v=25 (units: s, m/s, veh/mi/lane, mi/hr, mi/hr, veh/mi/lane, mi/hr), and the flow-density
  * relationship with -Dcapacity=2200 -Ddischarge=2200 -Dw=11.9 -Djam=172 (veh/hr/lane, veh/hr/lane, mi/hr, veh/mi/lane);
- * -Dtriangle=true sets w so the relationship is triangular. -Dramps=none places ramp detectors without the ramps file,
+ * -Dtriangle=true sets w so the relationship is triangular. -Dw2=9 -Djam2=190 (mi/hr, veh/mi/lane; the defaults) set the
+ * second congested line, to the jam density; the congested flow is the larger of the two lines. -Dw2=NaN uses one line. -Dramps=none places ramp detectors without the ramps file,
  * -Dunmetered=false ignores unmetered ramps, and
  * -Dsigma_r=18 sets their random walk standard deviation per time step (veh/hr). -Dprior=<file|none> sets the historical
  * average ramp flows (default data/MN610/ramp_prior.csv), and -Dreversion=600 the time (s) to relax toward
@@ -45,6 +49,11 @@ import umn.pw_estimation.PW.Corridor;
  * estimate is compared with the measurements of the withheld station after converting it to what that station would
  * measure (speed times its factor, density divided by it), and interpolation uses the corrected measurements of the
  * neighboring stations, converted in the same way.
+ * -Dboundary_state=false makes the flow into the first cell its own demand instead of a state variable, and
+ * -Dsigma_boundary=50 sets that variable's random walk standard deviation per time step (veh/hr/lane; see
+ * Corridor.BOUNDARY_STATE).
+ * -Dcorridor=<corridor.properties, or its folder> selects another corridor (default MN-610; see CorridorConfig and
+ * tools/corridors/build_corridor.py), whose settings give the default inventory, ramps and prior.
  * The script validate.sh runs every station in parallel and summarizes the results.
  *
  * @author mlevin
@@ -75,6 +84,8 @@ public class Validation {
         Corridor.max_unmetered = Double.parseDouble(System.getProperty("max_r", ""+Corridor.max_unmetered * 3600)) / 3600;
         Corridor.max_sigma_unmetered = Double.parseDouble(System.getProperty("max_sigma_r", ""+Corridor.max_sigma_unmetered * 3600)) / 3600;
         Corridor.MERGE_SUPPLY = Boolean.parseBoolean(System.getProperty("merge_supply", ""+Corridor.MERGE_SUPPLY));
+        Corridor.BOUNDARY_STATE = Boolean.parseBoolean(System.getProperty("boundary_state", ""+Corridor.BOUNDARY_STATE));
+        Corridor.sigma_boundary = Double.parseDouble(System.getProperty("sigma_boundary", ""+Corridor.sigma_boundary * 3600)) / 3600;
         Corridor.unmetered_reversion = Double.parseDouble(System.getProperty("reversion", ""+Corridor.unmetered_reversion));
         Corridor.MEASUREMENT_MODE = Corridor.MeasurementMode.valueOf(System.getProperty("measurement", ""+Corridor.MEASUREMENT_MODE).toUpperCase());
         Corridor.MEASURED = Corridor.MeasuredValues.valueOf(System.getProperty("measured", ""+Corridor.MEASURED).toUpperCase());
@@ -85,8 +96,12 @@ public class Validation {
         Corridor.count_error = Double.parseDouble(System.getProperty("count_error", ""+Corridor.count_error));
         Corridor.LENGTH_SPEED_ERROR = Boolean.parseBoolean(System.getProperty("length_speed_error", ""+Corridor.LENGTH_SPEED_ERROR));
         Corridor.measurement_noise_scale = Double.parseDouble(System.getProperty("r_scale", ""+Corridor.measurement_noise_scale));
+        Corridor.flow_noise_scale = Double.parseDouble(System.getProperty("r_flow", ""+Corridor.flow_noise_scale));
+        Corridor.density_noise_scale = Double.parseDouble(System.getProperty("r_density", ""+Corridor.density_noise_scale));
         ReadData.JAM_DENSITY = Double.parseDouble(System.getProperty("jam", ""+ReadData.JAM_DENSITY));
         ReadData.WAVE_SPEED = Double.parseDouble(System.getProperty("w", ""+ReadData.WAVE_SPEED));
+        ReadData.WAVE_SPEED_2 = Double.parseDouble(System.getProperty("w2", ""+ReadData.WAVE_SPEED_2));
+        ReadData.JAM_DENSITY_2 = Double.parseDouble(System.getProperty("jam2", ""+ReadData.JAM_DENSITY_2));
         ReadData.CAPACITY = Double.parseDouble(System.getProperty("capacity", ""+ReadData.CAPACITY));
         // the queue discharge rate is the capacity unless given
         ReadData.DISCHARGE_RATE = Double.parseDouble(System.getProperty("discharge", ""+ReadData.CAPACITY));
@@ -94,16 +109,19 @@ public class Validation {
         if(Boolean.parseBoolean(System.getProperty("triangle", "false"))){
             ReadData.WAVE_SPEED = ReadData.CAPACITY / (ReadData.JAM_DENSITY - ReadData.CAPACITY / ReadData.FREE_FLOW_SPEED);
         }
-        System.err.printf("flow-density: free flow speed %.1f mi/hr, capacity %.0f, discharge %.0f veh/hr/ln, w %.2f mi/hr, K %.0f veh/mi/ln%n",
-                ReadData.FREE_FLOW_SPEED, ReadData.CAPACITY, ReadData.DISCHARGE_RATE, ReadData.WAVE_SPEED, ReadData.JAM_DENSITY);
+        System.err.printf("flow-density: free flow speed %.1f mi/hr, capacity %.0f, discharge %.0f veh/hr/ln, w %.2f mi/hr, K %.1f veh/mi/ln, w2 %.2f mi/hr, K2 %.1f veh/mi/ln%n",
+                ReadData.FREE_FLOW_SPEED, ReadData.CAPACITY, ReadData.DISCHARGE_RATE, ReadData.WAVE_SPEED, ReadData.JAM_DENSITY,
+                ReadData.WAVE_SPEED_2, ReadData.JAM_DENSITY_2);
 
         ReadData read = new ReadData();
-        Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"},
-                new File(System.getProperty("inventory", "data/MN610/MN610_Edited.csv")), new String[]{"T.H.610 WB", "T.H.610 EB"},
-                System.getProperty("ramps", "data/MN610/ramps.csv").equals("none")? null : new File(System.getProperty("ramps", "data/MN610/ramps.csv")));
+        CorridorConfig config = CorridorConfig.load(System.getProperty("corridor", "MN610"));
+        String ramps = System.getProperty("ramps", config.ramps == null? "none" : config.ramps.getPath());
+        Map<String, Corridor> corridors = read.readOSM(config.name, config.geometry, dt, config.labels,
+                new File(System.getProperty("inventory", config.inventory.getPath())), config.detector_labels,
+                ramps.equals("none")? null : new File(ramps));
         read.readDetectorData(data);
-        String prior = System.getProperty("prior", "data/MN610/ramp_prior.csv");
-        if(!prior.equals("none")){
+        String prior = System.getProperty("prior", config.prior == null? "none" : config.prior.getPath());
+        if(!prior.equals("none") && new File(prior).exists()){
             read.readRampPrior(new File(prior));
         }
         String ffs_file = System.getProperty("ffs_file", "none");
@@ -145,6 +163,24 @@ public class Validation {
 
         long start = System.currentTimeMillis();
         corridor.init(0);
+        // -Dgeometry_out=<file>: the points of the corridor's road geometry with their distance along the corridor, to draw
+        // the estimate (cells_out) on a map
+        String geometry_out = System.getProperty("geometry_out", "none");
+        if(!geometry_out.equals("none")){
+            PrintStream geometry_file = new PrintStream(new File(geometry_out));
+            geometry_file.println("position (mi),lat,lon");
+            double link_start = 0; // m
+            for(Link link : corridor.getLinks()){
+                List<Coordinate> points = link.getCoordinates();
+                for(int i = 0; i < points.size(); i++){
+                    double position = link_start / 1609.34 + Link.calcLength(points, i) * 1609.3 / 1609.34;
+                    geometry_file.println(String.format("%.4f,%.7f,%.7f", position, points.get(i).lat, points.get(i).lon));
+                }
+                link_start += link.getLength();
+            }
+            geometry_file.close();
+        }
+
         corridor.estimate(duration, null);
         System.err.println(corridor.getName()+" station "+station+": estimated "+duration+" s in "+(System.currentTimeMillis() - start)/1000.0+" s");
 

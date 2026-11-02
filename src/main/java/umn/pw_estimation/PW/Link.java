@@ -20,7 +20,12 @@ public class Link implements Comparable<Link> {
     private double Q; // capacity per lane veh/s, before traffic breaks down
     private double Qd; // queue discharge rate per lane veh/s: the largest flow of congested traffic; Qd <= Q
     private double w; // congested wave speed m/s
-    private double K; // jam density per lane veh/m
+    private double K; // jam density per lane veh/m of the congested line w*(K - k)
+    // optional second congested line w2*(K2 - k), to the jam density K2: the congested flow is the larger of the two lines,
+    // so that w applies near the critical density and w2 near the jam density (see setSecondBranch()); by default, w2 = w and
+    // K2 = K, which is a single line
+    private double w2;
+    private double K2;
     private int numLanes;
     private double length; // units of meters
     private double maxspeed; // exceeding this violates CFL
@@ -42,6 +47,8 @@ public class Link implements Comparable<Link> {
         this.Qd = Math.min(Q, Qd) / 3600.0;
         this.w = w / 2.237;  // mph to m/s
         this.K = K / 1609.3;  // veh/mi to veh/m  // K = jam density
+        this.w2 = this.w;
+        this.K2 = this.K;
         this.numLanes = numLanes;
         this.maxspeed = maxspeed / 2.237;
         
@@ -54,6 +61,21 @@ public class Link implements Comparable<Link> {
     public Link(Link other, double v){
         this(other.name, other.length / 1609.3, v, other.maxspeed * 2.237, other.Q * 3600, other.Qd * 3600, other.w * 2.237, other.K * 1609.3, other.numLanes);
         this.coords = other.coords;
+        this.w2 = other.w2;
+        this.K2 = other.K2;
+    }
+    // a second congested line with wave speed w2 (mph) to the jam density K2 (veh/mi per lane); K2 > K and w2 < w
+    public void setSecondBranch(double w2, double K2){
+        this.w2 = w2 / 2.237;
+        this.K2 = K2 / 1609.3;
+    }
+    // congested flow per lane (veh/s) before the queue discharge rate limits it, for density per lane k (veh/m)
+    private double congestedFlow(double k){
+        return Math.max(w * (K - k), w2 * (K2 - k));
+    }
+    // whether density per lane k (veh/m) is on the first congested line
+    private boolean onFirstLine(double k){
+        return w * (K - k) >= w2 * (K2 - k);
     }
     
     // without a separate queue discharge rate (Qd = Q)
@@ -157,7 +179,7 @@ public class Link implements Comparable<Link> {
         if(k <= Q / v){
             return v * k;
         }
-        return Math.max(0, Math.min(Qd, w * (K - k)));
+        return Math.max(0, Math.min(Qd, congestedFlow(k)));
     }
 
     // equilibrium speed (m/s) for density per lane k_lane (veh/m)
@@ -171,17 +193,20 @@ public class Link implements Comparable<Link> {
     }
 
     // derivative of getEquilibriumSpeed() with respect to the density per lane
-    // it is 0 in free flow, -Qd/k^2 where the flow is Qd, and -w K/k^2 on the congested branch
+    // it is 0 in free flow, -Qd/k^2 where the flow is Qd, and -w K/k^2 (or -w2 K2/k^2) on the congested branch
     // (the drop at the critical density has no derivative; the derivative on each side is used)
     public double getDerivEqSpeed(double k_lane){
-        if(k_lane <= Q / v || k_lane >= K){
+        if(k_lane <= Q / v || k_lane >= K2){
             return 0;
         }
-        else if(w * (K - k_lane) >= Qd){
+        else if(congestedFlow(k_lane) >= Qd){
             return -Qd / (k_lane * k_lane);
         }
-        else{
+        else if(onFirstLine(k_lane)){
             return -w * K / (k_lane * k_lane);
+        }
+        else{
+            return -w2 * K2 / (k_lane * k_lane);
         }
     }
     
@@ -193,7 +218,7 @@ public class Link implements Comparable<Link> {
     
     // largest flow per lane (veh/s) of congested traffic
     public double getDischargeRate(){
-        return Math.min(Qd, w * (K - Q / v));
+        return Math.min(Qd, congestedFlow(Q / v));
     }
     
     // largest flow per lane (veh/s) that can enter a cell at density per lane k: the capacity in free flow, and the
@@ -204,8 +229,8 @@ public class Link implements Comparable<Link> {
     
     // derivative of getSupplyPerLane() with respect to the density per lane
     public double getDerivSupplyPerLane(double k_lane){
-        if(k_lane > Q / v && k_lane < K && w * (K - k_lane) < Qd){
-            return -w;
+        if(k_lane > Q / v && k_lane < K2 && congestedFlow(k_lane) < Qd){
+            return onFirstLine(k_lane)? -w : -w2;
         }
         return 0;
     }
@@ -218,8 +243,9 @@ public class Link implements Comparable<Link> {
         return Q;
     }
     
+    // jam density per lane (veh/m)
     public double getK_perLane(){
-        return K;
+        return K2;
     }
     
     // number of lanes from OpenStreetMap; a cell may have a different (average) number of lanes, see Cell.getNumLanes()

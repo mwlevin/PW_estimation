@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import umn.pw_estimation.Input.CorridorConfig;
 import umn.pw_estimation.Input.Detector;
 import umn.pw_estimation.Input.ReadData;
 import umn.pw_estimation.PW.Cell;
@@ -30,13 +31,15 @@ import umn.pw_estimation.PW.Corridor;
  * Read by ReadData.readRampPrior().
  *
  * Usage: RampPrior <output CSV> <detector data CSV> [detector data CSV ...]
+ * with -Dcorridor=<corridor.properties> for a corridor other than MN-610.
  * Each data file is one day (e.g. data/MN610/daily). Do not include the days used for validation.
  *
  * @author mlevin
  */
 public class RampPrior {
 
-    static final File RAMPS = new File("data/MN610/ramps.csv");
+    // -Dcorridor=<corridor.properties or its folder> for a corridor other than MN-610 (see CorridorConfig)
+    static CorridorConfig config;
     static final int BINS = 86400 / Cell.PRIOR_BIN;
 
     // a 30-second interval counts only if all detectors involved have data; a day's bin counts if at least half of
@@ -60,6 +63,7 @@ public class RampPrior {
     }
 
     public static void main(String[] args) throws IOException {
+        config = CorridorConfig.load(System.getProperty("corridor", "MN610"));
         // per direction, per segment (index of its downstream station), per bin: sum over days of the day's average, and number of days
         Map<String, double[][]> sum = new HashMap<>();
         Map<String, int[][]> days = new HashMap<>();
@@ -70,8 +74,8 @@ public class RampPrior {
 
         for(int f = 1; f < args.length; f++){
             ReadData read = new ReadData();
-            Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), 3, new String[]{"WB", "EB"},
-                    new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"}, RAMPS);
+            Map<String, Corridor> corridors = read.readOSM(config.name, config.geometry, 3, config.labels, config.inventory,
+                    config.detector_labels, config.ramps);
             read.readDetectorData(new File(args[f]));
             long start = read.getStartOfDay();
             ramps = readRamps(corridors);
@@ -218,7 +222,7 @@ public class RampPrior {
             station_positions.put(direction, positions);
         }
 
-        Scanner filein = new Scanner(RAMPS);
+        Scanner filein = new Scanner(config.ramps);
         filein.nextLine();
         while(filein.hasNextLine()){
             String[] columns = filein.nextLine().split(",", -1);
