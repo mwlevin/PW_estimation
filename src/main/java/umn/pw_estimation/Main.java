@@ -49,7 +49,7 @@ public class Main {
         
         ReadData read = new ReadData();
         Map<String, Corridor> corridors = read.readOSM("610", new File("data/MN610/geometry.txt"), dt, new String[]{"WB", "EB"}, new File("data/MN610/MN610_Edited.csv"), new String[]{"T.H.610 WB", "T.H.610 EB"}, new File("data/MN610/ramps.csv"));
-        read.readDetectorData(new File("data/MN610/detector_data.csv"));
+        read.readDetectorData(new File("data/MN610/detector_data.csv"));  // file MUST be called "detector_data" or Main will not run
         // historical average ramp flows, made by RampPrior
         read.readRampPrior(new File("data/MN610/ramp_prior.csv"));
         
@@ -73,7 +73,7 @@ public class Main {
         for(String direction : corridors.keySet()){
             Corridor corridor = corridors.get(direction);
             PrintStream fileout = new PrintStream(new FileOutputStream(new File(corridor.getName()+" estimate.csv")), true);
-            int duration = (int)(600); // in seconds
+            int duration = (int) 500; // in seconds
             // writes one row per time step: estimated k (veh/mi), u (mph), q (veh/hr) and regime for each cell, plus
             // detector values for cells with detectors (-1 means missing data). Densities and flows are totals across all lanes.
             // estimate() also saves every time step in memory (Corridor.records) for printCrashData() and getData() below.
@@ -82,10 +82,10 @@ public class Main {
         }
         
         // latitude, longitude of the crash; it must lie on the chosen corridor below, or findCell() returns null
-        Coordinate crash_loc = new Coordinate(45.1306773, -93.2979796);
+        Coordinate crash_loc = new Coordinate(45.13452588, -93.29504013);
         // seconds from the start of the data; must be less than duration above, and at least timestep * num_timesteps
         // it is rounded down to a multiple of dt
-        long crash_time = 520;
+        long crash_time = 420;
         
         Corridor wb610 = corridors.get("WB");
         Corridor eb610 = corridors.get("EB");

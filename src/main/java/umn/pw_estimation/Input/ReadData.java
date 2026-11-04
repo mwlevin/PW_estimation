@@ -103,7 +103,7 @@ public class ReadData {
             
             // the time column of the first row is the end of the first 30 seconds, e.g. 3:00:30 PM for data starting at 3 PM
             if(first){
-                start_of_day = parseClock(split1[1].trim()) - 30;
+                start_of_day = (long) parseClock(split1[1].trim()) - 30;  // previously no (long)
                 for(Corridor c : corridors.values()){
                     c.setClockStart(start_of_day);
                 }
@@ -401,13 +401,18 @@ public class ReadData {
     }
     
     // seconds after midnight of a time such as 3:00:30 PM, or 15:00:30 without AM/PM
-    static long parseClock(String clock){
+    static double parseClock(String clock){        // previously all "double"s were "long"
+        // if it doesn't contain a colon, it's already in seconds
+        if (!clock.contains(":")) {
+        return Double.parseDouble(clock.trim());
+        }
+        
         String[] parts = clock.split("[: ]");
-        long hour = Long.parseLong(parts[0]);
+        double hour = Double.parseDouble(parts[0]);
         if(parts.length > 3){
             hour = hour % 12 + (parts[3].equalsIgnoreCase("PM")? 12 : 0);
         }
-        return hour * 3600 + Long.parseLong(parts[1]) * 60 + Long.parseLong(parts[2]);
+        return hour * 3600 + Double.parseDouble(parts[1]) * 60 + Double.parseDouble(parts[2]);
     }
     
     // reads the historical average ramp flows made by RampPrior; columns: direction, type, lat, lon, osm_way, time (HH:MM,

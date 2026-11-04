@@ -52,7 +52,7 @@ public class DrawOSM extends JPanel {
         return draw(list);
     }
     public static DrawOSM draw(List<Corridor> corridors) throws IOException{
-        DrawOSM test = new DrawOSM(corridors, DISPLAY_MODE.DENSITY);
+        DrawOSM test = new DrawOSM(corridors, DISPLAY_MODE.TRAFFIC_REGIME);
 
         JFrame frame = new JFrame();
         frame.add(test);
@@ -187,6 +187,7 @@ public class DrawOSM extends JPanel {
         String imageType = "png";
 
         File outputfile = new File(output_file+"."+imageType);
+        System.out.println("Image saved to " +outputfile.getAbsolutePath());
 
         ImageIO.write(image, imageType, outputfile);
     }
@@ -228,7 +229,7 @@ public class DrawOSM extends JPanel {
     }
 
 
-    public static final Color[] regime_colors = new Color[]{Color.red, Color.green, Color.yellow, Color.orange, Color.blue, Color.magenta, Color.pink, Color.cyan};
+    public static final Color[] regime_colors = new Color[]{new Color(255, 245, 240), new Color(254, 224, 210), new Color(252, 187, 161), new Color(252, 146, 114), new Color(251, 106, 74), new Color(239, 59, 44), new Color(203, 24, 29), new Color(153, 0, 13)};
 
 
     // color of a cell for its estimated state
